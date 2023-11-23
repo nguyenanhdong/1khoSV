@@ -1,0 +1,11 @@
+# OSX
+#
+.DS_Store
+
+
+vendor/
+node_modules
+package-lock.json
+common/config/params2.php
+common/config/db.php
+logs
