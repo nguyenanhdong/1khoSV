@@ -16,6 +16,12 @@ class Customer extends \yii\db\ActiveRecord
 {
     public $date_start;
     public $date_end;
+
+    const ACCOUNT_VERIFYED = 1;
+    const ACCOUNT_NOT_VERIFY = 1;
+    const STATUS_ACTIVE = 1;
+    const STATUS_BANNED = 2;
+
     /**
      * @inheritdoc
      */
@@ -31,7 +37,7 @@ class Customer extends \yii\db\ActiveRecord
     {
         return [
             [['create_at'], 'safe'],
-            [['fullname'], 'string', 'max' => 100],
+            [['fullname'], 'string', 'max' => 255],
         ];
     }
 
@@ -44,11 +50,13 @@ class Customer extends \yii\db\ActiveRecord
             'id' => 'ID',
             'fullname' => 'Họ tên',
             'create_at' => 'Ngày đăng ký',
-            'email' => 'Email',
             'phone' => 'Số điện thoại',
             'fb_id' => 'ID Facebook',
             'apple_id' => 'ID Apple',
-            'address' => 'Địa chỉ'
+            'gg_id'    => 'ID Google',
+            'address' => 'Địa chỉ',
+            'district' => 'Quận/Huyện',
+            'province' => 'Thành phố',
         ];
     }
 }
