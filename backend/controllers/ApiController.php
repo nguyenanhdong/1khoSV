@@ -13,6 +13,7 @@ use yii\db\Exception;
 use yii\web\BadRequestHttpException;
 use yii\web\Controller;
 use backend\models\Customer;
+use backend\models\HistoryWalletPoint;
 use yii\helpers\ArrayHelper;
 use backend\models\Util;
 use common\helpers\Response;
@@ -124,12 +125,12 @@ class ApiController extends Controller
                         $paramsReturn[$name] = trim(strip_tags($params[$name]));
                     }
                 } else {
-                    $paramsReturn[$name] = $type == self::TYPE_INT ? 0 : ($type == self::TYPE_ARRAY ? [] : "");
+                    $paramsReturn[$name] = $type == self::TYPE_INT ? ( isset($objParams['default']) ? $objParams['default'] : 0 ) : ($type == self::TYPE_ARRAY ? [] : ( isset($objParams['default']) ? $objParams['default'] : "" ));
                 }
             }
         } else {
             foreach ($arrParamsGet as $name => $objParams) {
-                $paramsReturn[$name] = null;
+                $paramsReturn[$name] = isset($objParams['default']) ? $objParams['default'] : null;
             }
         }
 
@@ -273,6 +274,9 @@ class ApiController extends Controller
         return $responseObj;
     }
 
+    /**
+     * API đăng nhập bằng SĐT
+     */
     public function actionLoginWithPhone(){
         try{
             $params = self::getParamsRequest([
@@ -297,6 +301,8 @@ class ApiController extends Controller
                 return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $params['listError']);
             }
 
+            $this->writeLogFile('login-with-phone', $params);
+
             $phone      = $params['phone'];
             $token      = $params['token'];
             $did        = $params['did'];
@@ -316,11 +322,14 @@ class ApiController extends Controller
             if (!$user) {
                 $user           = new Customer;
                 $user->phone    = $phone;
-                $user->is_verify_account = Customer::ACCOUNT_VERIFYED;
             }else{
                 if( $user->status == Customer::STATUS_BANNED ){
-                    return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('login', Response::KEY_FORBIDEN)]);
+                    return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('banned', Response::KEY_FORBIDDEN)]);
                 }
+            }
+
+            if( !$user->is_verify_account ){
+                $user->is_verify_account = Customer::ACCOUNT_VERIFYED;
             }
 
             $user->device_id    = $did;
@@ -342,7 +351,9 @@ class ApiController extends Controller
             return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
         }
     }
-
+    /**
+     * API làm mới mã accessToken
+     */
     public function actionRefreshAccessToken(){
         try{
             $params = self::getParamsRequest([
@@ -364,7 +375,7 @@ class ApiController extends Controller
             $token      = $params['token'];
             $dataToken  = $this->decryptTokenWithJWT($token);
             if( !$dataToken || $dataToken['id'] != $user_id ){
-                $msg    = !$dataToken ? Response::getErrorMessage('token', Response::KEY_INVALID) : Response::getErrorMessage('info', Response::KEY_FORBIDEN);
+                $msg    = !$dataToken ? Response::getErrorMessage('token', Response::KEY_INVALID) : Response::getErrorMessage('info', Response::KEY_FORBIDDEN);
                 return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [$msg]);
             }
 
@@ -380,18 +391,20 @@ class ApiController extends Controller
             return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
         }
     }
-
+    /**
+     * API Thông tin user
+     */
     public function actionUserInfo(){
         try{
             
             if( !$this->userId ){
-                $msg    = Response::getErrorMessage('info', Response::KEY_FORBIDEN);
+                $msg    = Response::getErrorMessage('info', Response::KEY_FORBIDDEN);
                 return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [$msg]);
             }
 
             $user       = Customer::findOne($this->userId);
             if (!$user || $user->status == Customer::STATUS_BANNED) {
-                $msg    = !$user ? Response::getErrorMessage('account', Response::KEY_NOT_FOUND) : Response::getErrorMessage('info', Response::KEY_FORBIDEN);
+                $msg    = !$user ? Response::getErrorMessage('account', Response::KEY_NOT_FOUND) : Response::getErrorMessage('info', Response::KEY_FORBIDDEN);
             }
             
             $userRes = $this->getUserInfoRes($user);
@@ -399,6 +412,133 @@ class ApiController extends Controller
 
         }catch(\Exception $e){
             $this->writeLogFile('user-info-error', [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
+    }
+    /**
+     * API cập nhật thông tin user
+     */
+    public function actionUpdateInfo(){
+
+        try {
+            $params = self::getParamsRequest([
+                'fullname' => [
+                    'type' => self::TYPE_STRING,
+                    'validate' => Response::KEY_REQUIRED
+                ],
+                'phone' => [
+                    'type' => self::TYPE_STRING,
+                    'validate' => [Response::KEY_REQUIRED, Response::KEY_INVALID => ['min' => Response::PHONE_MIN_LENGTH, 'max' => Response::PHONE_MAX_LENGTH]]
+                ],
+                'district' => [
+                    'type' => self::TYPE_STRING,
+                    'validate' => Response::KEY_REQUIRED
+                ],
+                'province' => [
+                    'type' => self::TYPE_STRING,
+                    'validate' => Response::KEY_REQUIRED
+                ],
+                'address' => [
+                    'type' => self::TYPE_STRING,
+                    'validate' => Response::KEY_REQUIRED
+                ]
+            ]);
+            if( !empty($params['listError']) || !$this->userId ){
+                $listErr = !empty($params['listError']) ? $params['listError'] : [Response::getErrorMessage('info', Response::KEY_FORBIDDEN)];
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+            }
+
+            $this->writeLogFile('update-info', $params);
+
+            $fullname   = $params['fullname'];
+            $phone      = $params['phone'];
+            $district   = $params['district'];
+            $province   = $params['province'];
+            $address    = $params['address'];
+            if (strpos($phone, '+84') !== false) {
+                $phone  = str_replace('+84', '0', $phone);
+            }
+            $user       = Customer::findOne($this->userId);
+
+            if( !$user || $user->status == Customer::STATUS_BANNED ){
+                $msg    = !$user ? Response::getErrorMessage('account', Response::KEY_NOT_FOUND) : Response::getErrorMessage('banned', Response::KEY_FORBIDDEN);
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [$msg]);
+            }
+
+            //Check phone exist
+            $resultCheckPhone = Customer::find()->where(['phone' => $phone])->andWhere(['<>', 'id', $user->id])->one();
+            if ( $resultCheckPhone )
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('phone', Response::KEY_EXISTS)]);
+
+            if( $phone != $user->phone ){
+                $user->is_verify_account = Customer::ACCOUNT_NOT_VERIFY;
+            }
+
+            $user->fullname = $fullname;
+            $user->phone    = $phone;
+            $user->district = $district;
+            $user->province = $province;
+            $user->address  = $address;
+            $user->save(false);
+
+            $userRes = $this->getUserInfoRes($user);
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $userRes);
+
+        } catch (\Exception $e) {
+            $this->writeLogFile('update-info-error', [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
+    }
+
+    /**
+     * API ví tích điểm
+     */
+    public function actionWalletPoint(){
+
+        try {
+
+            $params = self::getParamsRequest([
+                'limit'    => [
+                    'type' => self::TYPE_INT,
+                    'default' => 10
+                ],
+                'page'    => [
+                    'type' => self::TYPE_INT,
+                    'default' => 1
+                ]
+            ]);
+            
+            if( !$this->userId ){
+                $listErr = [Response::getErrorMessage('info', Response::KEY_FORBIDDEN)];
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+            }
+
+            $user       = Customer::findOne($this->userId);
+
+            if( !$user || $user->status == Customer::STATUS_BANNED ){
+                $msg    = !$user ? Response::getErrorMessage('account', Response::KEY_NOT_FOUND) : Response::getErrorMessage('banned', Response::KEY_FORBIDDEN);
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [$msg]);
+            }
+
+            $limit      = $params['limit'];
+            $page       = $params['page'];
+            $offset     = ($page - 1) * $limit;
+
+            $listHistory= HistoryWalletPoint::find()->select(["id", "type", new Expression('date_format(create_at, "%H:%i %d/%m/%Y") as create_at'), "note", "point", "obj_id"])->where(['user_id' => $user->id])->limit($limit)->offset($offset)->orderBy(['id' => SORT_DESC])->asArray()->all();
+
+            $dataRes = [
+                'pointCurrent' => $user->wallet_point,
+                'history'      => $listHistory
+            ];
+
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+
+        } catch (\Exception $e) {
+            $this->writeLogFile('wallet-point-error', [
                 'message' => $e->getMessage(),
             ]);
             return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);

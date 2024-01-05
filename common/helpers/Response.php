@@ -10,9 +10,10 @@ class Response
     const PHONE_MAX_LENGTH   = 12;
     const KEY_REQUIRED       = 'required';
     const KEY_INVALID        = 'invalid';
-    const KEY_FORBIDEN       = 'forbiden';
+    const KEY_FORBIDDEN      = 'forbidden';
     const KEY_NOT_FOUND      = 'not_found';
     const KEY_SYS_ERR        = 'sys_err';
+    const KEY_EXISTS         = 'exists';
     public static $listErrorByField = array(
         self::KEY_REQUIRED   => [
             'user_id'        => 'Mã tài khoản không được trống',
@@ -37,12 +38,15 @@ class Response
             'authorization'  => 'AccessToken không hợp lệ',
             'request_method' => 'Phương thức yêu cầu không hợp lệ'
         ],
-        self::KEY_FORBIDEN   => [
-            'login'          => 'Tài khoản đang bị khoá',
+        self::KEY_FORBIDDEN   => [
+            'banned'         => 'Tài khoản đang bị khoá',
             'info'           => 'Xác thực không thành công',
         ],
         self::KEY_NOT_FOUND  => [
             'account'        => 'Thông tin khách hàng không tồn tại',
+        ],
+        self::KEY_EXISTS  => [
+            'phone'          => 'Số điện thoại đã được sử dụng',
         ],
         self::KEY_SYS_ERR    => [
             'sys'            => 'Lỗi! Vui lòng thử lại sau',
