@@ -14,6 +14,8 @@ use Yii;
  */
 class Banner extends \yii\db\ActiveRecord
 {
+    const BANNER_CUSTOMER = 1;
+    const BANNER_AGENT = 2;
     /**
      * @inheritdoc
      */
@@ -30,22 +32,10 @@ class Banner extends \yii\db\ActiveRecord
         return [
             [['name'],'required','message'=>'Nhập {attribute}'],
             [['image'], 'string', 'max' => 400],
-            [['code'], 'validateCode'],
-            [['is_popup','description','type_show','is_show_button','type','date_start','date_end'], 'safe'],
+            [['description','type_show','is_show_button','type','date_start','date_end'], 'safe'],
         ];
     }
-    public function validateCode($attribute, $params) {
-        if( $this->code != '' ){
-            $modelGiftCode = GiftCode::findOne(['code'=>$this->code]);
-            if( !$modelGiftCode )
-                $this->addError($attribute, Yii::t('app', 'Mã khuyến mại không tồn tại'));
-            else if($this->type && $modelGiftCode->service != '' && $modelGiftCode->service != '0' ){
-                $list_service = array_filter(explode(';',$modelGiftCode->service));
-                if( !in_array($this->type, $list_service) )
-                    $this->addError($attribute, Yii::t('app', 'Mã khuyến mại không dành cho dịch vụ này'));
-            }
-        }
-    }
+    
     public function beforeSave($insert){
         if( $this->date_start != '' ){
             if( strpos($this->date_start,'/') !== false ){
@@ -61,10 +51,7 @@ class Banner extends \yii\db\ActiveRecord
             }
         }else
             $this->date_end = NULL;
-        if( !isset($_POST['Banner']['is_show_button']) ){
-            $this->type = 0;
-            $this->is_show_button = 0;
-        }
+        
         return parent::beforeSave($insert);
     }
     /**
@@ -77,12 +64,18 @@ class Banner extends \yii\db\ActiveRecord
             'image' => 'Ảnh',
             'name' => 'Tên',
             'description' => 'Nội dung',
-            'code' => 'Mã khuyến mại',
-            'type' => 'Dịch vụ',
+            'category_id' => 'Chuyên mục',
             'date_start' => 'Ngày bắt đầu',
             'date_end' => 'Ngày kết thúc',
-            'type_show' => 'Loại',
-            'is_popup' => 'Popup banner'
+            'type' => 'Loại',
         ];
+    }
+
+    public static function getListBannerApp($type, $domain = ''){
+        $sql_banner = '
+            SELECT id, concat("' . $domain . '",image) as image, category_id
+            FROM banner where is_delete = 0 and type = :type and (( date_start is null and date_end is null ) or ( date_start <= "' . date('Y-m-d') . '" and date_end >= "' . date('Y-m-d') . '"))
+        ';
+        return Yii::$app->db->CreateCommand($sql_banner, [':type' => $type])->queryAll();
     }
 }

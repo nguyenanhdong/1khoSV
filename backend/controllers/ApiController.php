@@ -14,6 +14,11 @@ use yii\web\BadRequestHttpException;
 use yii\web\Controller;
 use backend\models\Customer;
 use backend\models\HistoryWalletPoint;
+use backend\models\Banner;
+use backend\models\Category;
+use backend\models\ProductSale;
+use backend\models\ProductReview;
+use backend\models\Advertisement;
 use yii\helpers\ArrayHelper;
 use backend\models\Util;
 use common\helpers\Response;
@@ -539,6 +544,58 @@ class ApiController extends Controller
 
         } catch (\Exception $e) {
             $this->writeLogFile('wallet-point-error', [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
+    }
+
+    /**
+     * API Trang chủ
+     */
+    public function actionHome(){
+        try {
+
+            $params = self::getParamsRequest([
+                'limit'    => [
+                    'type' => self::TYPE_INT,
+                    'default' => 4
+                ],
+                'page'    => [
+                    'type' => self::TYPE_INT,
+                    'default' => 1
+                ]
+            ]);
+            
+            $limit          = $params['limit'];
+            $page           = $params['page'];
+            $offset         = ($page - 1) * $limit;
+
+            
+            $listBanner     = Banner::getListBannerApp(Banner::BANNER_CUSTOMER, $this->urlDomain);
+            $listCategory   = Category::getListCateApp(0, 8, 0, $this->urlDomain);
+
+            $listproductSale= ProductSale::getProductSale(0, 0, 8);
+            $listAdvertisementNews = Advertisement::getAdvertisementHome(null, 4, 0);
+            $listAdvertisementBuy  = Advertisement::getAdvertisementHome(Advertisement::TYPE_BUY, 4, 0);
+            $listAdvertisementSell = Advertisement::getAdvertisementHome(Advertisement::TYPE_SELL, 4, 0);
+
+            $dataRes = [
+                'banner'       => $listBanner,//Banner
+                'category'     => $listCategory,//Chuyên mục
+                'advertisement'=> [
+                    'news'     => $listAdvertisementNews,
+                    'buy'      => $listAdvertisementBuy,
+                    'sell'     => $listAdvertisementSell,
+                ],//Tin rao vặt
+                'productSale'  => $listproductSale,//Săn sale cùng 1KHO
+                'categoryProduct' => [],//List chuyên mục kèm sản phẩm nổi bật
+            ];
+
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+
+        } catch (\Exception $e) {
+            $this->writeLogFile('home-error', [
                 'message' => $e->getMessage(),
             ]);
             return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
