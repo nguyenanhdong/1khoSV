@@ -71,7 +71,8 @@ class Banner extends \yii\db\ActiveRecord
         ];
     }
 
-    public static function getListBannerApp($type, $domain = ''){
+    public static function getListBannerApp($type){
+        $domain = Yii::$app->params['urlDomain'];
         $sql_banner = '
             SELECT id, concat("' . $domain . '",image) as image, category_id
             FROM banner where is_delete = 0 and type = :type and (( date_start is null and date_end is null ) or ( date_start <= "' . date('Y-m-d') . '" and date_end >= "' . date('Y-m-d') . '"))

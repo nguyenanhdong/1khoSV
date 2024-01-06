@@ -22,6 +22,7 @@ use backend\models\Advertisement;
 use yii\helpers\ArrayHelper;
 use backend\models\Util;
 use common\helpers\Response;
+use common\helpers\Request;
 use common\helpers\Jwt\JWT;
 
 class ApiController extends Controller
@@ -31,7 +32,10 @@ class ApiController extends Controller
     const TYPE_INT = 'int';
     const TYPE_ARRAY = 'array';
 
-    public $urlDomain = 'http://1khosv.com';
+    const PLATFORM_GG= 'google';
+    const PLATFORM_FB= 'facebook';
+
+    public $urlDomain = '';
     public $urlDomainAvatarStaff = 'https://api.1khosv.com';
     public $linkShare = "https://1khosv.com/";
 
@@ -89,6 +93,7 @@ class ApiController extends Controller
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         $request    = Yii::$app->request;
         $msgError   = "";
+        $this->urlDomain = Yii::$app->params['urlDomain'];
         if ($request->isPost) {
             $headers = apache_request_headers();
             $headers = array_change_key_case($headers, CASE_LOWER);
@@ -257,6 +262,52 @@ class ApiController extends Controller
         return false;
     }
 
+    private function _validateTokenSocial($idToken, $platform){
+        $data       = [];
+        if( $platform == self::PLATFORM_GG ){
+            $url    = "https://www.googleapis.com/oauth2/v1/userinfo?access_token=$idToken";
+            $result = Request::getRequest($url);
+            if( $result ){
+                $result = json_decode($result, true);
+                if( is_array($result) && isset($result['id']) ){
+                    $data = ['id' => $result['id'], 'name' => isset($result['name']) ? $result['name'] : '' ];
+                }
+            }
+        }else if( $platform == self::PLATFORM_FB ){
+            $socialKey      = Yii::$app->params['socialKey'];
+            $clientId       = $socialKey['facebook']['clientId'];
+            $clientSecret   = $socialKey['facebook']['clientSecret'];
+            $urlAccessToken = "https://graph.facebook.com/oauth/access_token?client_id=$clientId&client_secret=$clientSecret&grant_type=client_credentials";
+
+            $rsAccessToken  = Request::getRequest($urlAccessToken);
+            if( $rsAccessToken ){
+                $rsAccessToken = json_decode($rsAccessToken, true);
+                if( is_array($rsAccessToken) && isset($rsAccessToken['access_token']) ){
+                    $access_token   = $rsAccessToken['access_token'];
+                    $urlCheckToken  = "https://graph.facebook.com/debug_token?input_token=$idToken&access_token=$access_token";
+                    $rsCheckToken   = Request::getRequest($urlCheckToken);
+
+                    if( $rsCheckToken ){
+                        $rsCheckToken = json_decode($rsCheckToken, true);
+                        if( is_array($rsCheckToken) && isset($rsCheckToken['data']) && isset($rsCheckToken['data']['user_id']) ){
+                            $urlProfile = "https://graph.facebook.com/me?fields=id,name,email&access_token=$idToken";
+                            $result     = Request::getRequest($urlProfile);
+                            if( $result ){
+                                $result = json_decode($result, true);
+                                if( is_array($result) && isset($result['id']) ){
+                                    $data = ['id' => $result['id'], 'name' => isset($result['name']) ? $result['name'] : '' ];
+                                }
+                            }
+                        }
+                    }
+
+                }
+            }
+        }
+
+        return $data;
+    }
+
     private function getUserInfoRes($user){
         $resUser                = $user;
         $responseObj            = new \stdClass();
@@ -268,7 +319,7 @@ class ApiController extends Controller
         $responseObj->province  = !empty($resUser->province) ? $resUser->province : '';
         $responseObj->avatar    = $this->urlDomain . (!empty($resUser->avatar) ? $resUser->avatar : '/img/avatar.png');
         $responseObj->referral_code = $resUser->referral_code;
-        $responseObj->wallet_point  = $resUser->wallet_point;
+        $responseObj->wallet_point  = (int)$resUser->wallet_point;
         $responseObj->is_verify_account = $resUser->is_verify_account;
         $responseObj->device_id = $resUser->device_id;
         $responseObj->app_version = $resUser->clientver;
@@ -335,6 +386,85 @@ class ApiController extends Controller
 
             if( !$user->is_verify_account ){
                 $user->is_verify_account = Customer::ACCOUNT_VERIFYED;
+            }
+
+            $user->device_id    = $did;
+            $user->clientver    = $clientver;
+            $user->last_login   = date('Y-m-d H:i:s');
+            $user->save(false);
+
+            if( !$user->referral_code	){
+                $user->referral_code = $this->generateReferralCode($user->id);
+                $user->save(false);
+            }
+
+            $userRes = $this->getUserInfoRes($user);
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $userRes);
+        }catch(\Exception $e){
+            $this->writeLogFile('login-with-phone-error', [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
+    }
+
+    /**
+     * API đăng nhập mạng xã hội
+     */
+    public function actionLoginWithSocial(){
+        try{
+            $params = self::getParamsRequest([
+                'token' => [
+                    'type' => self::TYPE_STRING,
+                    'validate' => Response::KEY_REQUIRED
+                ],
+                'platform' => [
+                    'type' => self::TYPE_STRING,
+                    'validate' => Response::KEY_REQUIRED
+                ],
+                'did' => [
+                    'type' => self::TYPE_STRING,
+                    'validate' => Response::KEY_REQUIRED
+                ],
+                'clientver' => [
+                    'type' => self::TYPE_STRING,
+                    'validate' => Response::KEY_REQUIRED
+                ]
+            ]);
+            if( !empty($params['listError']) ){
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $params['listError']);
+            }
+
+            $this->writeLogFile('login-with-social', $params);
+
+            $platform   = $params['platform'];
+            $token      = $params['token'];
+            $did        = $params['did'];
+            $clientver  = $params['clientver'];
+            
+            $dataToken  = $this->_validateTokenSocial($token, $platform);
+            
+            if( empty($dataToken) ){
+                $keyMsg = $platform == self::PLATFORM_GG ? 'gg_id' : 'fb_id';
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage($keyMsg, Response::KEY_INVALID)]);
+            }
+
+            $condition  = $platform == self::PLATFORM_GG ? ['gg_id' => $dataToken['id']] : ['fb_id' => $dataToken['id']];
+
+            $user       = Customer::findOne($condition);
+            
+            //Khởi tạo tài khoản user trường hợp chưa có
+            if (!$user) {
+                $user           = new Customer;
+                $user->fullname = $dataToken['name'];
+                if( $platform == self::PLATFORM_GG )
+                    $user->gg_id    = $dataToken['id'];
+                else if( $platform == self::PLATFORM_FB )
+                    $user->fb_id    = $dataToken['id'];
+            }else{
+                if( $user->status == Customer::STATUS_BANNED ){
+                    return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('banned', Response::KEY_FORBIDDEN)]);
+                }
             }
 
             $user->device_id    = $did;
@@ -570,27 +700,29 @@ class ApiController extends Controller
             $limit          = $params['limit'];
             $page           = $params['page'];
             $offset         = ($page - 1) * $limit;
+            $dataRes        = [];
+            if( $offset == 0 ){
+                $listBanner     = Banner::getListBannerApp(Banner::BANNER_CUSTOMER);
+                $listCategory   = Category::getListCateApp(0, 8, 0);
 
-            
-            $listBanner     = Banner::getListBannerApp(Banner::BANNER_CUSTOMER, $this->urlDomain);
-            $listCategory   = Category::getListCateApp(0, 8, 0, $this->urlDomain);
+                $listProductSale= ProductSale::getProductSale(0, 0, 8);
+                $listAdvertisementNews = Advertisement::getAdvertisementHome(null, 4, 0);
+                $listAdvertisementBuy  = Advertisement::getAdvertisementHome(Advertisement::TYPE_BUY, 4, 0);
+                $listAdvertisementSell = Advertisement::getAdvertisementHome(Advertisement::TYPE_SELL, 4, 0);
 
-            $listproductSale= ProductSale::getProductSale(0, 0, 8);
-            $listAdvertisementNews = Advertisement::getAdvertisementHome(null, 4, 0);
-            $listAdvertisementBuy  = Advertisement::getAdvertisementHome(Advertisement::TYPE_BUY, 4, 0);
-            $listAdvertisementSell = Advertisement::getAdvertisementHome(Advertisement::TYPE_SELL, 4, 0);
-
-            $dataRes = [
-                'banner'       => $listBanner,//Banner
-                'category'     => $listCategory,//Chuyên mục
-                'advertisement'=> [
+                $dataRes['banner'] = $listBanner;//Danh sách banner
+                $dataRes['category'] = $listCategory;//Danh sách chuyên mục cha
+                $dataRes['advertisement'] = [
                     'news'     => $listAdvertisementNews,
                     'buy'      => $listAdvertisementBuy,
                     'sell'     => $listAdvertisementSell,
-                ],//Tin rao vặt
-                'productSale'  => $listproductSale,//Săn sale cùng 1KHO
-                'categoryProduct' => [],//List chuyên mục kèm sản phẩm nổi bật
-            ];
+                ];//Tin rao vặt
+                $dataRes['productSale'] = $listProductSale;//Săn sale
+
+            }
+            $categoryProduct       = Category::getCateProductHome($limit, $offset);
+            
+            $dataRes['categoryProduct'] = $categoryProduct;//List chuyên mục kèm sản phẩm nổi bật
 
             return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
 

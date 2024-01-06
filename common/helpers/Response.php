@@ -32,8 +32,8 @@ class Response
         self::KEY_INVALID    => [
             'phone'          => 'Số điện thoại không hợp lệ',
             'apple_id'       => 'Apple Id không hợp lệ',
-            'gg_id'          => 'Google Id không hợp lệ',
-            'fb_id'          => 'Facebook Id không hợp lệ',
+            'gg_id'          => 'Token Google không hợp lệ',
+            'fb_id'          => 'Token Facebook không hợp lệ',
             'token'          => 'Token không chính xác hoặc đã hết hạn',
             'authorization'  => 'AccessToken không hợp lệ',
             'request_method' => 'Phương thức yêu cầu không hợp lệ'
