@@ -44,7 +44,7 @@ class Product extends \yii\db\ActiveRecord
         foreach($listItem as $item){
             $price = $item['price_discount'] ? $item['price_discount'] : $item['price'];
             $price_old = $item['price'];
-            $percent_discount = $item['price_discount'] && $item['price_discount'] < $price_old ? round((($item['price'] - $item['price_discount'])/$item['price'])*100, 2) : 0;
+            $percent_discount = $item['price_discount'] && $item['price_discount'] < $price_old ? round((($item['price'] - $item['price_discount'])/$item['price'])*100) : 0;
             $imageShow = "";
             if( $item['image'] != "" ){
                 $image =  explode(';', $item['image']);

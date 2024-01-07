@@ -19,6 +19,7 @@ use backend\models\Category;
 use backend\models\ProductSale;
 use backend\models\ProductReview;
 use backend\models\Advertisement;
+use backend\models\Product;
 use yii\helpers\ArrayHelper;
 use backend\models\Util;
 use common\helpers\Response;
@@ -734,6 +735,56 @@ class ApiController extends Controller
         }
     }
 
+    /**
+     * API săn sale cùng 1KHO
+     */
+    public function actionProductSale(){
+        try {
+
+            $params = self::getParamsRequest([
+                'cate_parent_id' => [
+                    'type' => self::TYPE_INT,
+                    'default' => 0
+                ],
+                'cate_child_id' => [
+                    'type' => self::TYPE_INT,
+                    'default' => 0
+                ],
+                'limit'    => [
+                    'type' => self::TYPE_INT,
+                    'default' => 10
+                ],
+                'page'    => [
+                    'type' => self::TYPE_INT,
+                    'default' => 1
+                ]
+            ]);
+            
+            $cate_parent_id = $params['cate_parent_id'];
+            $cate_child_id  = $params['cate_child_id'];
+            $limit          = $params['limit'];
+            $page           = $params['page'];
+            $offset         = ($page - 1) * $limit;
+            
+            $listCateId     = [];
+            if( $cate_parent_id > 0 && $cate_child_id <= 0 ){
+                $listCateId = ArrayHelper::map(Category::getAllChildByParentId($cate_parent_id), 'id', 'id');
+                $listCateId[$cate_parent_id] = $cate_parent_id; 
+            }else if( $cate_child_id > 0){
+                $listCateId= $cate_child_id;
+            }
+
+            $dataRes        = ProductSale::getProductSale($listCateId, 0, $limit, $offset);
+
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+
+        } catch (\Exception $e) {
+            $this->writeLogFile('product-sale-error', [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
+    }
     private function writeLogFile($name, $data){
         if( is_array($data) )
             $data = json_encode($data);

@@ -62,14 +62,13 @@ class Category extends \yii\db\ActiveRecord
 
     public static function getCateProductHome($limit = 4, $offset = 0){
         $data       = [];
-        $domain     = Yii::$app->params['urlDomain'];
         $listCategoryParent = self::find()->where(['parent_id' => 0, 'is_delete' => 0, 'status' => self::STATUS_ACTIVE])->limit($limit)->offset($offset)->asArray()->all();
         
         if( !empty($listCategoryParent) ){
             foreach($listCategoryParent as $row){
                 $dataCategory   = [];
                 $cate_id        = $row['id'];
-                $listCategoryChild = self::find()->select(['id', 'name', new Expression("concat('$domain',image) as image")])->where(['parent_id' => $cate_id, 'is_delete' => 0, 'status' => self::STATUS_ACTIVE])->asArray()->all();
+                $listCategoryChild = self::getAllChildByParentId($cate_id);
                 if( !empty($listCategoryChild) ){
                     $dataCategory = [
                         'id'      => $row['id'],
@@ -90,5 +89,11 @@ class Category extends \yii\db\ActiveRecord
         }
         
         return $data;
+    }
+
+    public static function getAllChildByParentId($parent_id){
+        $domain     = Yii::$app->params['urlDomain'];
+        $listCategoryChild = self::find()->select(['id', 'name', new Expression("concat('$domain',image) as image")])->where(['parent_id' => $parent_id, 'is_delete' => 0, 'status' => self::STATUS_ACTIVE])->asArray()->all();
+        return $listCategoryChild;
     }
 }
