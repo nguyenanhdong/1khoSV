@@ -74,4 +74,50 @@ class Product extends \yii\db\ActiveRecord
         
         return $data;
     }
+
+    public static function getProductByCategory($category_id = [], $type_get = 'popular', $limit = null, $offset = null){
+        $condition  = ['status' => self::STATUS_ACTIVE];
+        
+        $query      = self::find()
+        ->where($condition)
+        ->andWhere(['>', 'quantity_in_stock', 0]);
+        
+        if( !empty($category_id) ){
+            $query->andWhere(['in', 'category_id', $category_id]);
+        }
+        
+        $sortBy     = [];
+        switch($type_get){
+            case 'popular'://Phổ biến
+                $sortBy = ['view_count' => SORT_DESC];
+                break;
+            case 'best-selling'://Bán chạy
+                $sortBy = ['quantity_sold' => SORT_DESC];
+                break;
+            case 'new'://Hàng mới
+                $sortBy = ['create_at' => SORT_DESC];
+                break;
+            case 'price_asc'://Giá thấp -> cao
+                $sortBy = ['price_discount' => SORT_ASC];
+                break;
+            case 'price_desc'://Giá cao -> thấp
+                $sortBy = ['price_discount' => SORT_DESC];
+                break;
+            default:
+                break;
+        }
+
+        if( !is_null($limit) )
+            $query->limit($limit);
+        if( !is_null($offset) )
+            $query->offset($offset);
+
+        $query->orderBy($sortBy);
+
+        $result = $query->asArray()->all();
+        if( !empty($result) )
+            return self::getItemApp($result);
+
+        return [];
+    }
 }

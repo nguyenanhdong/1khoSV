@@ -21,6 +21,7 @@ use backend\models\ProductReview;
 use backend\models\Advertisement;
 use backend\models\Voucher;
 use backend\models\Product;
+use common\helpers\Helper;
 use yii\helpers\ArrayHelper;
 use backend\models\Util;
 use common\helpers\Response;
@@ -45,11 +46,6 @@ class ApiController extends Controller
     public $chat_id = -581513801;
     public $token_bot = '1676133200:AAHU68FSplWBDqQ2p0KlBY28VO2l-6AoFCQ';
     /** End Telegram */
-
-    /** Firebase */
-    public $projectIdFireBase = 'fastjob-74057';
-    public $fireBaseApiKey = 'AIzaSyCrWJqgtPExKWILZtAut1-cmxACjtwc7oY';
-    /** End Firebase */
 
     public $userId;
 
@@ -223,7 +219,8 @@ class ApiController extends Controller
     
     private function _validateTokenPhoneLogin($idToken, $phoneCheck)
     {
-        $url        = 'https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=' . $this->fireBaseApiKey;
+        $apiKey     = Yii::$app->params['fireBase']['customer']['webAPIKey'];
+        $url        = 'https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=' . $apiKey;
         $ch         = curl_init ();
         $fields     = json_encode ( ['idToken' => $idToken] );
         $headers    = array (
@@ -396,14 +393,15 @@ class ApiController extends Controller
             $user->save(false);
 
             if( !$user->referral_code	){
-                $user->referral_code = $this->generateReferralCode($user->id);
+                $user->referral_code = Helper::generateReferralCode($user->id);
                 $user->save(false);
             }
 
             $userRes = $this->getUserInfoRes($user);
             return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $userRes);
         }catch(\Exception $e){
-            $this->writeLogFile('login-with-phone-error', [
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
                 'message' => $e->getMessage(),
             ]);
             return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
@@ -475,14 +473,15 @@ class ApiController extends Controller
             $user->save(false);
 
             if( !$user->referral_code	){
-                $user->referral_code = $this->generateReferralCode($user->id);
+                $user->referral_code = Helper::generateReferralCode($user->id);
                 $user->save(false);
             }
 
             $userRes = $this->getUserInfoRes($user);
             return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $userRes);
         }catch(\Exception $e){
-            $this->writeLogFile('login-with-phone-error', [
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
                 'message' => $e->getMessage(),
             ]);
             return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
@@ -522,7 +521,8 @@ class ApiController extends Controller
 
             return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $responseObj);
         }catch(\Exception $e){
-            $this->writeLogFile('refresh-access-token-error', [
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
                 'message' => $e->getMessage(),
             ]);
             return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
@@ -548,7 +548,8 @@ class ApiController extends Controller
             return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $userRes);
 
         }catch(\Exception $e){
-            $this->writeLogFile('user-info-error', [
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
                 'message' => $e->getMessage(),
             ]);
             return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
@@ -624,7 +625,8 @@ class ApiController extends Controller
             return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $userRes);
 
         } catch (\Exception $e) {
-            $this->writeLogFile('update-info-error', [
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
                 'message' => $e->getMessage(),
             ]);
             return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
@@ -675,7 +677,8 @@ class ApiController extends Controller
             return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
 
         } catch (\Exception $e) {
-            $this->writeLogFile('wallet-point-error', [
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
                 'message' => $e->getMessage(),
             ]);
             return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
@@ -729,7 +732,100 @@ class ApiController extends Controller
             return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
 
         } catch (\Exception $e) {
-            $this->writeLogFile('home-error', [
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
+    }
+    /**
+     * API Danh sách chuyên mục
+     */
+    public function actionAllCategory(){
+        try {
+
+            $dataRes        = Category::getListCateApp(0);
+
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+
+        } catch (\Exception $e) {
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
+    }
+
+    /**
+     * API chi tiết chuyên mục
+     */
+    public function actionCategoryDetail(){
+        try {
+            $params = self::getParamsRequest([
+                'cate_parent_id' => [
+                    'type' => self::TYPE_INT,
+                    'validate' => Response::KEY_REQUIRED
+                ],
+                'cate_child_id' => [
+                    'type' => self::TYPE_INT,
+                    'default' => 0
+                ],
+                'product_tab' => [
+                    'type' => self::TYPE_STRING,
+                    'default' => 'popular'
+                ],
+                'limit'    => [
+                    'type' => self::TYPE_INT,
+                    'default' => 10
+                ],
+                'page'    => [
+                    'type' => self::TYPE_INT,
+                    'default' => 1
+                ]
+            ]);
+            if( !empty($params['listError']) ){
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $params['listError']);
+            }
+
+            $cate_parent_id = $params['cate_parent_id'];
+            $cate_child_id  = $params['cate_child_id'];
+            $product_tab    = $params['product_tab'];
+            $limit          = $params['limit'];
+            $page           = $params['page'];
+            $offset         = ($page - 1) * $limit;
+
+            $modelCateParent= Category::findOne($cate_parent_id);
+            if( !$modelCateParent || $modelCateParent->is_delete || !$modelCateParent->status ){
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('category', Response::KEY_NOT_FOUND)]);
+            }
+
+            $listCateChild  = Category::getAllChildByParentId($modelCateParent->id);
+
+            $listCateIdProd = [-1];
+            if( $cate_child_id > 0 ){
+                $listCateIdProd = [$cate_child_id];
+            }else if(!empty($listCateChild)){
+                $listCateIdProd = ArrayHelper::map($listCateChild, 'id', 'id');
+            }
+
+            $listProduct    = Product::getProductByCategory($listCateIdProd, $product_tab, $limit, $offset);
+
+            $dataRes        = [
+                'info'      => [
+                    'id'    => $modelCateParent->id,
+                    'name'  => $modelCateParent->name
+                ],
+                'cate_child'=> $listCateChild,
+                'product'   => $listProduct
+            ];
+
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+
+        } catch (\Exception $e) {
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
                 'message' => $e->getMessage(),
             ]);
             return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
@@ -780,7 +876,8 @@ class ApiController extends Controller
             return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
 
         } catch (\Exception $e) {
-            $this->writeLogFile('product-sale-error', [
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
                 'message' => $e->getMessage(),
             ]);
             return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
@@ -822,7 +919,42 @@ class ApiController extends Controller
             return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
 
         } catch (\Exception $e) {
-            $this->writeLogFile('product-sale-error', [
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
+    }
+
+    /**
+     * API chi tiết voucher
+     */
+    public function actionVoucherDetail(){
+        try {
+            $params = self::getParamsRequest([
+                'id' => [
+                    'type' => self::TYPE_INT,
+                    'validate' => Response::KEY_REQUIRED
+                ]
+            ]);
+            
+            if( !empty($params['listError']) || !$this->userId ){
+                $listErr = !empty($params['listError']) ? $params['listError'] : [Response::getErrorMessage('info', Response::KEY_FORBIDDEN)];
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+            }
+
+            $id             = $params['id'];
+            $dataRes        = Voucher::getVoucherDetail($id, $this->userId);
+            if( !$dataRes ){
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('voucher', Response::KEY_NOT_FOUND)]);
+            }
+            
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+
+        } catch (\Exception $e) {
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
                 'message' => $e->getMessage(),
             ]);
             return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
@@ -881,41 +1013,4 @@ class ApiController extends Controller
         return null;
     }
 
-    protected function secondsTimeSpanToHMS($s)
-    {
-        $day = floor($s / (3600 * 24)); //Get whole hours
-        $s -= $day * 3600 * 24;
-        $h = floor($s / 3600); //Get whole hours
-        $s -= $h * 3600;
-        $m = floor($s / 60); //Get remaining minutes
-        $s -= $m * 60;
-        return [
-            'day' => $day,
-            'hour' => $h,
-            'minutes' => $m,
-            'seconds' => $s
-        ];
-    }
-
-    private function generateRandomString($length = 10)
-    {
-        $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        $charactersLength = strlen($characters);
-        $randomString = '';
-        for ($i = 0; $i < $length; $i++) {
-            $randomString .= $characters[rand(0, $charactersLength - 1)];
-        }
-        return strtoupper($randomString);
-    }
-
-    private function generateReferralCode($id, $maxLength = 6){
-        $referral_code      = $id;
-        $characters         = '0123456789';
-        $charactersLength   = strlen($characters);
-        $length             = $maxLength - strlen($id);
-        for ($i = 0; $i < $length; $i++) {
-            $referral_code .= $characters[rand(0, $charactersLength - 1)];
-        }
-        return $referral_code;
-    }
 }
