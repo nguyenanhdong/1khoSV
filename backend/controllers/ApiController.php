@@ -19,6 +19,7 @@ use backend\models\Category;
 use backend\models\ProductSale;
 use backend\models\ProductReview;
 use backend\models\Advertisement;
+use backend\models\Voucher;
 use backend\models\Product;
 use yii\helpers\ArrayHelper;
 use backend\models\Util;
@@ -785,6 +786,49 @@ class ApiController extends Controller
             return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
         }
     }
+
+    /**
+     * API Danh sách voucher
+     */
+    public function actionVoucher(){
+        try {
+            $params = self::getParamsRequest([
+                'type_voucher' => [
+                    'type' => self::TYPE_INT,
+                    'default' => 1
+                ],
+                'limit'    => [
+                    'type' => self::TYPE_INT,
+                    'default' => 10
+                ],
+                'page'    => [
+                    'type' => self::TYPE_INT,
+                    'default' => 1
+                ]
+            ]);
+            
+            if( !$this->userId ){
+                $listErr = [Response::getErrorMessage('info', Response::KEY_FORBIDDEN)];
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+            }
+
+            $type_voucher   = $params['type_voucher'];
+            $limit          = $params['limit'];
+            $page           = $params['page'];
+            $offset         = ($page - 1) * $limit;
+            
+            $dataRes        = Voucher::getListVoucherAppCustomer($type_voucher, $this->userId, $limit, $offset);
+
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+
+        } catch (\Exception $e) {
+            $this->writeLogFile('product-sale-error', [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
+    }
+
     private function writeLogFile($name, $data){
         if( is_array($data) )
             $data = json_encode($data);
