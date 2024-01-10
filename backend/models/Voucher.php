@@ -40,7 +40,48 @@ class Voucher extends \yii\db\ActiveRecord
         $model          = self::findOne($id);
         if( $model ){
             $data       = $model->getAttributes();
-            
+            $data['agent_avatar'] = null;
+            $data['can_use_voucher'] = 0;
+            $condition            = [
+                "Giá trị đơn hàng trên " . Format::formatPrice($model['minimum_order'])
+            ];
+
+            if( $model->agent_id > 0 ){
+                $modelAgent = Agent::findOne($model->agent_id);
+                if( $modelAgent ){
+                    $data['agent_avatar'] = $modelAgent->avatar;
+                }
+                if( empty($model->product_id) ){
+                    $condition[] = 'Áp dụng cho toàn bộ sản phẩm của ' . $modelAgent->fullname;
+                }
+            }
+
+            if( !empty($model->product_id) ){
+                $product_id     = !empty($model['product_id']) ? array_values(array_filter(explode(';', $model['product_id']))) : [];
+                if( !empty($product_id) ){
+                    $listProduct= Product::find()->where(['in', 'id', $product_id])->all();
+                    if( !empty($listProduct) ){
+                        $prdName= implode(', ', ArrayHelper::map($listProduct, 'name', 'name'));
+                        if( count($listProduct) >= 2 )
+                            $condition[] = 'Áp dụng cho các sản phẩm: ' . $prdName;
+                        else
+                            $condition[] = 'Áp dụng cho sản phẩm ' . $prdName;
+                    }
+                }
+            }
+
+            if( strtotime($model['date_end']) >= time() ){
+                $numVoucherUse = UserUseVoucher::find()->where(['user_id' => $user_id, 'voucher_id' => $id])->count();
+                if( $numVoucherUse < $model['maximum_use_by_user'] ){
+                    $data['can_use_voucher'] = 1;
+                }
+            }
+
+            $data = self::getItemApp([$data])[0];
+
+            $data['condition'] = $condition;
+
+            return $data;
         }
 
         return null;
@@ -51,10 +92,10 @@ class Voucher extends \yii\db\ActiveRecord
         $column_select = ['A.*', 'C.avatar as agent_avatar'];
         if( $voucher_type == 1 ){//Chưa dùng
             $column_select[] = new Expression("1 as can_use_voucher");
-            $condition = ['and', ['>=', 'A.date_end', date('Y-m-d')], ['>', 'A.total_maximum_use', 'A.total_use']];
+            $condition = ['and', ['<=', 'A.date_start', date('Y-m-d H:i:s')], ['>=', 'A.date_end', date('Y-m-d H:i:s')], ['>', 'A.total_maximum_use', 'A.total_use']];
         }else if( $voucher_type == 2 ){//Đã dùng hoặc hết hạn
             $column_select[] = new Expression("0 as can_use_voucher");
-            $condition = ['or', ['B.user_id' => $user_id], ['<', 'A.date_end', date('Y-m-d')]];
+            $condition = ['or', ['B.user_id' => $user_id], ['<', 'A.date_end', date('Y-m-d H:i:s')]];
         }
         
         $query = self::find()->select($column_select)->from(self::tableName() . ' A')
@@ -114,6 +155,7 @@ class Voucher extends \yii\db\ActiveRecord
                 'image'=> $imageShow,
                 'can_use_voucher' => (int)$item['can_use_voucher'],
                 'agent_id' => (int)$item['agent_id'],
+                'expire_time'=> date('d/m/Y', strtotime($item['date_end'])),
                 'product_id' => $product_id
             ];
             
