@@ -19,6 +19,7 @@ use backend\models\Category;
 use backend\models\ProductSale;
 use backend\models\ProductReview;
 use backend\models\Advertisement;
+use backend\models\Agent;
 use backend\models\Voucher;
 use backend\models\Product;
 use common\helpers\Helper;
@@ -948,6 +949,198 @@ class ApiController extends Controller
             $dataRes        = Voucher::getVoucherDetail($id, $this->userId);
             if( !$dataRes ){
                 return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('voucher', Response::KEY_NOT_FOUND)]);
+            }
+            
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+
+        } catch (\Exception $e) {
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
+    }
+
+    /**
+     * API trang chủ sản phẩm
+     */
+    public function actionProductHome(){
+        try {
+            $params = self::getParamsRequest([
+                'cate_parent_id' => [
+                    'type' => self::TYPE_INT,
+                    'default' => 0
+                ],
+                'cate_child_id' => [
+                    'type' => self::TYPE_INT,
+                    'default' => 0
+                ],
+                'product_tab' => [
+                    'type' => self::TYPE_STRING,
+                    'default' => 'popular'
+                ],
+                'limit'    => [
+                    'type' => self::TYPE_INT,
+                    'default' => 10
+                ],
+                'page'    => [
+                    'type' => self::TYPE_INT,
+                    'default' => 1
+                ]
+            ]);
+            
+            $cate_parent_id = $params['cate_parent_id'];
+            $cate_child_id  = $params['cate_child_id'];
+            $product_tab    = $params['product_tab'];
+            $limit          = $params['limit'];
+            $page           = $params['page'];
+            $offset         = ($page - 1) * $limit;
+
+            $listCateParent = Category::getListCateApp(0);
+
+            if( empty($listCateParent) ){
+                return Response::returnResponse(Response::RESPONSE_CODE_SUCC, []);
+            }
+
+            if( $cate_parent_id == 0 ){
+                $cate_parent_id = $listCateParent[0]['id'];
+            }
+
+            $listCateChild  = Category::getAllChildByParentId($cate_parent_id);
+            if(!empty($listCateChild)){
+                $listCateIdProd     = ArrayHelper::map($listCateChild, 'id', 'id');
+                $listProductSale    = ProductSale::getProductSale($listCateIdProd, 0, 8);
+            }else{
+                $listProductSale    = [];
+            }
+            
+            $listCateIdProd = [-1];
+            if( $cate_child_id > 0 ){
+                $listCateIdProd = [$cate_child_id];
+            }else if(!empty($listCateChild)){
+                $listCateIdProd = ArrayHelper::map($listCateChild, 'id', 'id');
+            }
+
+            $productHighlight   = Product::getProductByCategory($listCateIdProd, 'highlight', 10);
+
+            $listProductTab     = Product::getProductByCategory($listCateIdProd, $product_tab, $limit, $offset);
+
+            if( $cate_child_id > 0 ){
+                $dataRes            = [
+                    'productHighlight' => $productHighlight,
+                    'productTab'    => $listProductTab
+                ];
+            }else{
+                $dataRes            = [
+                    'category'      => $listCateParent,
+                    'cate_active'   => $cate_parent_id,
+                    'cate_child'    => $listCateChild,
+                    'productSale'   => $listProductSale,
+                    'productHighlight' => $productHighlight,
+                    'productTab'    => $listProductTab
+                ];
+            }
+            
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+
+        } catch (\Exception $e) {
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
+    }
+
+    /**
+     * API trang chủ đại lý
+     */
+    public function actionAgentHome(){
+        try {
+            $params = self::getParamsRequest([
+                'id' => [
+                    'type' => self::TYPE_INT,
+                    'validate' => Response::KEY_REQUIRED
+                ],
+                'cate_id' => [
+                    'type' => self::TYPE_INT,
+                    'default' => 0
+                ],
+                'product_tab' => [
+                    'type' => self::TYPE_STRING,
+                    'default' => 'popular'
+                ],
+                'limit'    => [
+                    'type' => self::TYPE_INT,
+                    'default' => 10
+                ],
+                'page'    => [
+                    'type' => self::TYPE_INT,
+                    'default' => 1
+                ]
+            ]);
+            if( !empty($params['listError']) ){
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $params['listError']);
+            }
+
+            $id             = $params['id'];
+            $cate_id        = $params['cate_id'];
+            $product_tab    = $params['product_tab'];
+            $limit          = $params['limit'];
+            $page           = $params['page'];
+            $offset         = ($page - 1) * $limit;
+
+
+            $modelAgent     = Agent::findOne($id);
+
+            if( !$modelAgent || $modelAgent->status != 1 ){
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('agent', Response::KEY_NOT_FOUND)]);
+            }
+
+            $listCateParent = Category::getListCateApp(0);
+
+            if( empty($listCateParent) ){
+                return Response::returnResponse(Response::RESPONSE_CODE_SUCC, []);
+            }
+
+            if( $cate_parent_id == 0 ){
+                $cate_parent_id = $listCateParent[0]['id'];
+            }
+
+            $listCateChild  = Category::getAllChildByParentId($cate_parent_id);
+            if(!empty($listCateChild)){
+                $listCateIdProd     = ArrayHelper::map($listCateChild, 'id', 'id');
+                $listProductSale    = ProductSale::getProductSale($listCateIdProd, 0, 8);
+            }else{
+                $listProductSale    = [];
+            }
+            
+            $listCateIdProd = [-1];
+            if( $cate_child_id > 0 ){
+                $listCateIdProd = [$cate_child_id];
+            }else if(!empty($listCateChild)){
+                $listCateIdProd = ArrayHelper::map($listCateChild, 'id', 'id');
+            }
+
+            $productHighlight   = Product::getProductByCategory($listCateIdProd, 'highlight', 10);
+
+            $listProductTab     = Product::getProductByCategory($listCateIdProd, $product_tab, $limit, $offset);
+
+            if( $cate_child_id > 0 ){
+                $dataRes            = [
+                    'productHighlight' => $productHighlight,
+                    'productTab'    => $listProductTab
+                ];
+            }else{
+                $dataRes            = [
+                    'category'      => $listCateParent,
+                    'cate_active'   => $cate_parent_id,
+                    'cate_child'    => $listCateChild,
+                    'productSale'   => $listProductSale,
+                    'productHighlight' => $productHighlight,
+                    'productTab'    => $listProductTab
+                ];
             }
             
             return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);

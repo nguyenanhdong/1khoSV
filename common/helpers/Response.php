@@ -47,7 +47,8 @@ class Response
         self::KEY_NOT_FOUND  => [
             'account'        => 'Thông tin khách hàng không tồn tại',
             'category'       => 'Danh mục sản phẩm không tồn tại',
-            'voucher'        => 'Voucher không tồn tại'
+            'voucher'        => 'Voucher không tồn tại',
+            'agent'          => 'Thông tin đại lý không tồn tại',
         ],
         self::KEY_EXISTS  => [
             'phone'          => 'Số điện thoại đã được sử dụng',

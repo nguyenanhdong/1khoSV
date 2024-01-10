@@ -103,6 +103,10 @@ class Product extends \yii\db\ActiveRecord
             case 'price_desc'://Giá cao -> thấp
                 $sortBy = ['price_discount' => SORT_DESC];
                 break;
+            case 'highlight'://Nổi bật
+                $query->andWhere(['is_highlight' => 1]);
+                $sortBy = ['quantity_sold' => SORT_DESC];
+                break;
             default:
                 break;
         }

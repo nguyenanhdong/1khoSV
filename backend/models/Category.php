@@ -78,10 +78,10 @@ class Category extends \yii\db\ActiveRecord
                     ];
                     $listId = ArrayHelper::map($listCategoryChild, 'id', 'id');
                     //Lấy sản phẩm nổi bật
-                    $listProductHightLight = Product::find()->where(['is_highlight' => 1, 'status' => Product::STATUS_ACTIVE])->andWhere(['in', 'category_id' , $listId])->andWhere(['>', 'quantity_in_stock', 0])->orderBy(['quantity_sold' => SORT_DESC])->limit(10)->all();
+                    $listProductHightLight = Product::getProductByCategory($listId, 'highlight', 10);
                     if( !empty($listProductHightLight) ){
                         
-                        $dataCategory['product'] = Product::getItemApp($listProductHightLight);
+                        $dataCategory['product'] = $listProductHightLight;
                     }
                     $data[] = $dataCategory;
                 }

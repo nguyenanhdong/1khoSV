@@ -69,6 +69,9 @@ class Voucher extends \yii\db\ActiveRecord
                     }
                 }
             }
+            else if( count($condition) == 1 ){
+                $condition[] = 'Áp dụng cho toàn bộ sản phẩm trên 1KHO';
+            }
 
             if( strtotime($model['date_end']) >= time() ){
                 $numVoucherUse = UserUseVoucher::find()->where(['user_id' => $user_id, 'voucher_id' => $id])->count();
@@ -132,15 +135,17 @@ class Voucher extends \yii\db\ActiveRecord
             $product_id     = !empty($item['product_id']) ? array_values(array_filter(explode(';', $item['product_id']))) : [];
             $labelName      = "";
             $priceType      = "";
+            $descOther      = "";
             if( $item['type_voucher'] == 1 ){//Giảm tiền
                 $labelName  = "Giảm ";
             }
             else if( $item['type_voucher'] == 2 ){//Hoàn xu
                 $labelName  = "Hoàn ";
                 $priceType  = " xu";
+                $descOther  = " vào ví tích điểm";
             }
             $voucher_name   = $labelName . $priceStr . $priceType;
-            $desc           = $labelName . $priceStr . $priceType . ( $max_price_by_percent ? " tối đa $max_price_by_percent" : "" ) . " cho đơn hàng có giá trị trên " . $minimum_order;
+            $desc           = $labelName . $priceStr . $priceType . ( $max_price_by_percent ? " tối đa $max_price_by_percent" : "" ) . $descOther . " cho đơn hàng có giá trị trên " . $minimum_order;
             $imageShow = "";
             if( $item['agent_id'] ){
                 $imageShow = $domain . $item['agent_avatar'];
