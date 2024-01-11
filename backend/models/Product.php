@@ -76,6 +76,14 @@ class Product extends \yii\db\ActiveRecord
     }
 
     public static function getProductByCategory($category_id = [], $type_get = 'popular', $limit = null, $offset = null){
+        return self::queryProductApp($category_id, 0, $type_get, $limit, $offset);
+    }
+
+    public static function getProductByAgent($category_id = [], $agent_id = 0, $type_get = 'popular', $limit = null, $offset = null){
+        return self::queryProductApp($category_id, $agent_id, $type_get, $limit, $offset);
+    }
+
+    private function queryProductApp($category_id = [], $agent_id = 0, $type_get = 'popular', $limit = null, $offset = null){
         $condition  = ['status' => self::STATUS_ACTIVE];
         
         $query      = self::find()
@@ -84,6 +92,10 @@ class Product extends \yii\db\ActiveRecord
         
         if( !empty($category_id) ){
             $query->andWhere(['in', 'category_id', $category_id]);
+        }
+
+        if( $agent_id > 0 ){
+            $query->andWhere(['agent_id' => $agent_id]);
         }
         
         $sortBy     = [];

@@ -96,4 +96,29 @@ class Category extends \yii\db\ActiveRecord
         $listCategoryChild = self::find()->select(['id', 'name', new Expression("concat('$domain',image) as image")])->where(['parent_id' => $parent_id, 'is_delete' => 0, 'status' => self::STATUS_ACTIVE])->asArray()->all();
         return $listCategoryChild;
     }
+
+    public static function getListCateAppByAgent($agent_id = 0, $limit = null, $offset = null){
+        $domain     = Yii::$app->params['urlDomain'];
+        $params     = [":parent_id" => 0, ':status' => self::STATUS_ACTIVE, ':agent_id' => $agent_id, ':prod_status' => Product::STATUS_ACTIVE];
+        $condition  = "A.is_delete = 0 and A.status = :status and A.parent_id = :parent_id and C.agent_id = :agent_id and C.status = :prod_status and C.quantity_in_stock > 0";
+        $page_navi  = "";
+
+        if( !is_null($limit) && !is_null($offset) ){
+            $page_navi = "LIMIT $offset,$limit";
+        }elseif( !is_null($limit)){
+            $page_navi = "LIMIT $limit";
+        }
+
+        $sql = "
+            SELECT A.id, A.name, concat('$domain', A.image) as image
+            FROM category A
+            LEFT JOIN category B ON A.id = B.parent_id
+            LEFT JOIN product C ON B.id = C.category_id
+            WHERE $condition $page_navi
+            GROUP BY A.id
+        ";
+        
+        return Yii::$app->db->CreateCommand($sql, $params)->queryAll();
+    }
+
 }

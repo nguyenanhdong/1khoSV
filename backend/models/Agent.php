@@ -37,4 +37,20 @@ class Agent extends \yii\db\ActiveRecord
         ];
     }
     
+    public static function getInfoAgent($id){
+        $data   = null;
+        $model  = self::findOne($id);
+        if( $model ){
+            $domain = Yii::$app->params['urlDomain'];
+            $data   = [
+                'id' => $id,
+                'name' => $model->fullname,
+                'avatar' => $domain . $model->avatar,
+                'cover' => $domain . $model->cover_img,
+                'total_follow' => $model->follow_count
+            ];
+        }
+
+        return $data;
+    }
 }
