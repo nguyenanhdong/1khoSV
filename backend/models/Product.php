@@ -83,7 +83,7 @@ class Product extends \yii\db\ActiveRecord
         return self::queryProductApp($category_id, $agent_id, $type_get, $limit, $offset);
     }
 
-    private function queryProductApp($category_id = [], $agent_id = 0, $type_get = 'popular', $limit = null, $offset = null){
+    private static function queryProductApp($category_id = [], $agent_id = 0, $type_get = 'popular', $limit = null, $offset = null){
         $condition  = ['status' => self::STATUS_ACTIVE];
         
         $query      = self::find()
