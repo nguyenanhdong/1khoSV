@@ -367,10 +367,10 @@ class ApiController extends Controller
                 $phone  = str_replace('+84', '0', $phone);
             }
             
-            // $tokenValid = $this->_validateTokenPhoneLogin($token, $phone);
-            // if( !$tokenValid ){
-            //     return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('token', Response::KEY_INVALID)]);
-            // }
+            $tokenValid = $this->_validateTokenPhoneLogin($token, $phone);
+            if( !$tokenValid ){
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('token', Response::KEY_INVALID)]);
+            }
 
             $user       = Customer::findOne(['phone' => $phone]);
             
