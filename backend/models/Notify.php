@@ -6,7 +6,8 @@ use Yii;
 
 class Notify extends \yii\db\ActiveRecord
 {
-    public $type_notify;
+    const TYPE_CUSTOMER = 1;
+    const TYPE_AGENT    = 2;
     /**
      * @inheritdoc
      */
@@ -28,7 +29,6 @@ class Notify extends \yii\db\ActiveRecord
     public function beforeSave($insert){
         
         if( !isset($_POST['Notify']['is_show_button']) ){
-            $this->type = 0;
             $this->is_show_button = 0;
         }
         return parent::beforeSave($insert);
@@ -40,12 +40,6 @@ class Notify extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'title' => 'Tiêu đề',
-            'description'  => 'Mô tả ngắn',
-            'content'  => 'Nội dung',
-            'is_show_button'  => 'Hiển thị nút đặt hàng',
-            'type'  => 'Dịch vụ',
-            'user_notify' => 'Đối tượng thông báo'
         ];
     }
 }

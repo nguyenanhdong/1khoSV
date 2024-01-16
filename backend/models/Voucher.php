@@ -116,7 +116,7 @@ class Voucher extends \yii\db\ActiveRecord
         if( !is_null($offset) )
             $query->offset($offset);
 
-        $result = $query->asArray()->all();
+        $result = $query->orderBy(["date_start" => SORT_DESC])->asArray()->all();
         if( !empty($result) )
             return self::getItemApp($result);
 

@@ -29,7 +29,8 @@ class Response
             'did'            => 'Mã thiết bị không được trống',
             'clientver'      => 'Phiên bản App không được trống',
             'cate_parent_id' => 'Mã danh mục cha không được trống',
-            'product_tab'    => "Tab sản phẩm không được trống"
+            'product_tab'    => "Tab sản phẩm không được trống",
+            'notify_id'      => 'Mã thông báo không được trống'
         ],
         self::KEY_INVALID    => [
             'phone'          => 'Số điện thoại không hợp lệ',
@@ -49,6 +50,7 @@ class Response
             'category'       => 'Danh mục sản phẩm không tồn tại',
             'voucher'        => 'Voucher không tồn tại',
             'agent'          => 'Thông tin đại lý không tồn tại',
+            'notify'         => 'Thông báo không tồn tại',
         ],
         self::KEY_EXISTS  => [
             'phone'          => 'Số điện thoại đã được sử dụng',

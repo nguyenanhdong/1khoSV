@@ -22,6 +22,9 @@ use backend\models\Advertisement;
 use backend\models\Agent;
 use backend\models\Voucher;
 use backend\models\Product;
+use backend\models\Notify;
+use backend\models\NotifyUser;
+use backend\models\NotifyUnRead;
 use common\helpers\Helper;
 use yii\helpers\ArrayHelper;
 use backend\models\Util;
@@ -1148,6 +1151,80 @@ class ApiController extends Controller
             return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
 
         } catch (\Exception $e) {
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
+    }
+
+    /**
+     * API danh sách thông báo
+     */
+    public function actionListNotify(){
+        try {
+            $params = self::getParamsRequest([
+                'limit' => [
+                    'type' => self::TYPE_INT,
+                    'default' => 10
+                ],
+                'page' => [
+                    'type' => self::TYPE_INT,
+                    'default' => 1
+                ]
+            ]);
+            
+            if( !empty($params['listError']) || !$this->userId ){
+                $listErr = !empty($params['listError']) ? $params['listError'] : [Response::getErrorMessage('info', Response::KEY_FORBIDDEN)];
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+            }
+
+            $limit          = $params['limit'];
+            $page           = $params['page'];
+            $offset         = ($page - 1) * $limit;
+           
+            $dataRes        = NotifyUser::getListNotifyByUser($this->userId, Notify::TYPE_CUSTOMER , $limit, $offset);
+            
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+
+        } catch (\Exception $e) {
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
+    }
+
+    /**
+     * API chi tiết thông báo
+     */
+    public function actionDetailNotify(){
+        try {
+            $params = self::getParamsRequest([
+                'notify_id' => [
+                    'type' => self::TYPE_INT,
+                    'validate' => Response::KEY_REQUIRED
+                ]
+            ]);
+            
+            if( !empty($params['listError']) || !$this->userId ){
+                $listErr = !empty($params['listError']) ? $params['listError'] : [Response::getErrorMessage('info', Response::KEY_FORBIDDEN)];
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+            }
+
+            $id             = $params['notify_id'];
+            $dataRes        = NotifyUser::getDetailNotify($id, $this->userId, Notify::TYPE_CUSTOMER);
+            if( !$dataRes ){
+                
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('notify', Response::KEY_NOT_FOUND)]);
+            }
+            
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+
+        } catch (\Exception $e) {
+            var_dump($e->getMessage());die;
             $action = Yii::$app->controller->action->id;
             $this->writeLogFile("$action-error", [
                 'message' => $e->getMessage(),
