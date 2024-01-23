@@ -25,6 +25,7 @@ use backend\models\Product;
 use backend\models\Notify;
 use backend\models\NotifyUser;
 use backend\models\NotifyUnRead;
+use backend\models\Config;
 use common\helpers\Helper;
 use yii\helpers\ArrayHelper;
 use backend\models\Util;
@@ -1225,6 +1226,111 @@ class ApiController extends Controller
 
         } catch (\Exception $e) {
             var_dump($e->getMessage());die;
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
+    }
+
+    /**
+     * API Giới thiệu
+     */
+    public function actionIntroduction(){
+        try {
+            
+            $dataRes        = [
+                "content"   => Config::getConfigApp("INTRODUCTION")
+            ];
+            
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+
+        } catch (\Exception $e) {
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
+    }
+
+    /**
+     * API Chính sách bảo mật
+     */
+    public function actionPrivacyPolicy(){
+        try {
+            
+            $dataRes        = [
+                "content"   => Config::getConfigApp("PRIVACY_POLICY")
+            ];
+            
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+
+        } catch (\Exception $e) {
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
+    }
+
+    /**
+     * API Chính sách bảo hành
+     */
+    public function actionWarrantyPolicy(){
+        try {
+            
+            $dataRes        = [
+                "content"   => Config::getConfigApp("WARRANTY_POLICY")
+            ];
+            
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+
+        } catch (\Exception $e) {
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
+    }
+
+    /**
+     * API Chính sách đổi hàng
+     */
+    public function actionReturnPolicy(){
+        try {
+            
+            $dataRes        = [
+                "content"   => Config::getConfigApp("RETURN_POLICY")
+            ];
+            
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+
+        } catch (\Exception $e) {
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
+    }
+
+    /**
+     * API Liên hệ
+     */
+    public function actionContact(){
+        try {
+            
+            $dataRes        = [
+                "content"   => Config::getConfigApp("CONTACT")
+            ];
+            
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+
+        } catch (\Exception $e) {
             $action = Yii::$app->controller->action->id;
             $this->writeLogFile("$action-error", [
                 'message' => $e->getMessage(),
