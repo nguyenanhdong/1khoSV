@@ -1396,10 +1396,7 @@ class ApiController extends Controller
         $offset         = ($page - 1) * $limit;
 
         $dataRes        = ProductReview::getReviewByProductId($product_id, $limit, $offset);
-        if( !$dataRes ){
-            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('product', Response::KEY_NOT_FOUND)]);
-        }
-
+        
         return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
     }
 
