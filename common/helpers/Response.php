@@ -30,7 +30,9 @@ class Response
             'clientver'      => 'Phiên bản App không được trống',
             'cate_parent_id' => 'Mã danh mục cha không được trống',
             'product_tab'    => "Tab sản phẩm không được trống",
-            'notify_id'      => 'Mã thông báo không được trống'
+            'notify_id'      => 'Mã thông báo không được trống',
+            'product_id'     => 'Mã sản phẩm không được trống',
+            'agent'          => 'Mã đại lý không được trống'
         ],
         self::KEY_INVALID    => [
             'phone'          => 'Số điện thoại không hợp lệ',
@@ -39,7 +41,7 @@ class Response
             'fb_id'          => 'Token Facebook không hợp lệ',
             'token'          => 'Token không chính xác hoặc đã hết hạn',
             'authorization'  => 'AccessToken không hợp lệ',
-            'request_method' => 'Phương thức yêu cầu không hợp lệ'
+            'request_method' => 'Phương thức yêu cầu không hợp lệ',
         ],
         self::KEY_FORBIDDEN   => [
             'banned'         => 'Tài khoản đang bị khoá',
@@ -51,6 +53,7 @@ class Response
             'voucher'        => 'Voucher không tồn tại',
             'agent'          => 'Thông tin đại lý không tồn tại',
             'notify'         => 'Thông báo không tồn tại',
+            'product'        => 'Sản phẩm không tồn tại',
         ],
         self::KEY_EXISTS  => [
             'phone'          => 'Số điện thoại đã được sử dụng',

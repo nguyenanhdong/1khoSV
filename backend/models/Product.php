@@ -136,4 +136,73 @@ class Product extends \yii\db\ActiveRecord
 
         return [];
     }
+
+    public static function getProductDetail($id, $user_id_current = 0){
+        $model = self::findOne($id);
+        
+        if( !$model || !$model->status ){
+            return null;
+        }
+
+        $domain             = Yii::$app->params['urlDomain'];
+
+        $price              = $model['price_discount'] ? $model['price_discount'] : $model['price'];
+        $price_old          = $model['price'];
+        $percent_discount   = $model['price_discount'] && $model['price_discount'] < $price_old ? round((($model['price'] - $model['price_discount'])/$model['price'])*100) : 0;
+        
+        $images             = [];
+        if( $model['image'] != "" ){
+            $images         =  explode(';', $model['image']);
+            $images         = preg_filter('/^/', $domain, $images);
+        }
+        $videos             = [];
+        if( $model['video'] != "" ){
+            $videos         = explode(';', $model['video']);
+            $videos         = preg_filter('/^/', $domain, $videos);
+        }
+
+        $state_name         = $model['state'] == 1 ? 'Mới' : 'Đã sử dụng';
+
+        $dataReview         = ProductReview::getReviewByProductId($model->id, 3);
+        $agentInfo          = $model['agent_id'] ? Agent::getInfoAgent($model['agent_id']) : null;
+
+        if( $agentInfo ){
+            $agentInfo['is_follow']    = $user_id_current ? UserFollowAgent::checkUserFollowAgent($user_id_current, $model['agent_id']) : false;
+        }
+
+
+        $productSuggest     = self::getProductByCategory([$model->category_id], 'popular', 8);
+
+        $productClassification = ProductClassificationCombination::getListCombination($model->id);
+
+        $data = [
+            'product_info' => [
+                'id' => $model->id,
+                'name' => $model->name,
+                'description' => $model->description,
+                'price'=> $price,
+                'price_old' => $price_old,
+                'percent_discount' => $percent_discount,
+                'images' => $images,
+                'videos' => $videos,
+                'origin' => $model->origin,
+                'state' => $state_name,
+                'weight' => $model->weight,
+                'width' => $model->width,
+                'height' => $model->height,
+                'length' => $model->length,
+                'star' => $model->star,
+                'total_rating' => $model->total_rate,
+                'quantity_sold' => $model->quantity_sold,
+                'classification_group' => $productClassification['group'],
+                'classification_data' => $productClassification['data'],
+            ],
+            'review_info' => $dataReview,
+            'agent_info'  => $agentInfo,
+            'product_suggest' => $productSuggest
+        ];
+
+
+        return $data;
+    }
 }

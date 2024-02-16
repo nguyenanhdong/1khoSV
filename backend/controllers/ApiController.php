@@ -26,6 +26,7 @@ use backend\models\Notify;
 use backend\models\NotifyUser;
 use backend\models\NotifyUnRead;
 use backend\models\Config;
+use backend\models\UserFollowAgent;
 use common\helpers\Helper;
 use yii\helpers\ArrayHelper;
 use backend\models\Util;
@@ -1337,6 +1338,106 @@ class ApiController extends Controller
             ]);
             return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
         }
+    }
+
+    /**
+     * API chi tiết sản phẩm
+     */
+    public function actionProductDetail(){
+        $params = self::getParamsRequest([
+            'product_id' => [
+                'type' => self::TYPE_INT,
+                'validate' => Response::KEY_REQUIRED
+            ]
+        ]);
+
+        if( !empty($params['listError']) ){
+            $listErr = $params['listError'];
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+        }
+
+        $product_id  = $params['product_id'];
+
+        $dataRes        = Product::getProductDetail($product_id, $this->userId);
+        if( !$dataRes ){
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('product', Response::KEY_NOT_FOUND)]);
+        }
+
+        return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+    }
+
+    /**
+     * API xem tất cả đánh giá sản phẩm
+     */
+    public function actionViewMoreReview(){
+        $params = self::getParamsRequest([
+            'product_id' => [
+                'type' => self::TYPE_INT,
+                'validate' => Response::KEY_REQUIRED
+            ],
+            'limit'    => [
+                'type' => self::TYPE_INT,
+                'default' => 10
+            ],
+            'page'    => [
+                'type' => self::TYPE_INT,
+                'default' => 1
+            ]
+        ]);
+
+        if( !empty($params['listError']) ){
+            $listErr = $params['listError'];
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+        }
+
+        $product_id     = $params['product_id'];
+        $limit          = $params['limit'];
+        $page           = $params['page'];
+        $offset         = ($page - 1) * $limit;
+
+        $dataRes        = ProductReview::getReviewByProductId($product_id, $limit, $offset);
+        if( !$dataRes ){
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('product', Response::KEY_NOT_FOUND)]);
+        }
+
+        return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+    }
+
+    /**
+     * API theo dõi/hủy theo dõi đại lý
+     */
+    public function actionToggleFollowAgent(){
+        $params = self::getParamsRequest([
+            'agent' => [
+                'type' => self::TYPE_INT,
+                'validate' => Response::KEY_REQUIRED
+            ]
+        ]);
+
+        if( !empty($params['listError']) || !$this->userId ){
+            $listErr = !empty($params['listError']) ? $params['listError'] : [Response::getErrorMessage('info', Response::KEY_FORBIDDEN)];
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+        }
+
+        $agent_id       = $params['agent'];
+
+        $agentInfo      = Agent::getInfoAgent($agent_id);
+        if( !$agentInfo ){
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('agent', Response::KEY_NOT_FOUND)]);
+        }
+
+        $resultFollow  = UserFollowAgent::toggleFollowAgent($this->userId, $agent_id);
+        $dataRes       = [
+            'status_follow' => $resultFollow
+        ];
+        return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+    }
+
+    /**
+     * API đặt hàng
+     */
+    public function actionOrder(){
+
     }
 
     private function writeLogFile($name, $data){
