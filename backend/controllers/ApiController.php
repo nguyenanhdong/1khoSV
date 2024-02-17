@@ -1434,7 +1434,61 @@ class ApiController extends Controller
      * API đặt hàng
      */
     public function actionOrder(){
+        
 
+    }
+
+     /**
+     * API chọn voucher đơn hàng
+     */
+    public function actionListVoucherByOrder(){
+        $params = self::getParamsRequest([
+            'product_combination' => [
+                'type' => self::TYPE_ARRAY,
+                'validate' => Response::KEY_REQUIRED
+            ]
+        ]);
+
+        if( !empty($params['listError']) || !$this->userId ){
+            $listErr = !empty($params['listError']) ? $params['listError'] : [Response::getErrorMessage('info', Response::KEY_FORBIDDEN)];
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+        }
+
+        $product_combination     = $params['product_combination'];
+        $dataRes        = Voucher::getListVoucherCustomerOrder($this->userId, $product_combination);
+
+        return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+    }
+
+    /**
+     * API tính giá trị (số tiền giảm hoặc xu được hoàn) của voucher theo đơn hàng
+     */
+    public function actionGetPriceVoucherByOrder(){
+        $params = self::getParamsRequest([
+            'product_combination' => [
+                'type' => self::TYPE_ARRAY,
+                'validate' => Response::KEY_REQUIRED
+            ],
+            'voucher_id' => [
+                'type' => self::TYPE_INT,
+                'validate' => Response::KEY_REQUIRED
+            ],
+        ]);
+
+        if( !empty($params['listError']) || !$this->userId ){
+            $listErr = !empty($params['listError']) ? $params['listError'] : [Response::getErrorMessage('info', Response::KEY_FORBIDDEN)];
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+        }
+
+        $voucher_id             = $params['voucher_id'];
+        $product_combination    = $params['product_combination'];
+        $dataRes                = Voucher::calculatePriceVoucherUse($this->userId, $product_combination, $voucher_id);
+        if( $dataRes['price'] == "0" ){
+            $listErr = [Response::getErrorMessage('voucher', Response::KEY_INVALID)];
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+        }
+
+        return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
     }
 
     private function writeLogFile($name, $data){

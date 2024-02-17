@@ -32,7 +32,9 @@ class Response
             'product_tab'    => "Tab sản phẩm không được trống",
             'notify_id'      => 'Mã thông báo không được trống',
             'product_id'     => 'Mã sản phẩm không được trống',
-            'agent'          => 'Mã đại lý không được trống'
+            'agent'          => 'Mã đại lý không được trống',
+            'voucher_id'     => 'Mã voucher không được trống',
+            'product_combination' => 'Danh sách mã sản phẩm không được trống',
         ],
         self::KEY_INVALID    => [
             'phone'          => 'Số điện thoại không hợp lệ',
@@ -42,6 +44,7 @@ class Response
             'token'          => 'Token không chính xác hoặc đã hết hạn',
             'authorization'  => 'AccessToken không hợp lệ',
             'request_method' => 'Phương thức yêu cầu không hợp lệ',
+            'voucher'        => 'Voucher không hợp lệ'      
         ],
         self::KEY_FORBIDDEN   => [
             'banned'         => 'Tài khoản đang bị khoá',
