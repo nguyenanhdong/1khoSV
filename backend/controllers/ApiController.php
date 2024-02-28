@@ -26,6 +26,7 @@ use backend\models\Notify;
 use backend\models\NotifyUser;
 use backend\models\NotifyUnRead;
 use backend\models\Config;
+use backend\models\UserDeliveryAddress;
 use backend\models\UserFollowAgent;
 use common\helpers\Helper;
 use yii\helpers\ArrayHelper;
@@ -548,6 +549,7 @@ class ApiController extends Controller
             $user       = Customer::findOne($this->userId);
             if (!$user || $user->status == Customer::STATUS_BANNED) {
                 $msg    = !$user ? Response::getErrorMessage('account', Response::KEY_NOT_FOUND) : Response::getErrorMessage('info', Response::KEY_FORBIDDEN);
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [$msg]);
             }
             
             $userRes = $this->getUserInfoRes($user);
@@ -1344,97 +1346,172 @@ class ApiController extends Controller
      * API chi tiết sản phẩm
      */
     public function actionProductDetail(){
-        $params = self::getParamsRequest([
-            'product_id' => [
-                'type' => self::TYPE_INT,
-                'validate' => Response::KEY_REQUIRED
-            ]
-        ]);
+        try{
+            $params = self::getParamsRequest([
+                'product_id' => [
+                    'type' => self::TYPE_INT,
+                    'validate' => Response::KEY_REQUIRED
+                ]
+            ]);
 
-        if( !empty($params['listError']) ){
-            $listErr = $params['listError'];
-            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+            if( !empty($params['listError']) ){
+                $listErr = $params['listError'];
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+            }
+
+            $product_id  = $params['product_id'];
+
+            $dataRes        = Product::getProductDetail($product_id, $this->userId);
+            if( !$dataRes ){
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('product', Response::KEY_NOT_FOUND)]);
+            }
+
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+        } catch (\Exception $e) {
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
         }
-
-        $product_id  = $params['product_id'];
-
-        $dataRes        = Product::getProductDetail($product_id, $this->userId);
-        if( !$dataRes ){
-            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('product', Response::KEY_NOT_FOUND)]);
-        }
-
-        return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
     }
 
     /**
      * API xem tất cả đánh giá sản phẩm
      */
     public function actionViewMoreReview(){
-        $params = self::getParamsRequest([
-            'product_id' => [
-                'type' => self::TYPE_INT,
-                'validate' => Response::KEY_REQUIRED
-            ],
-            'limit'    => [
-                'type' => self::TYPE_INT,
-                'default' => 10
-            ],
-            'page'    => [
-                'type' => self::TYPE_INT,
-                'default' => 1
-            ]
-        ]);
+        try{
+            $params = self::getParamsRequest([
+                'product_id' => [
+                    'type' => self::TYPE_INT,
+                    'validate' => Response::KEY_REQUIRED
+                ],
+                'limit'    => [
+                    'type' => self::TYPE_INT,
+                    'default' => 10
+                ],
+                'page'    => [
+                    'type' => self::TYPE_INT,
+                    'default' => 1
+                ]
+            ]);
 
-        if( !empty($params['listError']) ){
-            $listErr = $params['listError'];
-            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+            if( !empty($params['listError']) ){
+                $listErr = $params['listError'];
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+            }
+
+            $product_id     = $params['product_id'];
+            $limit          = $params['limit'];
+            $page           = $params['page'];
+            $offset         = ($page - 1) * $limit;
+
+            $dataRes        = ProductReview::getReviewByProductId($product_id, $limit, $offset);
+            
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+        } catch (\Exception $e) {
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
         }
-
-        $product_id     = $params['product_id'];
-        $limit          = $params['limit'];
-        $page           = $params['page'];
-        $offset         = ($page - 1) * $limit;
-
-        $dataRes        = ProductReview::getReviewByProductId($product_id, $limit, $offset);
-        
-        return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
     }
 
     /**
      * API theo dõi/hủy theo dõi đại lý
      */
     public function actionToggleFollowAgent(){
-        $params = self::getParamsRequest([
-            'agent' => [
-                'type' => self::TYPE_INT,
-                'validate' => Response::KEY_REQUIRED
-            ]
-        ]);
+        try{
+            $params = self::getParamsRequest([
+                'agent' => [
+                    'type' => self::TYPE_INT,
+                    'validate' => Response::KEY_REQUIRED
+                ]
+            ]);
 
-        if( !empty($params['listError']) || !$this->userId ){
-            $listErr = !empty($params['listError']) ? $params['listError'] : [Response::getErrorMessage('info', Response::KEY_FORBIDDEN)];
-            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+            if( !empty($params['listError']) || !$this->userId ){
+                $listErr = !empty($params['listError']) ? $params['listError'] : [Response::getErrorMessage('info', Response::KEY_FORBIDDEN)];
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+            }
+
+            $agent_id       = $params['agent'];
+
+            $agentInfo      = Agent::getInfoAgent($agent_id);
+            if( !$agentInfo ){
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('agent', Response::KEY_NOT_FOUND)]);
+            }
+
+            $resultFollow  = UserFollowAgent::toggleFollowAgent($this->userId, $agent_id);
+            $dataRes       = [
+                'status_follow' => $resultFollow
+            ];
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+        } catch (\Exception $e) {
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
         }
-
-        $agent_id       = $params['agent'];
-
-        $agentInfo      = Agent::getInfoAgent($agent_id);
-        if( !$agentInfo ){
-            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('agent', Response::KEY_NOT_FOUND)]);
-        }
-
-        $resultFollow  = UserFollowAgent::toggleFollowAgent($this->userId, $agent_id);
-        $dataRes       = [
-            'status_follow' => $resultFollow
-        ];
-        return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
     }
 
     /**
      * API đặt hàng
      */
     public function actionOrder(){
-        
+        try{
+            $params = self::getParamsRequest([
+                'product_combination' => [
+                    'type' => self::TYPE_ARRAY,
+                    'validate' => Response::KEY_REQUIRED
+                ],
+                'voucher_id' => [
+                    'type' => self::TYPE_INT,
+                    'default' => 0
+                ],
+            ]);
+
+            if( !empty($params['listError']) || !$this->userId ){
+                $listErr = !empty($params['listError']) ? $params['listError'] : [Response::getErrorMessage('info', Response::KEY_FORBIDDEN)];
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+            }
+
+            $user       = Customer::findOne($this->userId);
+            if (!$user || $user->status == Customer::STATUS_BANNED) {
+                $msg    = !$user ? Response::getErrorMessage('account', Response::KEY_NOT_FOUND) : Response::getErrorMessage('info', Response::KEY_FORBIDDEN);
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [$msg]);
+            }
+
+            $voucher_id             = $params['voucher_id'];
+            $product_combination    = $params['product_combination'];
+            $dataVoucher            = $voucher_id > 0 ? Voucher::calculatePriceVoucherUse($this->userId, $product_combination, $voucher_id) : ["price" => "0"];
+            
+            $price_order            = Product::getPriceOfOrder($product_combination);
+            $fee_ship               = Product::getFeeShipProduct($product_combination);
+
+            $total_price_order      = $price_order + $fee_ship;
+            
+            $delivery_address       = UserDeliveryAddress::getDeliveryAddressOrderDefault($this->userId);
+
+            $dataRes                = [
+                'price_voucher'     => $dataVoucher['price'] == "0" ? "" : $dataVoucher['price'],
+                'fee_ship'          => $fee_ship,
+                'wallet_point'      => $user->wallet_point,
+                'price_order'       => $price_order,
+                'total_price_order' => $total_price_order,
+                'delivery_address'  => $delivery_address
+            ];
+
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+            
+        } catch (\Exception $e) {
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
 
     }
 
@@ -1442,53 +1519,177 @@ class ApiController extends Controller
      * API chọn voucher đơn hàng
      */
     public function actionListVoucherByOrder(){
-        $params = self::getParamsRequest([
-            'product_combination' => [
-                'type' => self::TYPE_ARRAY,
-                'validate' => Response::KEY_REQUIRED
-            ]
-        ]);
+        try{
+            $params = self::getParamsRequest([
+                'product_combination' => [
+                    'type' => self::TYPE_ARRAY,
+                    'validate' => Response::KEY_REQUIRED
+                ]
+            ]);
 
-        if( !empty($params['listError']) || !$this->userId ){
-            $listErr = !empty($params['listError']) ? $params['listError'] : [Response::getErrorMessage('info', Response::KEY_FORBIDDEN)];
-            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+            if( !empty($params['listError']) || !$this->userId ){
+                $listErr = !empty($params['listError']) ? $params['listError'] : [Response::getErrorMessage('info', Response::KEY_FORBIDDEN)];
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+            }
+
+            $product_combination     = $params['product_combination'];
+            $dataRes        = Voucher::getListVoucherCustomerOrder($this->userId, $product_combination);
+
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+        } catch (\Exception $e) {
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
         }
-
-        $product_combination     = $params['product_combination'];
-        $dataRes        = Voucher::getListVoucherCustomerOrder($this->userId, $product_combination);
-
-        return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
     }
 
     /**
-     * API tính giá trị (số tiền giảm hoặc xu được hoàn) của voucher theo đơn hàng
+     * API tính giá trị (số tiền giảm hoặc xu được hoàn) của voucher, phí ship, xu trong ví tổng tiền của đơn hàng
      */
-    public function actionGetPriceVoucherByOrder(){
-        $params = self::getParamsRequest([
-            'product_combination' => [
-                'type' => self::TYPE_ARRAY,
-                'validate' => Response::KEY_REQUIRED
-            ],
-            'voucher_id' => [
-                'type' => self::TYPE_INT,
-                'validate' => Response::KEY_REQUIRED
-            ],
-        ]);
+    public function actionGetInfoOrder(){
+        try{
+            $params = self::getParamsRequest([
+                'product_combination' => [
+                    'type' => self::TYPE_ARRAY,
+                    'validate' => Response::KEY_REQUIRED
+                ],
+                'voucher_id' => [
+                    'type' => self::TYPE_INT,
+                    'default' => 0
+                ],
+            ]);
 
-        if( !empty($params['listError']) || !$this->userId ){
-            $listErr = !empty($params['listError']) ? $params['listError'] : [Response::getErrorMessage('info', Response::KEY_FORBIDDEN)];
-            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+            if( !empty($params['listError']) || !$this->userId ){
+                $listErr = !empty($params['listError']) ? $params['listError'] : [Response::getErrorMessage('info', Response::KEY_FORBIDDEN)];
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+            }
+
+            $user       = Customer::findOne($this->userId);
+            if (!$user || $user->status == Customer::STATUS_BANNED) {
+                $msg    = !$user ? Response::getErrorMessage('account', Response::KEY_NOT_FOUND) : Response::getErrorMessage('info', Response::KEY_FORBIDDEN);
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [$msg]);
+            }
+
+            $voucher_id             = $params['voucher_id'];
+            $product_combination    = $params['product_combination'];
+            $dataVoucher            = $voucher_id > 0 ? Voucher::calculatePriceVoucherUse($this->userId, $product_combination, $voucher_id) : ["price" => "0"];
+            
+            $price_order            = Product::getPriceOfOrder($product_combination);
+            $fee_ship               = Product::getFeeShipProduct($product_combination);
+
+            $total_price_order      = $price_order + $fee_ship;
+            
+            $delivery_address       = UserDeliveryAddress::getDeliveryAddressOrderDefault($this->userId);
+
+            $dataRes                = [
+                'price_voucher'     => $dataVoucher['price'] == "0" ? "" : $dataVoucher['price'],
+                'fee_ship'          => $fee_ship,
+                'wallet_point'      => $user->wallet_point,
+                'price_order'       => $price_order,
+                'total_price_order' => $total_price_order,
+                'delivery_address'  => $delivery_address
+            ];
+
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+            
+        } catch (\Exception $e) {
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
         }
+    }
+    /**
+     * API lấy danh sách địa chỉ giao hàng
+     */
+    public function actionGetDeliveryAddress(){
+        try{
+            $params = self::getParamsRequest([
+                'limit'    => [
+                    'type' => self::TYPE_INT,
+                    'default' => 10
+                ],
+                'page'    => [
+                    'type' => self::TYPE_INT,
+                    'default' => 1
+                ]
+            ]);
 
-        $voucher_id             = $params['voucher_id'];
-        $product_combination    = $params['product_combination'];
-        $dataRes                = Voucher::calculatePriceVoucherUse($this->userId, $product_combination, $voucher_id);
-        if( $dataRes['price'] == "0" ){
-            $listErr = [Response::getErrorMessage('voucher', Response::KEY_INVALID)];
-            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+            if( !empty($params['listError']) || !$this->userId ){
+                $listErr = !empty($params['listError']) ? $params['listError'] : [Response::getErrorMessage('info', Response::KEY_FORBIDDEN)];
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+            }
+
+            $limit          = $params['limit'];
+            $page           = $params['page'];
+            $offset         = ($page - 1) * $limit;
+
+            $dataRes        = UserDeliveryAddress::getListDeliveryAddressOfUser($this->userId, $limit, $offset);
+            
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+        } catch (\Exception $e) {
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
         }
+    }
 
-        return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+    /**
+     * API thêm địa chỉ giao hàng
+     */
+    public function actionAddDeliveryAddress(){
+        try{
+            $params = self::getParamsRequest([
+                'fullname' => [
+                    'type' => self::TYPE_STRING,
+                    'validate' => Response::KEY_REQUIRED
+                ],
+                'phone' => [
+                    'type' => self::TYPE_STRING,
+                    'validate' => [Response::KEY_REQUIRED, Response::KEY_INVALID => ['min' => Response::PHONE_MIN_LENGTH, 'max' => Response::PHONE_MAX_LENGTH]]
+                ],
+                'district' => [
+                    'type' => self::TYPE_STRING,
+                    'validate' => Response::KEY_REQUIRED
+                ],
+                'province' => [
+                    'type' => self::TYPE_STRING,
+                    'validate' => Response::KEY_REQUIRED
+                ],
+                'address' => [
+                    'type' => self::TYPE_STRING,
+                    'validate' => Response::KEY_REQUIRED
+                ],
+                'is_primary_address' => [
+                    'type' => self::TYPE_INT,
+                    'default' => 0
+                ]
+            ]);
+            if( !empty($params['listError']) || !$this->userId ){
+                $listErr = !empty($params['listError']) ? $params['listError'] : [Response::getErrorMessage('info', Response::KEY_FORBIDDEN)];
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+            }
+
+            $phone      = $params['phone'];
+            if (strpos($phone, '+84') !== false) {
+                $params['phone']  = str_replace('+84', '0', $phone);
+            }
+
+            $dataRes    = UserDeliveryAddress::addDeliveryAddress($params, $this->userId);
+            
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+        } catch (\Exception $e) {
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
     }
 
     private function writeLogFile($name, $data){

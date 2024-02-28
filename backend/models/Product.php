@@ -3,6 +3,7 @@
 namespace backend\models;
 
 use Yii;
+use yii\helpers\ArrayHelper;
 
 class Product extends \yii\db\ActiveRecord
 {
@@ -204,5 +205,55 @@ class Product extends \yii\db\ActiveRecord
 
 
         return $data;
+    }
+
+    public static function getFeeShipProduct($product_combination){
+        $listCombinationId  = ArrayHelper::map($product_combination, 'id', 'id');
+        $resultCombination  = ProductClassificationCombination::find()->select('A.*, B.weight')
+        ->from(ProductClassificationCombination::tableName() . ' A')
+        ->leftJoin(self::tableName() . ' B', 'A.product_id = B.id')
+        ->where(['in', 'A.id', $listCombinationId])->asArray()->all();
+        
+        if( empty($resultCombination) )
+            return 0;
+
+        $config = Config::findOne(['key' => 'FEE_SHIP']);
+        
+        if( !$config || !$config->value )
+            return 0;
+
+        $fee_ship = 0;
+        foreach($resultCombination as $rows){
+            $product_id = $rows['product_id'];
+            foreach($product_combination as $combination){
+                if( $combination['id'] == $rows['id'] && $combination['quantity'] > 0 ){
+                    $fee_ship += $rows['weight'] * $config->value;
+                    break;
+                }
+            }
+        }
+
+        return $fee_ship;//number_format($fee_ship, 0, '.', '.');
+    }
+
+
+    public static function getPriceOfOrder($product_combination){
+        $listCombinationId  = ArrayHelper::map($product_combination, 'id', 'id');
+        $resultCombination  = ProductClassificationCombination::find()->where(['in', 'id', $listCombinationId])->asArray()->all();
+        
+        if( empty($resultCombination) )
+            return 0;
+        
+        $price = 0;
+        foreach($resultCombination as $rows){
+            foreach($product_combination as $combination){
+                if( $combination['id'] == $rows['id'] && $combination['quantity'] > 0 ){
+                    $price += $rows['price'] * $combination['quantity'];
+                    break;
+                }
+            }
+        }
+
+        return $price;//number_format($price, 0, '.', '.');
     }
 }
