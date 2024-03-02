@@ -26,6 +26,7 @@ use backend\models\Notify;
 use backend\models\NotifyUser;
 use backend\models\NotifyUnRead;
 use backend\models\Config;
+use backend\models\Order;
 use backend\models\UserDeliveryAddress;
 use backend\models\UserFollowAgent;
 use common\helpers\Helper;
@@ -1470,6 +1471,18 @@ class ApiController extends Controller
                     'type' => self::TYPE_INT,
                     'default' => 0
                 ],
+                'delivery_address_id' => [
+                    'type' => self::TYPE_INT,
+                    'validate' => Response::KEY_REQUIRED
+                ],
+                'type_payment' => [
+                    'type' => self::TYPE_INT,
+                    'validate' => Response::KEY_REQUIRED
+                ],
+                'use_wallet_payment' => [
+                    'type' => self::TYPE_INT,
+                    'default' => 0
+                ],
             ]);
 
             if( !empty($params['listError']) || !$this->userId ){
@@ -1482,26 +1495,14 @@ class ApiController extends Controller
                 $msg    = !$user ? Response::getErrorMessage('account', Response::KEY_NOT_FOUND) : Response::getErrorMessage('info', Response::KEY_FORBIDDEN);
                 return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [$msg]);
             }
-
-            $voucher_id             = $params['voucher_id'];
-            $product_combination    = $params['product_combination'];
-            $dataVoucher            = $voucher_id > 0 ? Voucher::calculatePriceVoucherUse($this->userId, $product_combination, $voucher_id) : ["price" => "0"];
+            $dataRes    = [];
+            $result     = Order::createNewOrder($params, $user);
             
-            $price_order            = Product::getPriceOfOrder($product_combination);
-            $fee_ship               = Product::getFeeShipProduct($product_combination);
-
-            $total_price_order      = $price_order + $fee_ship;
-            
-            $delivery_address       = UserDeliveryAddress::getDeliveryAddressOrderDefault($this->userId);
-
-            $dataRes                = [
-                'price_voucher'     => $dataVoucher['price'] == "0" ? "" : $dataVoucher['price'],
-                'fee_ship'          => $fee_ship,
-                'wallet_point'      => $user->wallet_point,
-                'price_order'       => $price_order,
-                'total_price_order' => $total_price_order,
-                'delivery_address'  => $delivery_address
-            ];
+            if( !$result['status'] ){
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [$result['msg']]);
+            }else{
+                //Get total notify unread
+            }
 
             return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
             
@@ -1574,17 +1575,22 @@ class ApiController extends Controller
 
             $voucher_id             = $params['voucher_id'];
             $product_combination    = $params['product_combination'];
-            $dataVoucher            = $voucher_id > 0 ? Voucher::calculatePriceVoucherUse($this->userId, $product_combination, $voucher_id) : ["price" => "0"];
+            $dataVoucher            = $voucher_id > 0 ? Voucher::calculatePriceVoucherUse($this->userId, $product_combination, $voucher_id) : ["price" => "0", "price_org" => 0, "price_type" => 1];
             
             $price_order            = Product::getPriceOfOrder($product_combination);
             $fee_ship               = Product::getFeeShipProduct($product_combination);
 
-            $total_price_order      = $price_order + $fee_ship;
             
             $delivery_address       = UserDeliveryAddress::getDeliveryAddressOrderDefault($this->userId);
 
+            $price_deduct           = $dataVoucher['price_org'] && $dataVoucher['price_type'] == 1 ? $dataVoucher['price_org'] : 0;
+
+            $price_voucher          = $dataVoucher['price'] == "0" ? "" : $dataVoucher['price'];
+
+            $total_price_order      = ($price_order + $fee_ship) - $price_deduct;
+
             $dataRes                = [
-                'price_voucher'     => $dataVoucher['price'] == "0" ? "" : $dataVoucher['price'],
+                'price_voucher'     => $price_voucher,
                 'fee_ship'          => $fee_ship,
                 'wallet_point'      => $user->wallet_point,
                 'price_order'       => $price_order,

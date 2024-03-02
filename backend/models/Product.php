@@ -236,7 +236,6 @@ class Product extends \yii\db\ActiveRecord
         return $fee_ship;//number_format($fee_ship, 0, '.', '.');
     }
 
-
     public static function getPriceOfOrder($product_combination){
         $listCombinationId  = ArrayHelper::map($product_combination, 'id', 'id');
         $resultCombination  = ProductClassificationCombination::find()->where(['in', 'id', $listCombinationId])->asArray()->all();
@@ -255,5 +254,35 @@ class Product extends \yii\db\ActiveRecord
         }
 
         return $price;//number_format($price, 0, '.', '.');
+    }
+
+    public static function getProductByCombination($product_combination){
+        $listCombinationId  = ArrayHelper::map($product_combination, 'id', 'id');
+        $resultCombination  = ProductClassificationCombination::find()->select('A.*, B.weight, B.agent_id')
+        ->from(ProductClassificationCombination::tableName() . ' A')
+        ->leftJoin(self::tableName() . ' B', 'A.product_id = B.id')
+        ->where(['in', 'A.id', $listCombinationId])->asArray()->all();
+        
+        $data = [];
+
+        $config = Config::findOne(['key' => 'FEE_SHIP']);
+        $value_config = 0;
+        if( $config && !$config->value ){
+            $value_config = (int)$config->value;
+        }
+
+        foreach($resultCombination as $rows){
+            foreach($product_combination as $combination){
+                if( $combination['id'] == $rows['id'] && $combination['quantity'] > 0 ){
+                    $rows['quantity']       = $combination['quantity'];
+                    $rows['fee_ship']       = $value_config ? $rows['weight'] * $value_config : 0;
+                    $rows['total_price']    = $rows['price'] * $combination['quantity'];
+                    break;
+                }
+            }
+            $data[] = $rows;
+        }
+
+        return $data;
     }
 }

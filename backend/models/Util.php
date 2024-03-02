@@ -131,7 +131,7 @@ class Util extends \yii\base\Model
 			$fh = fopen($fileName, 'a+') or die("Can't create file");
 			fwrite($fh,date('Y-m-d H:i:s',time()).": ". $stringlog."\n");
 			fclose($fh);
-		}catch(Exception $e){
+		}catch(\Exception $e){
 
 		}
 	}

@@ -98,17 +98,19 @@ class Voucher extends \yii\db\ActiveRecord
             $condition = ['and', ['<=', 'A.date_start', date('Y-m-d H:i:s')], ['>=', 'A.date_end', date('Y-m-d H:i:s')], ['>', 'A.total_maximum_use', 'A.total_use']];
         }else if( $voucher_type == 2 ){//Đã dùng hoặc hết hạn
             $column_select[] = new Expression("0 as can_use_voucher");
-            $condition = ['or', ['B.user_id' => $user_id], ['<', 'A.date_end', date('Y-m-d H:i:s')]];
+            $condition = ['or', ['B.user_id' => $user_id], ['<', 'A.date_end', date('Y-m-d H:i:s')], ['=', 'A.total_maximum_use', 'A.total_use']];
         }
         
         $query = self::find()->select($column_select)->from(self::tableName() . ' A')
-        ->leftJoin('`order` B', 'A.id = B.voucher_id')
         ->leftJoin('agent C', 'A.agent_id = C.id');
 
         $query->where($condition);
         if( $voucher_type == 1 ){
             $query->leftJoin(new Expression("(SELECT count(id) as total_voucher_has_use, voucher_id FROM user_use_voucher WHERE user_id = $user_id GROUP BY voucher_id)") . ' D', 'D.voucher_id = A.id');
             $query->andWhere(['or', ['IS', new Expression("D.total_voucher_has_use"), NULL], ['>', 'A.maximum_use_by_user', new Expression("D.total_voucher_has_use")]]);
+        }else{
+            $query ->leftJoin('`order` B', 'A.id = B.voucher_id');
+            $query->groupBy(['A.id']);
         }
 
         if( !is_null($limit) )
@@ -189,7 +191,7 @@ class Voucher extends \yii\db\ActiveRecord
     }
 
     public static function calculatePriceVoucherUse($user_id, $product_combination, $voucher_current_id, $getProductApplyVoucher = false){
-        $dataReturn         = ["price" => "0"];
+        $dataReturn         = ["price" => "0", "price_org" => 0, "price_type" => 1];
 
         $listCombinationId  = ArrayHelper::map($product_combination, 'id', 'id');
         $resultCombination  = ProductClassificationCombination::find()->where(['in', 'id', $listCombinationId])->asArray()->all();
@@ -224,7 +226,7 @@ class Voucher extends \yii\db\ActiveRecord
             return $dataReturn;
 
         $priceProductMaximum = 0;
-        $productApplyVoucher = 0;
+        $productApplyVoucher = [];
 
         $listProductOfVoucher= !empty($modelVoucher['product_id']) ? array_values(array_filter(explode(';', $modelVoucher['product_id']))) : [];
 
@@ -248,10 +250,8 @@ class Voucher extends \yii\db\ActiveRecord
                         }
                     }
                     if( $flagValid && isset($dataPrice[$product_id]) && $dataPrice[$product_id] >= $voucher['minimum_order'] ){
-                        if( $priceProductMaximum < $dataPrice[$product_id] ){
-                            $productApplyVoucher = $product_id;
-                            $priceProductMaximum = $dataPrice[$product_id];
-                        }
+                        $productApplyVoucher[] = $product_id;
+                        $priceProductMaximum += $dataPrice[$product_id];
                     }
                 }
                 break;  
@@ -262,6 +262,7 @@ class Voucher extends \yii\db\ActiveRecord
             $maxPriceByPercent = $modelVoucher['max_price_by_percent'];
             $labelAction = "";
             $labelUnit   = "";
+            $dataReturn['price_type'] = $modelVoucher['type_voucher'];
             if( $modelVoucher['type_voucher'] == 1 ){//Giảm tiền (Số tiền cố định hoặc %)
                $labelAction = "-";
                $labelUnit   = "đ";
@@ -272,6 +273,7 @@ class Voucher extends \yii\db\ActiveRecord
 
             if( $modelVoucher['type_price'] == 1 ){//Số tiền, Xu cố định
                 $dataReturn['price'] = $labelAction . number_format($modelVoucher['price'], 0, '.', '.') . $labelUnit;
+                $dataReturn['price_org'] = $modelVoucher['price'];
             }else{//Phần trăm
                 $priceDiscount = $priceProductMaximum * ($modelVoucher['price']/100);
                 
@@ -279,6 +281,7 @@ class Voucher extends \yii\db\ActiveRecord
                     $priceDiscount = $maxPriceByPercent;
                 }
                 $dataReturn['price'] = $labelAction . number_format($priceDiscount, 0, '.', '.') . $labelUnit;
+                $dataReturn['price_org'] = $priceDiscount;
             }
         }
 

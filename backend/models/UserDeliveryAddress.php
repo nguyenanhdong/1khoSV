@@ -73,8 +73,11 @@ class UserDeliveryAddress extends \yii\db\ActiveRecord
         return $data;
     }
 
-    public static function getDeliveryAddressOrderDefault($user_id){
-        $model = self::findOne(['user_id' => $user_id, 'is_save_primary_address' => 1]);
+    public static function getDeliveryAddressOrderDefault($user_id, $id = 0){
+        if( $id > 0 )
+            $model = self::findOne(['user_id' => $user_id, 'id' => $id]);
+        else
+            $model = self::findOne(['user_id' => $user_id, 'is_save_primary_address' => 1]);
         if( !$model )
             return null;
 

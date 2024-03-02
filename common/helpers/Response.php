@@ -44,7 +44,8 @@ class Response
             'token'          => 'Token không chính xác hoặc đã hết hạn',
             'authorization'  => 'AccessToken không hợp lệ',
             'request_method' => 'Phương thức yêu cầu không hợp lệ',
-            'voucher'        => 'Voucher không hợp lệ'      
+            'voucher'        => 'Voucher không hợp lệ',
+            'order'          => 'Đơn hàng không hợp lệ'
         ],
         self::KEY_FORBIDDEN   => [
             'banned'         => 'Tài khoản đang bị khoá',
@@ -57,6 +58,7 @@ class Response
             'agent'          => 'Thông tin đại lý không tồn tại',
             'notify'         => 'Thông báo không tồn tại',
             'product'        => 'Sản phẩm không tồn tại',
+            'delivery_address' => 'Địa chỉ giao hàng không tồn tại',
         ],
         self::KEY_EXISTS  => [
             'phone'          => 'Số điện thoại đã được sử dụng',
