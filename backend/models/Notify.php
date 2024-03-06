@@ -42,4 +42,19 @@ class Notify extends \yii\db\ActiveRecord
             'id' => 'ID',
         ];
     }
+
+    public static function insertNotify($user_id, $title, $desc, $content, $isShowButton, $category_id, $obj_id, $user_notify){
+        $model                  = new Notify;
+        $model->title           = $title;
+        $model->description     = $desc;
+        $model->content         = $content;
+        $model->is_show_button  = $isShowButton;
+        $model->category_id     = $category_id;
+        $model->obj_id          = $obj_id;
+        $model->user_notify     = $user_notify;
+        if($model->save(false)){
+            NotifyUser::insertHistory($user_id, $model->id, $user_notify);
+            NotifyUnRead::saveUnread($user_id, 1, $user_notify);
+        }
+    }
 }

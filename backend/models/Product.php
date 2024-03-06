@@ -258,7 +258,7 @@ class Product extends \yii\db\ActiveRecord
 
     public static function getProductByCombination($product_combination){
         $listCombinationId  = ArrayHelper::map($product_combination, 'id', 'id');
-        $resultCombination  = ProductClassificationCombination::find()->select('A.*, B.weight, B.agent_id')
+        $resultCombination  = ProductClassificationCombination::find()->select('A.*, B.name, B.weight, B.agent_id')
         ->from(ProductClassificationCombination::tableName() . ' A')
         ->leftJoin(self::tableName() . ' B', 'A.product_id = B.id')
         ->where(['in', 'A.id', $listCombinationId])->asArray()->all();

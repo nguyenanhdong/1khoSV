@@ -96,4 +96,12 @@ class NotifyUser extends \yii\db\ActiveRecord
         
         return $data;
     }
+
+    public static function insertHistory($user_id, $notify_id, $type_user){
+        $model              = new NotifyUser;
+        $model->user_id     = $user_id;
+        $model->notify_id   = $notify_id;
+        $model->type_user   = $type_user;
+        $model->save(false);
+    }
 }

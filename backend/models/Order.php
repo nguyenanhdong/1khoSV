@@ -154,8 +154,20 @@ class Order extends \yii\db\ActiveRecord
                     //Lưu lịch sử sử dụng ví
                     if( $isSaveHistoryWallet )
                         HistoryWalletPoint::insertHistory($user_id, 2, 'Dùng ví mua sản phẩm', $modelOrder->id, $subtracted_balance);
-                    //Tạo notify cho user + đại lý
 
+                    //Tạo notify cho user + đại lý
+                    $product_name   = $product['name'];
+                    $title_user     = "Đặt hàng thành công";
+                    $desc_user      = "Bạn đã mua sản phẩm $product_name. Shop sẽ xác nhận đơn hàng của bạn";
+                    $content_user   = $desc_user;
+                    Notify::insertNotify($user_id, $title_user, $desc_user, $content_user, 0, 0, $modelOrder->id, Notify::TYPE_CUSTOMER);
+
+                    $full_name_user = trim($modelUser->fullname) ? $modelUser->fullname : $modelUser->phone;
+                    $title_agent    = "Bạn có đơn hàng mới";
+                    $desc_agent     = "$full_name_user đã đặt 1 đơn hàng";
+                    $content_agent  = $desc_agent;
+                    Notify::insertNotify($modelOrder->agent_id, $title_agent, $desc_agent, $content_agent, 0, 0, $modelOrder->id, Notify::TYPE_AGENT);
+                    //Cộng số lượng sản phẩm đã bán, Trừ số lượng trong kho hàng => Xử lý sau khi đại lý chấp nhận đơn
                 }
 
             }
