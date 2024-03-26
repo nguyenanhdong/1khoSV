@@ -1,0 +1,263 @@
+@charset "UTF-8";
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@200;300;400;500;600;700&family=Lato:wght@300;400;700&family=Merriweather:wght@300;400&display=swap');
+
+@font-face {
+  font-family: fontAaron;
+  src: url("../fonts/SVN-Aaron-Script.otf");
+}
+
+@font-face {
+  font-family: timenewroman;
+  src: url("../fonts/Times-New-Roman-400.ttf");
+}
+
+$brand: #08469B;
+$orange: #E45625;
+$black: #000;
+$white: #fff;
+
+body {
+  font-family: 'Be Vietnam Pro', sans-serif !important;
+}
+
+a:hover {
+  text-decoration: unset;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 0;
+}
+
+input,
+button {
+  border: none;
+  outline: none;
+}
+
+p,
+input,
+span,
+a,
+li {
+  font-size: 14px;
+  font-weight: 400;
+  color: $black;
+  margin: 0;
+}
+h1,h2,h3,h4,h5,h6{
+  margin: 0;
+}
+
+.gap-20 {
+  gap: 20px;
+}
+
+.line_3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line_2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line_1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.banner_bread {
+  background-image: url(/images/page/bg-ab.png);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  height: 530px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+#header {
+
+  .header_top {
+    background-color: $brand;
+    padding: 12px 0;
+
+    .header_top_group {
+      display: flex;
+      justify-content: space-between;
+
+      .header_search {
+        margin: 0 83px 0 50px;
+        height: 40px;
+        width: 578px;
+        display: flex;
+
+        input {
+          border-radius: 5px;
+          height: 100%;
+          text-indent: 12px;
+          width: 100%;
+        }
+
+        button {
+          background-color: $orange;
+          width: 58px;
+          height: 100%;
+          border-radius: 0px 5px 5px 0px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-left: -5px;
+        }
+      }
+
+      .header_action {
+        display: flex;
+        gap: 15px;
+
+        a {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-direction: column;
+          gap: 2px;
+
+          img {
+            height: 24px;
+          }
+
+          p {
+            color: $white;
+          }
+
+          &:last-child {
+            padding-left: 15px;
+            position: relative;
+
+            &:before {
+              border-left: 1px solid #fff;
+              width: 1px;
+              height: 30px;
+              content: '';
+              position: absolute;
+              left: 0;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .header_menu {
+    padding: 16px 0;
+
+    ul {
+      display: flex;
+      align-items: center;
+      gap: 40px;
+
+      i {
+        color: $brand;
+        font-size: 15px;
+      }
+    }
+  }
+}
+
+#footer {
+  background-color: $brand;
+  position: relative;
+
+  &:before {
+    content: "";
+    background-image: url(/images/page/backg-ft.png);
+    position: absolute;
+    right: 0;
+    width: 320px;
+    height: 400px;
+  }
+
+  .footer_gr {
+    display: grid;
+    grid-template-columns: 378px 256px 184px;
+    gap: 90px;
+    padding: 80px 0;
+
+    .footer_item {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+
+      &:first-child {
+        gap: 20px;
+      }
+
+      h4{
+        font-weight: bold;
+        font-size: 20px;
+        color:$white;
+      }
+      div{
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+
+        img{
+          margin-top: 5px;
+        }
+      }
+      a{
+        color: $white;   
+        font-size: 16px;
+        font-weight: 500;
+      }
+      h2{
+        font-size: 20px;
+        font-weight: 600;
+        color: $white;
+        position: relative;
+        margin-bottom: 15px;
+
+        &::before{
+          content: "";
+          border-bottom: 2px solid $white;
+          width: 85%;
+          height: 2px;
+          position: absolute;
+          bottom: -5px;
+          border-radius: 10px;
+        }
+      }
+    }
+  }
+  .footer_bottom{
+    border-top: 1px solid #05ABF3;
+    padding: 28px 0;
+    text-align: center;
+    p{
+      color: $white;
+      font-size: 20px;
+    }
+  }
+
+}
+
+@media screen and (max-width: 1024px) {}
+
+@media screen and (min-width: 1024px) {}
