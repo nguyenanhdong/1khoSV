@@ -20,12 +20,12 @@ class AppAsset extends AssetBundle
         'https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css',
     ];
     public $js = [
-        '/js/jquery.min.js',
-        '/js/bootstrap.min.js',
-        '/js/sweetalert2.js',
-        '/js/slick.min.js',
-        'js/toastr/toastr.min.js',
-        '/js/script.js',
+        // '/js/jquery.min.js',
+        // '/js/bootstrap.min.js',
+        // '/js/sweetalert2.js',
+        // '/js/slick.min.js',
+        // 'js/toastr/toastr.min.js',
+        // '/js/script.js',
     ];
     public $jsOptions = [
         'position' => View::POS_HEAD

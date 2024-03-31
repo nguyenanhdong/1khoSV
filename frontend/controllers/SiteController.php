@@ -19,18 +19,8 @@ use frontend\models\Contact;
 use backend\models\News;
 
 use backend\models\UserLogin;
-use backend\models\Banner;
-use backend\models\Partner;
-use backend\models\Abouts;
-use backend\models\Technical;
-use backend\models\Product;
-use backend\models\Comment;
 use backend\models\Config;
-use backend\models\ProductCategory;
 use backend\models\EmailPromotion;
-use backend\models\ProductTag;
-use backend\models\Branch;
-use backend\models\AboutsPage;
 
 
 /**
@@ -149,6 +139,7 @@ class SiteController extends Controller
         ]);
     }
 
+
     public function actionAbout(){
         $this->view->title = 'Giới thiệu';
         Yii::$app->view->registerMetaTag([
@@ -172,12 +163,9 @@ class SiteController extends Controller
         //     'name' => 'description',
         //     'content' => ''
         // ]);
-        $result = AboutsPage::find()
-        ->asArray()
-        ->one();
       
         return $this->render('about', [
-            'result'    => $result,
+           
         ]);
     }
 
@@ -266,18 +254,7 @@ class SiteController extends Controller
             }
 
             if( $model->login() ){
-                $resultCheck = $this->checkLogin();
-                if( $resultCheck ){
-                    return [
-                        'status' => 1,
-                        'message' => "Success"
-                    ];
-                }else{
-                    return [
-                        'status' => 0,
-                        'message' => 'Đăng nhập không thành công! </br> Nguyên Nhân: Vượt quá số lượng thiết bị cho phép'
-                    ];
-                }
+           
             }
             else
                 return [
@@ -287,7 +264,7 @@ class SiteController extends Controller
         } else {
             $model->password = '';
 
-            return $this->renderAjax('login', [
+            return $this->render('login', [
                 'model' => $model,
             ]);
         }

@@ -1,3 +1,104 @@
+// 1kho JS
+  $('.banner_index').slick({
+    autoplay: false,
+    speed: 800,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    centerMode: false,
+    focusOnSelect: false,
+    pauseOnHover:false,
+    dots:true,
+    infinite: false,
+  });
+  $('.sale_list').slick({
+    autoplay: false,
+    speed: 800,
+    slidesToShow: 4,
+    slidesToScroll: 1,
+    centerMode: false,
+    focusOnSelect: false,
+    pauseOnHover:false,
+    dots:false,
+    infinite: false,
+		responsive: [
+			{
+        breakpoint: 1024,
+        settings: {
+          autoplay: false,
+          speed: 800,
+          slidesToShow: 2,
+          slidesToScroll: 1,
+          centerMode: false,
+          focusOnSelect: false,
+          infinite: false,
+          centerPadding: '20%',
+          variableWidth: true,
+          pauseOnHover:false,
+        }
+			}
+		]
+  });
+  $('.product_slide').slick({
+    autoplay: false,
+    speed: 800,
+    slidesToShow: 5,
+    slidesToScroll: 1,
+    centerMode: false,
+    focusOnSelect: false,
+    pauseOnHover:false,
+    dots:false,
+    infinite: false,
+		responsive: [
+			{
+        breakpoint: 1024,
+        settings: {
+          autoplay: false,
+          speed: 800,
+          slidesToShow: 2,
+          slidesToScroll: 1,
+          centerMode: false,
+          focusOnSelect: false,
+          infinite: false,
+          centerPadding: '20%',
+          variableWidth: true,
+          pauseOnHover:false,
+        }
+			}
+		]
+  });
+
+  $(document).on('click', '#btn_toggle_menu', function(){
+    $('.header_top_mobi').toggleClass('open');
+  });
+  $(document).on('click', '.close_sidebar', function(){
+    $('.header_top_mobi').removeClass('open');
+  });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 var setSlideCourse = function () {
   if ($('.list-course-by-group').length > 0) {
     if ($(window).width() <= 600) {
@@ -264,3 +365,9 @@ $(document).ready(function () {
 
 
 });
+
+
+
+
+
+

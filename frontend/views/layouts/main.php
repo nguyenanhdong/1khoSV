@@ -31,6 +31,20 @@ AppAsset::register($this);
         <meta property="og:type" content="website" />
         <link rel="stylesheet" href="/css/azuremediaplayer.min.css" />
         <script src="/resoure/sdk.js" async="" crossorigin="anonymous"></script>
+        
+        <link href="/css/sweetalert.css" rel="stylesheet">
+        <link href="/css/slick-theme.css" rel="stylesheet">
+        <link href="/css/slick.css" rel="stylesheet">
+        <link href="/js/toastr/toastr.min.css" rel="stylesheet">
+        <link href="/css/site.css" rel="stylesheet">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+        <script src="/js/jquery.min.js" defer></script>
+        <script src="/js/bootstrap.min.js" defer></script>
+        <script src="/js/sweetalert2.js" defer></script>
+        <script src="/js/slick.min.js" defer></script>
+        <script src="/js/toastr/toastr.min.js" defer></script>
+        <script src="/js/script.js" defer></script> 
+
         <script>
             (function (html) {
                 html.className = html.className.replace(/\bno-js\b/, "js");
