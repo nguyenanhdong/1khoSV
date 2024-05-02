@@ -138,7 +138,7 @@ class ApiController extends Controller
                     if ($type == self::TYPE_ARRAY && (empty($paramsReturn[$name]) || !is_array($paramsReturn[$name]))) {
                         $paramsReturn[$name] = [];
                     } else if ($type == self::TYPE_STRING) {
-                        $paramsReturn[$name] = trim(strip_tags($params[$name]));
+                        $paramsReturn[$name] = $params[$name] ? trim(strip_tags($params[$name])) : '';
                     }
                 } else {
                     $paramsReturn[$name] = $type == self::TYPE_INT ? ( isset($objParams['default']) ? $objParams['default'] : 0 ) : ($type == self::TYPE_ARRAY ? [] : ( isset($objParams['default']) ? $objParams['default'] : "" ));
@@ -1589,13 +1589,16 @@ class ApiController extends Controller
 
             $total_price_order      = ($price_order + $fee_ship) - $price_deduct;
 
+            $bank_payment           = Config::getConfigApp("BANK_PAYMENT");
+
             $dataRes                = [
                 'price_voucher'     => $price_voucher,
                 'fee_ship'          => $fee_ship,
                 'wallet_point'      => $user->wallet_point,
                 'price_order'       => $price_order,
                 'total_price_order' => $total_price_order,
-                'delivery_address'  => $delivery_address
+                'delivery_address'  => $delivery_address,
+                'bank_payment'      => $bank_payment
             ];
 
             return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
@@ -1687,6 +1690,48 @@ class ApiController extends Controller
             }
 
             $dataRes    = UserDeliveryAddress::addDeliveryAddress($params, $this->userId);
+            
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+        } catch (\Exception $e) {
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
+    }
+
+    /**
+     * API đơn hàng của tôi
+     */
+
+    public function actionMyOrder(){
+        try{
+            $params = self::getParamsRequest([
+                'type' => [
+                    'type' => self::TYPE_STRING,
+                    'validate' => Response::KEY_REQUIRED
+                ],
+                'limit'    => [
+                    'type' => self::TYPE_INT,
+                    'default' => 10
+                ],
+                'page'    => [
+                    'type' => self::TYPE_INT,
+                    'default' => 1
+                ]
+            ]);
+            if( !empty($params['listError']) || !$this->userId ){
+                $listErr = !empty($params['listError']) ? $params['listError'] : [Response::getErrorMessage('info', Response::KEY_FORBIDDEN)];
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+            }
+
+            $type       = $params['type'];
+            $limit      = $params['limit'];
+            $page       = $params['page'];
+            $offset     = ($page - 1) * $limit;
+            
+            $dataRes    = Order::getOrderOfUserByType($type, $this->userId, $limit, $offset);
             
             return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
         } catch (\Exception $e) {
