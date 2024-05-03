@@ -35,6 +35,7 @@ class Response
             'agent'          => 'Mã đại lý không được trống',
             'voucher_id'     => 'Mã voucher không được trống',
             'product_combination' => 'Danh sách mã sản phẩm không được trống',
+            'social_id'      => 'ID mạng xã hội không được trống'
         ],
         self::KEY_INVALID    => [
             'phone'          => 'Số điện thoại không hợp lệ',
@@ -45,7 +46,8 @@ class Response
             'authorization'  => 'AccessToken không hợp lệ',
             'request_method' => 'Phương thức yêu cầu không hợp lệ',
             'voucher'        => 'Voucher không hợp lệ',
-            'order'          => 'Đơn hàng không hợp lệ'
+            'order'          => 'Đơn hàng không hợp lệ',
+            'social_id'      => 'ID mạng xã hội không hợp lệ'
         ],
         self::KEY_FORBIDDEN   => [
             'banned'         => 'Tài khoản đang bị khoá',
