@@ -28,6 +28,7 @@ use backend\models\NotifyUnRead;
 use backend\models\Config;
 use backend\models\Order;
 use backend\models\UserDeliveryAddress;
+use backend\models\UserFavouriteProduct;
 use backend\models\UserFollowAgent;
 use common\helpers\Helper;
 use yii\helpers\ArrayHelper;
@@ -1566,6 +1567,44 @@ class ApiController extends Controller
             $resultFollow  = UserFollowAgent::toggleFollowAgent($this->userId, $agent_id);
             $dataRes       = [
                 'status_follow' => $resultFollow
+            ];
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+        } catch (\Exception $e) {
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
+    }
+
+    /**
+     * API yêu thích/bỏ yêu thích sản phẩm
+     */
+    public function actionToggleFavouriteProduct(){
+        try{
+            $params = self::getParamsRequest([
+                'product_id' => [
+                    'type' => self::TYPE_INT,
+                    'validate' => Response::KEY_REQUIRED
+                ]
+            ]);
+
+            if( !empty($params['listError']) || !$this->userId ){
+                $listErr = !empty($params['listError']) ? $params['listError'] : [Response::getErrorMessage('info', Response::KEY_FORBIDDEN)];
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+            }
+
+            $product_id       = $params['product_id'];
+
+            $modelProduct     = Product::findOne($product_id);
+            if( !$modelProduct || !$modelProduct->status ){
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('product', Response::KEY_NOT_FOUND)]);
+            }
+
+            $resultFavourites  = UserFavouriteProduct::toggleFavourites($this->userId, $product_id);
+            $dataRes       = [
+                'status_favourites' => $resultFavourites
             ];
             return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
         } catch (\Exception $e) {
