@@ -1,0 +1,1232 @@
+[23-Mar-2020 16:35:34 Asia/Ho_Chi_Minh] An Error occurred while handling another error:
+yii\base\InvalidConfigException: The 'label' option is required. in /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2-bootstrap/src/Nav.php:170
+Stack trace:
+#0 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2-bootstrap/src/Nav.php(152): yii\bootstrap\Nav->renderItem(Array)
+#1 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2-bootstrap/src/Nav.php(139): yii\bootstrap\Nav->renderItems()
+#2 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2/base/Widget.php(140): yii\bootstrap\Nav->run()
+#3 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/frontend/views/layouts/main.php(990): yii\base\Widget::widget(Array)
+#4 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2/base/View.php(348): require('/home/pqlfgxowh...')
+#5 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2/base/View.php(257): yii\base\View->renderPhpFile('/home/pqlfgxowh...', Array)
+#6 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2/base/Controller.php(399): yii\base\View->renderFile('/home/pqlfgxowh...', Array, Object(frontend\controllers\SiteController))
+#7 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2/base/Controller.php(385): yii\base\Controller->renderContent('<div class="sit...')
+#8 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2/web/ErrorAction.php(139): yii\base\Controller->render('error', Array)
+#9 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2/web/ErrorAction.php(118): yii\web\ErrorAction->renderHtmlResponse()
+#10 [internal function]: yii\web\ErrorAction->run()
+#11 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2/base/Action.php(94): call_user_func_array(Array, Array)
+#12 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2/base/Controller.php(157): yii\base\Action->runWithParams(Array)
+#13 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2/base/Module.php(528): yii\base\Controller->runAction('error', Array)
+#14 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2/web/ErrorHandler.php(108): yii\base\Module->runAction('site/error')
+#15 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2/base/ErrorHandler.php(111): yii\web\ErrorHandler->renderException(Object(yii\web\NotFoundHttpException))
+#16 [internal function]: yii\base\ErrorHandler->handleException(Object(yii\web\NotFoundHttpException))
+#17 {main}
+Previous exception:
+yii\base\InvalidRouteException: Unable to resolve the request "news/detail". in /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2/base/Module.php:537
+Stack trace:
+#0 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2/web/Application.php(103): yii\base\Module->runAction('news/detail', Array)
+#1 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2/base/Application.php(386): yii\web\Application->handleRequest(Object(yii\web\Request))
+#2 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/frontend/web/index.php(19): yii\base\Application->run()
+#3 {main}
+
+Next yii\web\NotFoundHttpException: Page not found. in /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2/web/Application.php:115
+Stack trace:
+#0 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2/base/Application.php(386): yii\web\Application->handleRequest(Object(yii\web\Request))
+#1 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/frontend/web/index.php(19): yii\base\Application->run()
+#2 {main}
+$_SERVER = [
+    'PATH' => '/bin:/usr/bin:/usr/local/bin',
+    'HTTP_ACCEPT' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+    'HTTP_ACCEPT_ENCODING' => 'gzip, deflate, br',
+    'HTTP_ACCEPT_LANGUAGE' => 'vi,en;q=0.9,en-US;q=0.8,fr-FR;q=0.7,fr;q=0.6',
+    'HTTP_COOKIE' => 'advanced-frontend=e3965956ede2919a771620af20704357; _identity-frontend=dcec10fd22c224248a2b67907ca4bdedea07ffa5a1ee30ef865f2cb9ddcc5743a%3A2%3A%7Bi%3A0%3Bs%3A18%3A%22_identity-frontend%22%3Bi%3A1%3Bs%3A16%3A%22%5B8%2Cnull%2C2592000%5D%22%3B%7D; _csrf-frontend=7098715d852bff949ccde55dd78144831614603f9246da89a249735e4a124850a%3A2%3A%7Bi%3A0%3Bs%3A14%3A%22_csrf-frontend%22%3Bi%3A1%3Bs%3A32%3A%22ikuf93n0U7EgfJaDI0wdl25kPJk7hzN_%22%3B%7D',
+    'HTTP_HOST' => 'cogaivangyoga.vn',
+    'HTTP_PRAGMA' => 'no-cache',
+    'HTTP_REFERER' => 'https://cogaivangyoga.vn/news/detail?id=5',
+    'HTTP_USER_AGENT' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
+    'HTTP_CACHE_CONTROL' => 'no-cache',
+    'HTTP_UPGRADE_INSECURE_REQUESTS' => '1',
+    'HTTP_SEC_FETCH_DEST' => 'document',
+    'HTTP_SEC_FETCH_SITE' => 'same-origin',
+    'HTTP_SEC_FETCH_MODE' => 'navigate',
+    'HTTP_SEC_FETCH_USER' => '?1',
+    'DOCUMENT_ROOT' => '/home/pqlfgxowhosting/public_html/admin.cogaivang.vn/frontend/web',
+    'REMOTE_ADDR' => '14.244.196.130',
+    'REMOTE_PORT' => '62525',
+    'SERVER_ADDR' => '203.113.174.46',
+    'SERVER_NAME' => 'cogaivangyoga.vn',
+    'SERVER_ADMIN' => 'webmaster@admin.bmggroup.vn',
+    'SERVER_PORT' => '443',
+    'REQUEST_URI' => '/news/detail?id=1',
+    'REDIRECT_URL' => '/news/detail',
+    'REDIRECT_QUERY_STRING' => 'id=1',
+    'HTTPS' => 'on',
+    'REDIRECT_STATUS' => '200',
+    'X_SPDY' => 'HTTP2',
+    'SSL_PROTOCOL' => 'TLSv1.2',
+    'SSL_SESSION_ID' => '2d309dbab8106a00a7f71fd9ba4ed14ee909280ed6cb271b2c10ac8820cbc65e',
+    'SSL_CIPHER' => 'ECDHE-RSA-AES256-GCM-SHA384',
+    'SSL_CIPHER_USEKEYSIZE' => '256',
+    'SSL_CIPHER_ALGKEYSIZE' => '256',
+    'SCRIPT_FILENAME' => '/home/pqlfgxowhosting/public_html/admin.cogaivang.vn/frontend/web/index.php',
+    'QUERY_STRING' => 'id=1',
+    'SCRIPT_URI' => 'https://cogaivangyoga.vn/news/detail',
+    'SCRIPT_URL' => '/news/detail',
+    'SCRIPT_NAME' => '/index.php',
+    'SERVER_PROTOCOL' => 'HTTP/1.1',
+    'SERVER_SOFTWARE' => 'LiteSpeed',
+    'REQUEST_METHOD' => 'GET',
+    'X-LSCACHE' => 'on',
+    'PHP_SELF' => '/index.php',
+    'REQUEST_TIME_FLOAT' => 1584956134.566905,
+    'REQUEST_TIME' => 1584956134,
+]
+[23-Mar-2020 16:36:50 Asia/Ho_Chi_Minh] An Error occurred while handling another error:
+yii\base\InvalidConfigException: The 'label' option is required. in /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2-bootstrap/src/Nav.php:170
+Stack trace:
+#0 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2-bootstrap/src/Nav.php(152): yii\bootstrap\Nav->renderItem(Array)
+#1 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2-bootstrap/src/Nav.php(139): yii\bootstrap\Nav->renderItems()
+#2 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2/base/Widget.php(140): yii\bootstrap\Nav->run()
+#3 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/frontend/views/layouts/main.php(991): yii\base\Widget::widget(Array)
+#4 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2/base/View.php(348): require('/home/pqlfgxowh...')
+#5 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2/base/View.php(257): yii\base\View->renderPhpFile('/home/pqlfgxowh...', Array)
+#6 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2/base/Controller.php(399): yii\base\View->renderFile('/home/pqlfgxowh...', Array, Object(frontend\controllers\SiteController))
+#7 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2/base/Controller.php(385): yii\base\Controller->renderContent('<div class="sit...')
+#8 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2/web/ErrorAction.php(139): yii\base\Controller->render('error', Array)
+#9 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2/web/ErrorAction.php(118): yii\web\ErrorAction->renderHtmlResponse()
+#10 [internal function]: yii\web\ErrorAction->run()
+#11 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2/base/Action.php(94): call_user_func_array(Array, Array)
+#12 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2/base/Controller.php(157): yii\base\Action->runWithParams(Array)
+#13 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2/base/Module.php(528): yii\base\Controller->runAction('error', Array)
+#14 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2/web/ErrorHandler.php(108): yii\base\Module->runAction('site/error')
+#15 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2/base/ErrorHandler.php(111): yii\web\ErrorHandler->renderException(Object(yii\web\NotFoundHttpException))
+#16 [internal function]: yii\base\ErrorHandler->handleException(Object(yii\web\NotFoundHttpException))
+#17 {main}
+Previous exception:
+yii\base\InvalidRouteException: Unable to resolve the request "news/detail". in /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2/base/Module.php:537
+Stack trace:
+#0 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2/web/Application.php(103): yii\base\Module->runAction('news/detail', Array)
+#1 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2/base/Application.php(386): yii\web\Application->handleRequest(Object(yii\web\Request))
+#2 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/frontend/web/index.php(19): yii\base\Application->run()
+#3 {main}
+
+Next yii\web\NotFoundHttpException: Page not found. in /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2/web/Application.php:115
+Stack trace:
+#0 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/vendor/yiisoft/yii2/base/Application.php(386): yii\web\Application->handleRequest(Object(yii\web\Request))
+#1 /home/pqlfgxowhosting/public_html/admin.cogaivang.vn/frontend/web/index.php(19): yii\base\Application->run()
+#2 {main}
+$_SERVER = [
+    'PATH' => '/bin:/usr/bin:/usr/local/bin',
+    'HTTP_ACCEPT' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+    'HTTP_ACCEPT_ENCODING' => 'gzip, deflate, br',
+    'HTTP_ACCEPT_LANGUAGE' => 'vi,en;q=0.9,en-US;q=0.8,fr-FR;q=0.7,fr;q=0.6',
+    'HTTP_COOKIE' => 'advanced-frontend=e3965956ede2919a771620af20704357; _identity-frontend=dcec10fd22c224248a2b67907ca4bdedea07ffa5a1ee30ef865f2cb9ddcc5743a%3A2%3A%7Bi%3A0%3Bs%3A18%3A%22_identity-frontend%22%3Bi%3A1%3Bs%3A16%3A%22%5B8%2Cnull%2C2592000%5D%22%3B%7D; _csrf-frontend=7098715d852bff949ccde55dd78144831614603f9246da89a249735e4a124850a%3A2%3A%7Bi%3A0%3Bs%3A14%3A%22_csrf-frontend%22%3Bi%3A1%3Bs%3A32%3A%22ikuf93n0U7EgfJaDI0wdl25kPJk7hzN_%22%3B%7D',
+    'HTTP_HOST' => 'cogaivangyoga.vn',
+    'HTTP_PRAGMA' => 'no-cache',
+    'HTTP_REFERER' => 'https://cogaivangyoga.vn/news/detail?id=5',
+    'HTTP_USER_AGENT' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36',
+    'HTTP_CACHE_CONTROL' => 'no-cache',
+    'HTTP_UPGRADE_INSECURE_REQUESTS' => '1',
+    'HTTP_SEC_FETCH_DEST' => 'document',
+    'HTTP_SEC_FETCH_SITE' => 'same-origin',
+    'HTTP_SEC_FETCH_MODE' => 'navigate',
+    'HTTP_SEC_FETCH_USER' => '?1',
+    'DOCUMENT_ROOT' => '/home/pqlfgxowhosting/public_html/admin.cogaivang.vn/frontend/web',
+    'REMOTE_ADDR' => '14.244.196.130',
+    'REMOTE_PORT' => '62839',
+    'SERVER_ADDR' => '203.113.174.46',
+    'SERVER_NAME' => 'cogaivangyoga.vn',
+    'SERVER_ADMIN' => 'webmaster@admin.bmggroup.vn',
+    'SERVER_PORT' => '443',
+    'REQUEST_URI' => '/news/detail?id=1',
+    'REDIRECT_URL' => '/news/detail',
+    'REDIRECT_QUERY_STRING' => 'id=1',
+    'HTTPS' => 'on',
+    'REDIRECT_STATUS' => '200',
+    'X_SPDY' => 'HTTP2',
+    'SSL_PROTOCOL' => 'TLSv1.2',
+    'SSL_SESSION_ID' => '2d309dbab8106a00a7f71fd9ba4ed14ee909280ed6cb271b2c10ac8820cbc65e',
+    'SSL_CIPHER' => 'ECDHE-RSA-AES256-GCM-SHA384',
+    'SSL_CIPHER_USEKEYSIZE' => '256',
+    'SSL_CIPHER_ALGKEYSIZE' => '256',
+    'SCRIPT_FILENAME' => '/home/pqlfgxowhosting/public_html/admin.cogaivang.vn/frontend/web/index.php',
+    'QUERY_STRING' => 'id=1',
+    'SCRIPT_URI' => 'https://cogaivangyoga.vn/news/detail',
+    'SCRIPT_URL' => '/news/detail',
+    'SCRIPT_NAME' => '/index.php',
+    'SERVER_PROTOCOL' => 'HTTP/1.1',
+    'SERVER_SOFTWARE' => 'LiteSpeed',
+    'REQUEST_METHOD' => 'GET',
+    'X-LSCACHE' => 'on',
+    'PHP_SELF' => '/index.php',
+    'REQUEST_TIME_FLOAT' => 1584956210.208251,
+    'REQUEST_TIME' => 1584956210,
+]
+[29-Mar-2020 09:30:32 Asia/Ho_Chi_Minh] PHP Fatal error:  Call to a member function load() on null in /home/cp015828/public_html/cogaivangyoga.vn/admin.cogaivang.vn/frontend/controllers/UserController.php on line 28
+[30-Mar-2020 10:54:00 Asia/Ho_Chi_Minh] PHP Fatal error:  Class 'frontend\controllers\Controller' not found in /home/cp015828/public_html/cogaivangyoga.vn/admin.cogaivang.vn/frontend/controllers/SupportController.php on line 5
+[30-Mar-2020 10:54:11 Asia/Ho_Chi_Minh] PHP Fatal error:  Class 'frontend\controllers\Controller' not found in /home/cp015828/public_html/cogaivangyoga.vn/admin.cogaivang.vn/frontend/controllers/SupportController.php on line 5
+[30-Mar-2020 10:54:13 Asia/Ho_Chi_Minh] PHP Fatal error:  Class 'frontend\controllers\Controller' not found in /home/cp015828/public_html/cogaivangyoga.vn/admin.cogaivang.vn/frontend/controllers/SupportController.php on line 5
+[30-Mar-2020 11:40:11 Asia/Ho_Chi_Minh] PHP Parse error:  syntax error, unexpected '->' (T_OBJECT_OPERATOR), expecting ']' in /home/cp015828/public_html/cogaivangyoga.vn/admin.cogaivang.vn/frontend/controllers/SupportController.php on line 26
+[30-Mar-2020 11:40:26 Asia/Ho_Chi_Minh] PHP Fatal error:  Class 'ActiveForm' not found in /home/cp015828/public_html/cogaivangyoga.vn/admin.cogaivang.vn/frontend/views/support/lienhe.php on line 2
+[30-Mar-2020 19:12:48 Asia/Ho_Chi_Minh] PHP Parse error:  syntax error, unexpected 'switch' (T_SWITCH) in /home/cp015828/public_html/cogaivangyoga.vn/admin.cogaivang.vn/frontend/controllers/SupportController.php on line 39
+[14-Apr-2021 16:05:37 Asia/Ho_Chi_Minh] PHP Fatal error:  Cannot use $this as parameter in /home/edhcklfhosting/public_html/yogalunathai/frontend/models/ChangePassword.php on line 30
+[02-Jun-2021 15:55:42 Asia/Ho_Chi_Minh] PHP Fatal error:  Cannot use $this as parameter in /home/edhcklfhosting/public_html/yogalunathai/frontend/models/ChangePassword.php on line 30
+[29-Jun-2021 11:50:52 Asia/Ho_Chi_Minh] PHP Fatal error:  Cannot use $this as parameter in /home/edhcklfhosting/public_html/yogalunathai/frontend/models/ChangePassword.php on line 30
+[29-Jun-2021 11:51:13 Asia/Ho_Chi_Minh] PHP Fatal error:  Cannot use $this as parameter in /home/edhcklfhosting/public_html/yogalunathai/frontend/models/ChangePassword.php on line 30
+[29-Jun-2021 11:51:32 Asia/Ho_Chi_Minh] PHP Fatal error:  Cannot use $this as parameter in /home/edhcklfhosting/public_html/yogalunathai/frontend/models/ChangePassword.php on line 30
+[02-Jul-2021 09:08:31 Asia/Ho_Chi_Minh] PHP Fatal error:  Cannot use $this as parameter in /home/edhcklfhosting/public_html/yogalunathai/frontend/models/ChangePassword.php on line 30
+[02-Jul-2021 09:10:56 Asia/Ho_Chi_Minh] PHP Fatal error:  Cannot use $this as parameter in /home/edhcklfhosting/public_html/yogalunathai/frontend/models/ChangePassword.php on line 30
+[02-Jul-2021 09:11:27 Asia/Ho_Chi_Minh] PHP Fatal error:  Cannot use $this as parameter in /home/edhcklfhosting/public_html/yogalunathai/frontend/models/ChangePassword.php on line 30
+[02-Jul-2021 11:57:53 Asia/Ho_Chi_Minh] PHP Fatal error:  Cannot use $this as parameter in /home/edhcklfhosting/public_html/yogalunathai/frontend/models/ChangePassword.php on line 30
+[31-Jul-2021 15:53:13 Asia/Ho_Chi_Minh] PHP Fatal error:  Cannot use $this as parameter in /home/edhcklfhosting/public_html/yogalunathai/frontend/models/ChangePassword.php on line 30
+[31-Jul-2021 17:38:05 Asia/Ho_Chi_Minh] PHP Fatal error:  Cannot use $this as parameter in /home/edhcklfhosting/public_html/yogalunathai/frontend/models/ChangePassword.php on line 30
+[04-Aug-2021 08:46:09 Asia/Ho_Chi_Minh] PHP Fatal error:  Cannot use $this as parameter in /home/edhcklfhosting/public_html/yogalunathai/frontend/models/ChangePassword.php on line 30
+[10-Aug-2021 02:46:50 Asia/Ho_Chi_Minh] PHP Fatal error:  Cannot use $this as parameter in /home/edhcklfhosting/public_html/yogalunathai/frontend/models/ChangePassword.php on line 30
+[10-Aug-2021 02:47:14 Asia/Ho_Chi_Minh] PHP Fatal error:  Cannot use $this as parameter in /home/edhcklfhosting/public_html/yogalunathai/frontend/models/ChangePassword.php on line 30
+[10-Aug-2021 02:48:26 Asia/Ho_Chi_Minh] PHP Fatal error:  Cannot use $this as parameter in /home/edhcklfhosting/public_html/yogalunathai/frontend/models/ChangePassword.php on line 30
+[15-Aug-2021 16:18:26 Asia/Ho_Chi_Minh] PHP Fatal error:  Cannot use $this as parameter in /home/edhcklfhosting/public_html/yogalunathai/frontend/models/ChangePassword.php on line 30
+[15-Aug-2021 16:19:15 Asia/Ho_Chi_Minh] PHP Fatal error:  Cannot use $this as parameter in /home/edhcklfhosting/public_html/yogalunathai/frontend/models/ChangePassword.php on line 30
+[20-Aug-2021 06:20:45 Asia/Ho_Chi_Minh] PHP Fatal error:  Cannot use $this as parameter in /home/edhcklfhosting/public_html/yogalunathai/frontend/models/ChangePassword.php on line 30
+[20-Aug-2021 06:20:57 Asia/Ho_Chi_Minh] PHP Fatal error:  Cannot use $this as parameter in /home/edhcklfhosting/public_html/yogalunathai/frontend/models/ChangePassword.php on line 30
+[27-Aug-2021 20:18:25 Asia/Ho_Chi_Minh] PHP Fatal error:  Cannot use $this as parameter in /home/edhcklfhosting/public_html/yogalunathai/frontend/models/ChangePassword.php on line 30
+[11-Sep-2021 21:25:59 Asia/Ho_Chi_Minh] PHP Fatal error:  Cannot use $this as parameter in /home/edhcklfhosting/public_html/yogalunathai/frontend/models/ChangePassword.php on line 30
+[17-Sep-2021 08:42:30 Asia/Ho_Chi_Minh] PHP Fatal error:  Cannot use $this as parameter in /home/edhcklfhosting/public_html/yogalunathai/frontend/models/ChangePassword.php on line 30
+[04-Jul-2023 23:56:14 Asia/Ho_Chi_Minh] PHP Warning:  require(/home/gekbhbrchosting/public_html/phavico/frontend/config/../../common/config/db.php): failed to open stream: No such file or directory in /home/gekbhbrchosting/public_html/phavico/frontend/config/main.php on line 2
+[04-Jul-2023 23:56:14 Asia/Ho_Chi_Minh] PHP Warning:  require(/home/gekbhbrchosting/public_html/phavico/frontend/config/../../common/config/db.php): failed to open stream: No such file or directory in /home/gekbhbrchosting/public_html/phavico/frontend/config/main.php on line 2
+[04-Jul-2023 23:56:14 Asia/Ho_Chi_Minh] PHP Fatal error:  require(): Failed opening required '/home/gekbhbrchosting/public_html/phavico/frontend/config/../../common/config/db.php' (include_path='.:/opt/alt/php74/usr/share/pear') in /home/gekbhbrchosting/public_html/phavico/frontend/config/main.php on line 2
+[04-Jul-2023 23:56:23 Asia/Ho_Chi_Minh] PHP Warning:  require(/home/gekbhbrchosting/public_html/phavico/frontend/config/../../common/config/db.php): failed to open stream: No such file or directory in /home/gekbhbrchosting/public_html/phavico/frontend/config/main.php on line 2
+[04-Jul-2023 23:56:23 Asia/Ho_Chi_Minh] PHP Warning:  require(/home/gekbhbrchosting/public_html/phavico/frontend/config/../../common/config/db.php): failed to open stream: No such file or directory in /home/gekbhbrchosting/public_html/phavico/frontend/config/main.php on line 2
+[04-Jul-2023 23:56:23 Asia/Ho_Chi_Minh] PHP Fatal error:  require(): Failed opening required '/home/gekbhbrchosting/public_html/phavico/frontend/config/../../common/config/db.php' (include_path='.:/opt/alt/php74/usr/share/pear') in /home/gekbhbrchosting/public_html/phavico/frontend/config/main.php on line 2
+[04-Jul-2023 23:56:25 Asia/Ho_Chi_Minh] PHP Warning:  require(/home/gekbhbrchosting/public_html/phavico/frontend/config/../../common/config/db.php): failed to open stream: No such file or directory in /home/gekbhbrchosting/public_html/phavico/frontend/config/main.php on line 2
+[04-Jul-2023 23:56:25 Asia/Ho_Chi_Minh] PHP Warning:  require(/home/gekbhbrchosting/public_html/phavico/frontend/config/../../common/config/db.php): failed to open stream: No such file or directory in /home/gekbhbrchosting/public_html/phavico/frontend/config/main.php on line 2
+[04-Jul-2023 23:56:25 Asia/Ho_Chi_Minh] PHP Fatal error:  require(): Failed opening required '/home/gekbhbrchosting/public_html/phavico/frontend/config/../../common/config/db.php' (include_path='.:/opt/alt/php74/usr/share/pear') in /home/gekbhbrchosting/public_html/phavico/frontend/config/main.php on line 2
+[04-Jul-2023 23:56:43 Asia/Ho_Chi_Minh] PHP Warning:  require(/home/gekbhbrchosting/public_html/phavico/frontend/config/../../common/config/db.php): failed to open stream: No such file or directory in /home/gekbhbrchosting/public_html/phavico/frontend/config/main.php on line 2
+[04-Jul-2023 23:56:43 Asia/Ho_Chi_Minh] PHP Warning:  require(/home/gekbhbrchosting/public_html/phavico/frontend/config/../../common/config/db.php): failed to open stream: No such file or directory in /home/gekbhbrchosting/public_html/phavico/frontend/config/main.php on line 2
+[04-Jul-2023 23:56:43 Asia/Ho_Chi_Minh] PHP Fatal error:  require(): Failed opening required '/home/gekbhbrchosting/public_html/phavico/frontend/config/../../common/config/db.php' (include_path='.:/opt/alt/php74/usr/share/pear') in /home/gekbhbrchosting/public_html/phavico/frontend/config/main.php on line 2
+[04-Jul-2023 23:56:44 Asia/Ho_Chi_Minh] PHP Warning:  require(/home/gekbhbrchosting/public_html/phavico/frontend/config/../../common/config/db.php): failed to open stream: No such file or directory in /home/gekbhbrchosting/public_html/phavico/frontend/config/main.php on line 2
+[04-Jul-2023 23:56:44 Asia/Ho_Chi_Minh] PHP Warning:  require(/home/gekbhbrchosting/public_html/phavico/frontend/config/../../common/config/db.php): failed to open stream: No such file or directory in /home/gekbhbrchosting/public_html/phavico/frontend/config/main.php on line 2
+[04-Jul-2023 23:56:44 Asia/Ho_Chi_Minh] PHP Fatal error:  require(): Failed opening required '/home/gekbhbrchosting/public_html/phavico/frontend/config/../../common/config/db.php' (include_path='.:/opt/alt/php74/usr/share/pear') in /home/gekbhbrchosting/public_html/phavico/frontend/config/main.php on line 2
+[04-Jul-2023 23:56:44 Asia/Ho_Chi_Minh] PHP Warning:  require(/home/gekbhbrchosting/public_html/phavico/frontend/config/../../common/config/db.php): failed to open stream: No such file or directory in /home/gekbhbrchosting/public_html/phavico/frontend/config/main.php on line 2
+[04-Jul-2023 23:56:44 Asia/Ho_Chi_Minh] PHP Warning:  require(/home/gekbhbrchosting/public_html/phavico/frontend/config/../../common/config/db.php): failed to open stream: No such file or directory in /home/gekbhbrchosting/public_html/phavico/frontend/config/main.php on line 2
+[04-Jul-2023 23:56:44 Asia/Ho_Chi_Minh] PHP Fatal error:  require(): Failed opening required '/home/gekbhbrchosting/public_html/phavico/frontend/config/../../common/config/db.php' (include_path='.:/opt/alt/php74/usr/share/pear') in /home/gekbhbrchosting/public_html/phavico/frontend/config/main.php on line 2
+[04-Jul-2023 23:56:45 Asia/Ho_Chi_Minh] PHP Warning:  require(/home/gekbhbrchosting/public_html/phavico/frontend/config/../../common/config/db.php): failed to open stream: No such file or directory in /home/gekbhbrchosting/public_html/phavico/frontend/config/main.php on line 2
+[04-Jul-2023 23:56:45 Asia/Ho_Chi_Minh] PHP Warning:  require(/home/gekbhbrchosting/public_html/phavico/frontend/config/../../common/config/db.php): failed to open stream: No such file or directory in /home/gekbhbrchosting/public_html/phavico/frontend/config/main.php on line 2
+[04-Jul-2023 23:56:45 Asia/Ho_Chi_Minh] PHP Fatal error:  require(): Failed opening required '/home/gekbhbrchosting/public_html/phavico/frontend/config/../../common/config/db.php' (include_path='.:/opt/alt/php74/usr/share/pear') in /home/gekbhbrchosting/public_html/phavico/frontend/config/main.php on line 2
+[04-Jul-2023 23:57:09 Asia/Ho_Chi_Minh] PHP Warning:  require(/home/gekbhbrchosting/public_html/phavico/frontend/config/../../common/config/db.php): failed to open stream: No such file or directory in /home/gekbhbrchosting/public_html/phavico/frontend/config/main.php on line 2
+[04-Jul-2023 23:57:09 Asia/Ho_Chi_Minh] PHP Warning:  require(/home/gekbhbrchosting/public_html/phavico/frontend/config/../../common/config/db.php): failed to open stream: No such file or directory in /home/gekbhbrchosting/public_html/phavico/frontend/config/main.php on line 2
+[04-Jul-2023 23:57:09 Asia/Ho_Chi_Minh] PHP Fatal error:  require(): Failed opening required '/home/gekbhbrchosting/public_html/phavico/frontend/config/../../common/config/db.php' (include_path='.:/opt/alt/php74/usr/share/pear') in /home/gekbhbrchosting/public_html/phavico/frontend/config/main.php on line 2
+[04-Jul-2023 23:57:10 Asia/Ho_Chi_Minh] PHP Warning:  require(/home/gekbhbrchosting/public_html/phavico/frontend/config/../../common/config/db.php): failed to open stream: No such file or directory in /home/gekbhbrchosting/public_html/phavico/frontend/config/main.php on line 2
+[04-Jul-2023 23:57:10 Asia/Ho_Chi_Minh] PHP Warning:  require(/home/gekbhbrchosting/public_html/phavico/frontend/config/../../common/config/db.php): failed to open stream: No such file or directory in /home/gekbhbrchosting/public_html/phavico/frontend/config/main.php on line 2
+[04-Jul-2023 23:57:10 Asia/Ho_Chi_Minh] PHP Fatal error:  require(): Failed opening required '/home/gekbhbrchosting/public_html/phavico/frontend/config/../../common/config/db.php' (include_path='.:/opt/alt/php74/usr/share/pear') in /home/gekbhbrchosting/public_html/phavico/frontend/config/main.php on line 2
+[04-Jul-2023 23:57:12 Asia/Ho_Chi_Minh] PHP Warning:  require(/home/gekbhbrchosting/public_html/phavico/frontend/config/../../common/config/db.php): failed to open stream: No such file or directory in /home/gekbhbrchosting/public_html/phavico/frontend/config/main.php on line 2
+[04-Jul-2023 23:57:12 Asia/Ho_Chi_Minh] PHP Warning:  require(/home/gekbhbrchosting/public_html/phavico/frontend/config/../../common/config/db.php): failed to open stream: No such file or directory in /home/gekbhbrchosting/public_html/phavico/frontend/config/main.php on line 2
+[04-Jul-2023 23:57:12 Asia/Ho_Chi_Minh] PHP Fatal error:  require(): Failed opening required '/home/gekbhbrchosting/public_html/phavico/frontend/config/../../common/config/db.php' (include_path='.:/opt/alt/php74/usr/share/pear') in /home/gekbhbrchosting/public_html/phavico/frontend/config/main.php on line 2
+[04-Jul-2023 23:58:01 Asia/Ho_Chi_Minh] PHP Warning:  require(/home/gekbhbrchosting/public_html/phavico/frontend/config/../../common/config/db.php): failed to open stream: No such file or directory in /home/gekbhbrchosting/public_html/phavico/frontend/config/main.php on line 2
+[04-Jul-2023 23:58:01 Asia/Ho_Chi_Minh] PHP Warning:  require(/home/gekbhbrchosting/public_html/phavico/frontend/config/../../common/config/db.php): failed to open stream: No such file or directory in /home/gekbhbrchosting/public_html/phavico/frontend/config/main.php on line 2
+[04-Jul-2023 23:58:01 Asia/Ho_Chi_Minh] PHP Fatal error:  require(): Failed opening required '/home/gekbhbrchosting/public_html/phavico/frontend/config/../../common/config/db.php' (include_path='.:/opt/alt/php74/usr/share/pear') in /home/gekbhbrchosting/public_html/phavico/frontend/config/main.php on line 2
+[04-Jul-2023 23:58:02 Asia/Ho_Chi_Minh] PHP Warning:  require(/home/gekbhbrchosting/public_html/phavico/frontend/config/../../common/config/db.php): failed to open stream: No such file or directory in /home/gekbhbrchosting/public_html/phavico/frontend/config/main.php on line 2
+[04-Jul-2023 23:58:02 Asia/Ho_Chi_Minh] PHP Warning:  require(/home/gekbhbrchosting/public_html/phavico/frontend/config/../../common/config/db.php): failed to open stream: No such file or directory in /home/gekbhbrchosting/public_html/phavico/frontend/config/main.php on line 2
+[04-Jul-2023 23:58:02 Asia/Ho_Chi_Minh] PHP Fatal error:  require(): Failed opening required '/home/gekbhbrchosting/public_html/phavico/frontend/config/../../common/config/db.php' (include_path='.:/opt/alt/php74/usr/share/pear') in /home/gekbhbrchosting/public_html/phavico/frontend/config/main.php on line 2
+[11-Aug-2023 14:33:08 UTC] PHP Notice:  Undefined offset: 1 in /home/gekbhbrchosting/public_html/nongnghiep/wp-content/plugins/wp-super-cache/wp-cache-phase2.php on line 3085
+[17-Aug-2023 13:56:11 Asia/Ho_Chi_Minh] An Error occurred while handling another error:
+PDOException: SQLSTATE[HY000] [1040] Too many connections in /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php:722
+Stack trace:
+#0 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(722): PDO->__construct('mysql:host=loca...', 'gekbhbrchosting...', 'LiWY_1txJpAh', NULL)
+#1 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(637): yii\db\Connection->createPdoInstance()
+#2 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(1067): yii\db\Connection->open()
+#3 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(1054): yii\db\Connection->getMasterPdo()
+#4 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(413): yii\db\Connection->getSlavePdo(true)
+#5 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(437): yii\db\mysql\QueryBuilder->supportsFractionalSeconds()
+#6 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(59): yii\db\mysql\QueryBuilder->defaultTimeTypeMap()
+#7 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/BaseObject.php(109): yii\db\mysql\QueryBuilder->init()
+#8 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/QueryBuilder.php(116): yii\base\BaseObject->__construct(Array)
+#9 [internal function]: yii\db\QueryBuilder->__construct(Object(yii\db\Connection), Array)
+#10 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/di/Container.php(411): ReflectionClass->newInstanceArgs(Array)
+#11 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/di/Container.php(170): yii\di\Container->build('yii\\db\\mysql\\Qu...', Array, Array)
+#12 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/BaseYii.php(345): yii\di\Container->get('yii\\db\\mysql\\Qu...', Array)
+#13 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/Schema.php(225): yii\BaseYii::createObject('yii\\db\\mysql\\Qu...', Array)
+#14 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Schema.php(247): yii\db\mysql\Schema->createQueryBuilder()
+#15 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(884): yii\db\Schema->getQueryBuilder()
+#16 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/ActiveQuery.php(328): yii\db\Connection->getQueryBuilder()
+#17 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Query.php(249): yii\db\ActiveQuery->createCommand(Object(yii\db\Connection))
+#18 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/ActiveQuery.php(133): yii\db\Query->all(NULL)
+#19 /home/gekbhbrchosting/public_html/phavico/frontend/views/layouts/main.php(36): yii\db\ActiveQuery->all()
+#20 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/View.php(347): require('/home/gekbhbrch...')
+#21 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/View.php(257): yii\base\View->renderPhpFile('/home/gekbhbrch...', Array)
+#22 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(422): yii\base\View->renderFile('/home/gekbhbrch...', Array, Object(frontend\controllers\SiteController))
+#23 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(408): yii\base\Controller->renderContent('<div class="sit...')
+#24 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorAction.php(139): yii\base\Controller->render('error', Array)
+#25 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorAction.php(118): yii\web\ErrorAction->renderHtmlResponse()
+#26 [internal function]: yii\web\ErrorAction->run()
+#27 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Action.php(93): call_user_func_array(Array, Array)
+#28 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(178): yii\base\Action->runWithParams(Array)
+#29 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Module.php(552): yii\base\Controller->runAction('error', Array)
+#30 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorHandler.php(109): yii\base\Module->runAction('site/error')
+#31 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/ErrorHandler.php(152): yii\web\ErrorHandler->renderException(Object(yii\web\NotFoundHttpException))
+#32 [internal function]: yii\base\ErrorHandler->handleException(Object(yii\web\NotFoundHttpException))
+#33 {main}
+
+Next yii\db\Exception: SQLSTATE[HY000] [1040] Too many connections in /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php:648
+Stack trace:
+#0 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(1067): yii\db\Connection->open()
+#1 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(1054): yii\db\Connection->getMasterPdo()
+#2 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(413): yii\db\Connection->getSlavePdo(true)
+#3 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(437): yii\db\mysql\QueryBuilder->supportsFractionalSeconds()
+#4 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(59): yii\db\mysql\QueryBuilder->defaultTimeTypeMap()
+#5 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/BaseObject.php(109): yii\db\mysql\QueryBuilder->init()
+#6 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/QueryBuilder.php(116): yii\base\BaseObject->__construct(Array)
+#7 [internal function]: yii\db\QueryBuilder->__construct(Object(yii\db\Connection), Array)
+#8 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/di/Container.php(411): ReflectionClass->newInstanceArgs(Array)
+#9 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/di/Container.php(170): yii\di\Container->build('yii\\db\\mysql\\Qu...', Array, Array)
+#10 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/BaseYii.php(345): yii\di\Container->get('yii\\db\\mysql\\Qu...', Array)
+#11 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/Schema.php(225): yii\BaseYii::createObject('yii\\db\\mysql\\Qu...', Array)
+#12 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Schema.php(247): yii\db\mysql\Schema->createQueryBuilder()
+#13 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(884): yii\db\Schema->getQueryBuilder()
+#14 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/ActiveQuery.php(328): yii\db\Connection->getQueryBuilder()
+#15 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Query.php(249): yii\db\ActiveQuery->createCommand(Object(yii\db\Connection))
+#16 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/ActiveQuery.php(133): yii\db\Query->all(NULL)
+#17 /home/gekbhbrchosting/public_html/phavico/frontend/views/layouts/main.php(36): yii\db\ActiveQuery->all()
+#18 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/View.php(347): require('/home/gekbhbrch...')
+#19 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/View.php(257): yii\base\View->renderPhpFile('/home/gekbhbrch...', Array)
+#20 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(422): yii\base\View->renderFile('/home/gekbhbrch...', Array, Object(frontend\controllers\SiteController))
+#21 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(408): yii\base\Controller->renderContent('<div class="sit...')
+#22 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorAction.php(139): yii\base\Controller->render('error', Array)
+#23 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorAction.php(118): yii\web\ErrorAction->renderHtmlResponse()
+#24 [internal function]: yii\web\ErrorAction->run()
+#25 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Action.php(93): call_user_func_array(Array, Array)
+#26 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(178): yii\base\Action->runWithParams(Array)
+#27 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Module.php(552): yii\base\Controller->runAction('error', Array)
+#28 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorHandler.php(109): yii\base\Module->runAction('site/error')
+#29 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/ErrorHandler.php(152): yii\web\ErrorHandler->renderException(Object(yii\web\NotFoundHttpException))
+#30 [internal function]: yii\base\ErrorHandler->handleException(Object(yii\web\NotFoundHttpException))
+#31 {main}
+Additional Information:
+Array
+(
+    [0] => HY000
+    [1] => 1040
+    [2] => Too many connections
+)
+
+Previous exception:
+yii\base\InvalidRouteException: Unable to resolve the request "themes/agrikon/wp-content/plugins/elementor/assets/lib/font-awesome/webfonts/fa-regular-400.woff2". in /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Module.php:561
+Stack trace:
+#0 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/Application.php(103): yii\base\Module->runAction('themes/agrikon/...', Array)
+#1 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Application.php(384): yii\web\Application->handleRequest(Object(yii\web\Request))
+#2 /home/gekbhbrchosting/public_html/phavico/frontend/web/index.php(18): yii\base\Application->run()
+#3 {main}
+
+Next yii\web\NotFoundHttpException: Page not found. in /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/Application.php:115
+Stack trace:
+#0 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Application.php(384): yii\web\Application->handleRequest(Object(yii\web\Request))
+#1 /home/gekbhbrchosting/public_html/phavico/frontend/web/index.php(18): yii\base\Application->run()
+#2 {main}
+$_SERVER = [
+    'PATH' => '/usr/local/bin:/bin:/usr/bin',
+    'HTTP_ACCEPT' => '*/*',
+    'HTTP_ACCEPT_ENCODING' => 'gzip, deflate, br',
+    'HTTP_ACCEPT_LANGUAGE' => 'en-US',
+    'HTTP_CONNECTION' => 'keep-alive',
+    'HTTP_COOKIE' => 'advanced-frontend=001f6b8f11fc8537837316116b60e6ad',
+    'HTTP_HOST' => 'phavico.com',
+    'HTTP_REFERER' => 'http://phavico.com/css/layout.css',
+    'HTTP_USER_AGENT' => 'Google-Edu',
+    'HTTP_ORIGIN' => 'http://phavico.com',
+    'HTTP_FROM' => 'googlebot(at)googlebot.com',
+    'DOCUMENT_ROOT' => '/home/gekbhbrchosting/public_html/phavico/frontend/web',
+    'REMOTE_ADDR' => '72.14.199.196',
+    'REMOTE_PORT' => '64106',
+    'SERVER_ADDR' => '103.75.187.81',
+    'SERVER_NAME' => 'phavico.com.fsfuugwe.000web.xyz',
+    'SERVER_ADMIN' => 'webmaster@phavico.com.fsfuugwe.000web.xyz',
+    'SERVER_PORT' => '80',
+    'REQUEST_SCHEME' => 'http',
+    'REQUEST_URI' => '/themes/agrikon/wp-content/plugins/elementor/assets/lib/font-awesome/webfonts/fa-regular-400.woff2',
+    'REDIRECT_URL' => '/themes/agrikon/wp-content/plugins/elementor/assets/lib/font-awesome/webfonts/fa-regular-400.woff2',
+    'REDIRECT_REQUEST_METHOD' => 'GET',
+    'REDIRECT_STATUS' => '200',
+    'SCRIPT_FILENAME' => '/home/gekbhbrchosting/public_html/phavico/frontend/web/index.php',
+    'QUERY_STRING' => '',
+    'SCRIPT_URI' => 'http://phavico.com/themes/agrikon/wp-content/plugins/elementor/assets/lib/font-awesome/webfonts/fa-regular-400.woff2',
+    'SCRIPT_URL' => '/themes/agrikon/wp-content/plugins/elementor/assets/lib/font-awesome/webfonts/fa-regular-400.woff2',
+    'SCRIPT_NAME' => '/index.php',
+    'SERVER_PROTOCOL' => 'HTTP/1.1',
+    'SERVER_SOFTWARE' => 'LiteSpeed',
+    'REQUEST_METHOD' => 'GET',
+    'X-LSCACHE' => 'on,crawler',
+    'PHP_SELF' => '/index.php',
+    'REQUEST_TIME_FLOAT' => 1692255371.735859,
+    'REQUEST_TIME' => 1692255371,
+]
+[21-Aug-2023 07:40:07 UTC] PHP Notice:  Undefined offset: 1 in /home/gekbhbrchosting/public_html/nongnghiep/wp-content/plugins/wp-super-cache/wp-cache-phase2.php on line 3085
+[23-Aug-2023 02:18:02 UTC] PHP Notice:  Undefined offset: 1 in /home/gekbhbrchosting/public_html/nongnghiep/wp-content/plugins/wp-super-cache/wp-cache-phase2.php on line 3085
+[24-Aug-2023 02:36:07 UTC] PHP Notice:  Undefined offset: 1 in /home/gekbhbrchosting/public_html/nongnghiep/wp-content/plugins/wp-super-cache/wp-cache-phase2.php on line 3085
+[24-Aug-2023 02:36:08 UTC] PHP Notice:  Undefined offset: 1 in /home/gekbhbrchosting/public_html/nongnghiep/wp-content/plugins/wp-super-cache/wp-cache-phase2.php on line 3085
+[24-Aug-2023 11:05:48 Asia/Ho_Chi_Minh] An Error occurred while handling another error:
+PDOException: SQLSTATE[HY000] [1040] Too many connections in /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php:722
+Stack trace:
+#0 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(722): PDO->__construct('mysql:host=loca...', 'gekbhbrchosting...', 'LiWY_1txJpAh', NULL)
+#1 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(637): yii\db\Connection->createPdoInstance()
+#2 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(1067): yii\db\Connection->open()
+#3 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(1054): yii\db\Connection->getMasterPdo()
+#4 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(413): yii\db\Connection->getSlavePdo(true)
+#5 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(437): yii\db\mysql\QueryBuilder->supportsFractionalSeconds()
+#6 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(59): yii\db\mysql\QueryBuilder->defaultTimeTypeMap()
+#7 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/BaseObject.php(109): yii\db\mysql\QueryBuilder->init()
+#8 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/QueryBuilder.php(116): yii\base\BaseObject->__construct(Array)
+#9 [internal function]: yii\db\QueryBuilder->__construct(Object(yii\db\Connection), Array)
+#10 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/di/Container.php(411): ReflectionClass->newInstanceArgs(Array)
+#11 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/di/Container.php(170): yii\di\Container->build('yii\\db\\mysql\\Qu...', Array, Array)
+#12 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/BaseYii.php(345): yii\di\Container->get('yii\\db\\mysql\\Qu...', Array)
+#13 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/Schema.php(225): yii\BaseYii::createObject('yii\\db\\mysql\\Qu...', Array)
+#14 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Schema.php(247): yii\db\mysql\Schema->createQueryBuilder()
+#15 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(884): yii\db\Schema->getQueryBuilder()
+#16 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/ActiveQuery.php(328): yii\db\Connection->getQueryBuilder()
+#17 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Query.php(249): yii\db\ActiveQuery->createCommand(Object(yii\db\Connection))
+#18 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/ActiveQuery.php(133): yii\db\Query->all(NULL)
+#19 /home/gekbhbrchosting/public_html/phavico/frontend/views/layouts/main.php(36): yii\db\ActiveQuery->all()
+#20 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/View.php(347): require('/home/gekbhbrch...')
+#21 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/View.php(257): yii\base\View->renderPhpFile('/home/gekbhbrch...', Array)
+#22 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(422): yii\base\View->renderFile('/home/gekbhbrch...', Array, Object(frontend\controllers\SiteController))
+#23 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(408): yii\base\Controller->renderContent('<div class="sit...')
+#24 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorAction.php(139): yii\base\Controller->render('error', Array)
+#25 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorAction.php(118): yii\web\ErrorAction->renderHtmlResponse()
+#26 [internal function]: yii\web\ErrorAction->run()
+#27 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Action.php(93): call_user_func_array(Array, Array)
+#28 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(178): yii\base\Action->runWithParams(Array)
+#29 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Module.php(552): yii\base\Controller->runAction('error', Array)
+#30 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorHandler.php(109): yii\base\Module->runAction('site/error')
+#31 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/ErrorHandler.php(152): yii\web\ErrorHandler->renderException(Object(yii\web\NotFoundHttpException))
+#32 [internal function]: yii\base\ErrorHandler->handleException(Object(yii\web\NotFoundHttpException))
+#33 {main}
+
+Next yii\db\Exception: SQLSTATE[HY000] [1040] Too many connections in /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php:648
+Stack trace:
+#0 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(1067): yii\db\Connection->open()
+#1 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(1054): yii\db\Connection->getMasterPdo()
+#2 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(413): yii\db\Connection->getSlavePdo(true)
+#3 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(437): yii\db\mysql\QueryBuilder->supportsFractionalSeconds()
+#4 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(59): yii\db\mysql\QueryBuilder->defaultTimeTypeMap()
+#5 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/BaseObject.php(109): yii\db\mysql\QueryBuilder->init()
+#6 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/QueryBuilder.php(116): yii\base\BaseObject->__construct(Array)
+#7 [internal function]: yii\db\QueryBuilder->__construct(Object(yii\db\Connection), Array)
+#8 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/di/Container.php(411): ReflectionClass->newInstanceArgs(Array)
+#9 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/di/Container.php(170): yii\di\Container->build('yii\\db\\mysql\\Qu...', Array, Array)
+#10 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/BaseYii.php(345): yii\di\Container->get('yii\\db\\mysql\\Qu...', Array)
+#11 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/Schema.php(225): yii\BaseYii::createObject('yii\\db\\mysql\\Qu...', Array)
+#12 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Schema.php(247): yii\db\mysql\Schema->createQueryBuilder()
+#13 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(884): yii\db\Schema->getQueryBuilder()
+#14 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/ActiveQuery.php(328): yii\db\Connection->getQueryBuilder()
+#15 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Query.php(249): yii\db\ActiveQuery->createCommand(Object(yii\db\Connection))
+#16 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/ActiveQuery.php(133): yii\db\Query->all(NULL)
+#17 /home/gekbhbrchosting/public_html/phavico/frontend/views/layouts/main.php(36): yii\db\ActiveQuery->all()
+#18 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/View.php(347): require('/home/gekbhbrch...')
+#19 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/View.php(257): yii\base\View->renderPhpFile('/home/gekbhbrch...', Array)
+#20 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(422): yii\base\View->renderFile('/home/gekbhbrch...', Array, Object(frontend\controllers\SiteController))
+#21 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(408): yii\base\Controller->renderContent('<div class="sit...')
+#22 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorAction.php(139): yii\base\Controller->render('error', Array)
+#23 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorAction.php(118): yii\web\ErrorAction->renderHtmlResponse()
+#24 [internal function]: yii\web\ErrorAction->run()
+#25 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Action.php(93): call_user_func_array(Array, Array)
+#26 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(178): yii\base\Action->runWithParams(Array)
+#27 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Module.php(552): yii\base\Controller->runAction('error', Array)
+#28 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorHandler.php(109): yii\base\Module->runAction('site/error')
+#29 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/ErrorHandler.php(152): yii\web\ErrorHandler->renderException(Object(yii\web\NotFoundHttpException))
+#30 [internal function]: yii\base\ErrorHandler->handleException(Object(yii\web\NotFoundHttpException))
+#31 {main}
+Additional Information:
+Array
+(
+    [0] => HY000
+    [1] => 1040
+    [2] => Too many connections
+)
+
+Previous exception:
+yii\base\InvalidRouteException: Unable to resolve the request "themes/agrikon/wp-content/plugins/elementor/assets/lib/font-awesome/webfonts/fa-regular-400.woff2". in /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Module.php:561
+Stack trace:
+#0 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/Application.php(103): yii\base\Module->runAction('themes/agrikon/...', Array)
+#1 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Application.php(384): yii\web\Application->handleRequest(Object(yii\web\Request))
+#2 /home/gekbhbrchosting/public_html/phavico/frontend/web/index.php(18): yii\base\Application->run()
+#3 {main}
+
+Next yii\web\NotFoundHttpException: Page not found. in /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/Application.php:115
+Stack trace:
+#0 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Application.php(384): yii\web\Application->handleRequest(Object(yii\web\Request))
+#1 /home/gekbhbrchosting/public_html/phavico/frontend/web/index.php(18): yii\base\Application->run()
+#2 {main}
+$_SERVER = [
+    'PATH' => '/usr/local/bin:/bin:/usr/bin',
+    'HTTP_ACCEPT' => '*/*',
+    'HTTP_ACCEPT_ENCODING' => 'gzip, deflate, br',
+    'HTTP_ACCEPT_LANGUAGE' => 'en-US,en;q=0.9',
+    'HTTP_COOKIE' => '_ga=GA1.1.1171571996.1689851766; _ga_GNSZR91JYF=GS1.1.1689854821.2.1.1689854937.0.0.0; advanced-frontend=a6b8119ad79d734ba27ab1344997b99d; _ga_RBXMQEX8JH=GS1.1.1692849599.4.1.1692849940.0.0.0',
+    'HTTP_HOST' => 'phavico.com',
+    'HTTP_REFERER' => 'https://phavico.com/css/layout.css',
+    'HTTP_USER_AGENT' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36 Edg/115.0.1901.203',
+    'HTTP_SEC_CH_UA' => '"Not/A)Brand";v="99", "Microsoft Edge";v="115", "Chromium";v="115"',
+    'HTTP_ORIGIN' => 'https://phavico.com',
+    'HTTP_SEC_CH_UA_MOBILE' => '?0',
+    'HTTP_SEC_CH_UA_PLATFORM' => '"Windows"',
+    'HTTP_SEC_FETCH_SITE' => 'same-origin',
+    'HTTP_SEC_FETCH_MODE' => 'cors',
+    'HTTP_SEC_FETCH_DEST' => 'font',
+    'HTTP_X_HTTPS' => '1',
+    'DOCUMENT_ROOT' => '/home/gekbhbrchosting/public_html/phavico/frontend/web',
+    'REMOTE_ADDR' => '14.224.147.202',
+    'REMOTE_PORT' => '56269',
+    'SERVER_ADDR' => '103.75.187.81',
+    'SERVER_NAME' => 'phavico.com',
+    'SERVER_ADMIN' => 'webmaster@phavico.com.fsfuugwe.000web.xyz',
+    'SERVER_PORT' => '443',
+    'REQUEST_SCHEME' => 'https',
+    'REQUEST_URI' => '/themes/agrikon/wp-content/plugins/elementor/assets/lib/font-awesome/webfonts/fa-regular-400.woff2',
+    'REDIRECT_URL' => '/themes/agrikon/wp-content/plugins/elementor/assets/lib/font-awesome/webfonts/fa-regular-400.woff2',
+    'REDIRECT_REQUEST_METHOD' => 'GET',
+    'HTTPS' => 'on',
+    'REDIRECT_STATUS' => '200',
+    'X_SPDY' => 'HTTP2',
+    'SSL_PROTOCOL' => 'TLSv1.3',
+    'SSL_CIPHER' => 'TLS_AES_128_GCM_SHA256',
+    'SSL_CIPHER_USEKEYSIZE' => '128',
+    'SSL_CIPHER_ALGKEYSIZE' => '128',
+    'SCRIPT_FILENAME' => '/home/gekbhbrchosting/public_html/phavico/frontend/web/index.php',
+    'QUERY_STRING' => '',
+    'SCRIPT_URI' => 'https://phavico.com/themes/agrikon/wp-content/plugins/elementor/assets/lib/font-awesome/webfonts/fa-regular-400.woff2',
+    'SCRIPT_URL' => '/themes/agrikon/wp-content/plugins/elementor/assets/lib/font-awesome/webfonts/fa-regular-400.woff2',
+    'SCRIPT_NAME' => '/index.php',
+    'SERVER_PROTOCOL' => 'HTTP/1.1',
+    'SERVER_SOFTWARE' => 'LiteSpeed',
+    'REQUEST_METHOD' => 'GET',
+    'X-LSCACHE' => 'on,crawler',
+    'PHP_SELF' => '/index.php',
+    'REQUEST_TIME_FLOAT' => 1692849943.248482,
+    'REQUEST_TIME' => 1692849943,
+]
+[24-Aug-2023 11:05:48 Asia/Ho_Chi_Minh] An Error occurred while handling another error:
+PDOException: SQLSTATE[HY000] [1040] Too many connections in /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php:722
+Stack trace:
+#0 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(722): PDO->__construct('mysql:host=loca...', 'gekbhbrchosting...', 'LiWY_1txJpAh', NULL)
+#1 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(637): yii\db\Connection->createPdoInstance()
+#2 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(1067): yii\db\Connection->open()
+#3 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(1054): yii\db\Connection->getMasterPdo()
+#4 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(413): yii\db\Connection->getSlavePdo(true)
+#5 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(437): yii\db\mysql\QueryBuilder->supportsFractionalSeconds()
+#6 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(59): yii\db\mysql\QueryBuilder->defaultTimeTypeMap()
+#7 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/BaseObject.php(109): yii\db\mysql\QueryBuilder->init()
+#8 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/QueryBuilder.php(116): yii\base\BaseObject->__construct(Array)
+#9 [internal function]: yii\db\QueryBuilder->__construct(Object(yii\db\Connection), Array)
+#10 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/di/Container.php(411): ReflectionClass->newInstanceArgs(Array)
+#11 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/di/Container.php(170): yii\di\Container->build('yii\\db\\mysql\\Qu...', Array, Array)
+#12 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/BaseYii.php(345): yii\di\Container->get('yii\\db\\mysql\\Qu...', Array)
+#13 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/Schema.php(225): yii\BaseYii::createObject('yii\\db\\mysql\\Qu...', Array)
+#14 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Schema.php(247): yii\db\mysql\Schema->createQueryBuilder()
+#15 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(884): yii\db\Schema->getQueryBuilder()
+#16 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/ActiveQuery.php(328): yii\db\Connection->getQueryBuilder()
+#17 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Query.php(249): yii\db\ActiveQuery->createCommand(Object(yii\db\Connection))
+#18 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/ActiveQuery.php(133): yii\db\Query->all(NULL)
+#19 /home/gekbhbrchosting/public_html/phavico/frontend/views/layouts/main.php(36): yii\db\ActiveQuery->all()
+#20 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/View.php(347): require('/home/gekbhbrch...')
+#21 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/View.php(257): yii\base\View->renderPhpFile('/home/gekbhbrch...', Array)
+#22 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(422): yii\base\View->renderFile('/home/gekbhbrch...', Array, Object(frontend\controllers\SiteController))
+#23 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(408): yii\base\Controller->renderContent('<div class="sit...')
+#24 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorAction.php(139): yii\base\Controller->render('error', Array)
+#25 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorAction.php(118): yii\web\ErrorAction->renderHtmlResponse()
+#26 [internal function]: yii\web\ErrorAction->run()
+#27 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Action.php(93): call_user_func_array(Array, Array)
+#28 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(178): yii\base\Action->runWithParams(Array)
+#29 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Module.php(552): yii\base\Controller->runAction('error', Array)
+#30 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorHandler.php(109): yii\base\Module->runAction('site/error')
+#31 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/ErrorHandler.php(152): yii\web\ErrorHandler->renderException(Object(yii\web\NotFoundHttpException))
+#32 [internal function]: yii\base\ErrorHandler->handleException(Object(yii\web\NotFoundHttpException))
+#33 {main}
+
+Next yii\db\Exception: SQLSTATE[HY000] [1040] Too many connections in /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php:648
+Stack trace:
+#0 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(1067): yii\db\Connection->open()
+#1 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(1054): yii\db\Connection->getMasterPdo()
+#2 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(413): yii\db\Connection->getSlavePdo(true)
+#3 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(437): yii\db\mysql\QueryBuilder->supportsFractionalSeconds()
+#4 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(59): yii\db\mysql\QueryBuilder->defaultTimeTypeMap()
+#5 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/BaseObject.php(109): yii\db\mysql\QueryBuilder->init()
+#6 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/QueryBuilder.php(116): yii\base\BaseObject->__construct(Array)
+#7 [internal function]: yii\db\QueryBuilder->__construct(Object(yii\db\Connection), Array)
+#8 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/di/Container.php(411): ReflectionClass->newInstanceArgs(Array)
+#9 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/di/Container.php(170): yii\di\Container->build('yii\\db\\mysql\\Qu...', Array, Array)
+#10 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/BaseYii.php(345): yii\di\Container->get('yii\\db\\mysql\\Qu...', Array)
+#11 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/Schema.php(225): yii\BaseYii::createObject('yii\\db\\mysql\\Qu...', Array)
+#12 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Schema.php(247): yii\db\mysql\Schema->createQueryBuilder()
+#13 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(884): yii\db\Schema->getQueryBuilder()
+#14 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/ActiveQuery.php(328): yii\db\Connection->getQueryBuilder()
+#15 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Query.php(249): yii\db\ActiveQuery->createCommand(Object(yii\db\Connection))
+#16 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/ActiveQuery.php(133): yii\db\Query->all(NULL)
+#17 /home/gekbhbrchosting/public_html/phavico/frontend/views/layouts/main.php(36): yii\db\ActiveQuery->all()
+#18 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/View.php(347): require('/home/gekbhbrch...')
+#19 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/View.php(257): yii\base\View->renderPhpFile('/home/gekbhbrch...', Array)
+#20 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(422): yii\base\View->renderFile('/home/gekbhbrch...', Array, Object(frontend\controllers\SiteController))
+#21 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(408): yii\base\Controller->renderContent('<div class="sit...')
+#22 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorAction.php(139): yii\base\Controller->render('error', Array)
+#23 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorAction.php(118): yii\web\ErrorAction->renderHtmlResponse()
+#24 [internal function]: yii\web\ErrorAction->run()
+#25 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Action.php(93): call_user_func_array(Array, Array)
+#26 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(178): yii\base\Action->runWithParams(Array)
+#27 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Module.php(552): yii\base\Controller->runAction('error', Array)
+#28 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorHandler.php(109): yii\base\Module->runAction('site/error')
+#29 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/ErrorHandler.php(152): yii\web\ErrorHandler->renderException(Object(yii\web\NotFoundHttpException))
+#30 [internal function]: yii\base\ErrorHandler->handleException(Object(yii\web\NotFoundHttpException))
+#31 {main}
+Additional Information:
+Array
+(
+    [0] => HY000
+    [1] => 1040
+    [2] => Too many connections
+)
+
+Previous exception:
+yii\base\InvalidRouteException: Unable to resolve the request "themes/agrikon/wp-content/themes/agrikon/fonts/fa-light-300.woff2". in /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Module.php:561
+Stack trace:
+#0 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/Application.php(103): yii\base\Module->runAction('themes/agrikon/...', Array)
+#1 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Application.php(384): yii\web\Application->handleRequest(Object(yii\web\Request))
+#2 /home/gekbhbrchosting/public_html/phavico/frontend/web/index.php(18): yii\base\Application->run()
+#3 {main}
+
+Next yii\web\NotFoundHttpException: Page not found. in /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/Application.php:115
+Stack trace:
+#0 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Application.php(384): yii\web\Application->handleRequest(Object(yii\web\Request))
+#1 /home/gekbhbrchosting/public_html/phavico/frontend/web/index.php(18): yii\base\Application->run()
+#2 {main}
+$_SERVER = [
+    'PATH' => '/usr/local/bin:/bin:/usr/bin',
+    'HTTP_ACCEPT' => '*/*',
+    'HTTP_ACCEPT_ENCODING' => 'gzip, deflate, br',
+    'HTTP_ACCEPT_LANGUAGE' => 'en-US,en;q=0.9',
+    'HTTP_COOKIE' => '_ga=GA1.1.1171571996.1689851766; _ga_GNSZR91JYF=GS1.1.1689854821.2.1.1689854937.0.0.0; advanced-frontend=a6b8119ad79d734ba27ab1344997b99d; _ga_RBXMQEX8JH=GS1.1.1692849599.4.1.1692849940.0.0.0',
+    'HTTP_HOST' => 'phavico.com',
+    'HTTP_REFERER' => 'https://phavico.com/css/layout.css',
+    'HTTP_USER_AGENT' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36 Edg/115.0.1901.203',
+    'HTTP_SEC_CH_UA' => '"Not/A)Brand";v="99", "Microsoft Edge";v="115", "Chromium";v="115"',
+    'HTTP_ORIGIN' => 'https://phavico.com',
+    'HTTP_SEC_CH_UA_MOBILE' => '?0',
+    'HTTP_SEC_CH_UA_PLATFORM' => '"Windows"',
+    'HTTP_SEC_FETCH_SITE' => 'same-origin',
+    'HTTP_SEC_FETCH_MODE' => 'cors',
+    'HTTP_SEC_FETCH_DEST' => 'font',
+    'HTTP_X_HTTPS' => '1',
+    'DOCUMENT_ROOT' => '/home/gekbhbrchosting/public_html/phavico/frontend/web',
+    'REMOTE_ADDR' => '14.224.147.202',
+    'REMOTE_PORT' => '56269',
+    'SERVER_ADDR' => '103.75.187.81',
+    'SERVER_NAME' => 'phavico.com',
+    'SERVER_ADMIN' => 'webmaster@phavico.com.fsfuugwe.000web.xyz',
+    'SERVER_PORT' => '443',
+    'REQUEST_SCHEME' => 'https',
+    'REQUEST_URI' => '/themes/agrikon/wp-content/themes/agrikon/fonts/fa-light-300.woff2',
+    'REDIRECT_URL' => '/themes/agrikon/wp-content/themes/agrikon/fonts/fa-light-300.woff2',
+    'REDIRECT_REQUEST_METHOD' => 'GET',
+    'HTTPS' => 'on',
+    'REDIRECT_STATUS' => '200',
+    'X_SPDY' => 'HTTP2',
+    'SSL_PROTOCOL' => 'TLSv1.3',
+    'SSL_CIPHER' => 'TLS_AES_128_GCM_SHA256',
+    'SSL_CIPHER_USEKEYSIZE' => '128',
+    'SSL_CIPHER_ALGKEYSIZE' => '128',
+    'SCRIPT_FILENAME' => '/home/gekbhbrchosting/public_html/phavico/frontend/web/index.php',
+    'QUERY_STRING' => '',
+    'SCRIPT_URI' => 'https://phavico.com/themes/agrikon/wp-content/themes/agrikon/fonts/fa-light-300.woff2',
+    'SCRIPT_URL' => '/themes/agrikon/wp-content/themes/agrikon/fonts/fa-light-300.woff2',
+    'SCRIPT_NAME' => '/index.php',
+    'SERVER_PROTOCOL' => 'HTTP/1.1',
+    'SERVER_SOFTWARE' => 'LiteSpeed',
+    'REQUEST_METHOD' => 'GET',
+    'X-LSCACHE' => 'on,crawler',
+    'PHP_SELF' => '/index.php',
+    'REQUEST_TIME_FLOAT' => 1692849943.249069,
+    'REQUEST_TIME' => 1692849943,
+]
+[24-Aug-2023 11:05:49 Asia/Ho_Chi_Minh] An Error occurred while handling another error:
+PDOException: SQLSTATE[HY000] [1040] Too many connections in /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php:722
+Stack trace:
+#0 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(722): PDO->__construct('mysql:host=loca...', 'gekbhbrchosting...', 'LiWY_1txJpAh', NULL)
+#1 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(637): yii\db\Connection->createPdoInstance()
+#2 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(1067): yii\db\Connection->open()
+#3 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(1054): yii\db\Connection->getMasterPdo()
+#4 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(413): yii\db\Connection->getSlavePdo(true)
+#5 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(437): yii\db\mysql\QueryBuilder->supportsFractionalSeconds()
+#6 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(59): yii\db\mysql\QueryBuilder->defaultTimeTypeMap()
+#7 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/BaseObject.php(109): yii\db\mysql\QueryBuilder->init()
+#8 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/QueryBuilder.php(116): yii\base\BaseObject->__construct(Array)
+#9 [internal function]: yii\db\QueryBuilder->__construct(Object(yii\db\Connection), Array)
+#10 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/di/Container.php(411): ReflectionClass->newInstanceArgs(Array)
+#11 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/di/Container.php(170): yii\di\Container->build('yii\\db\\mysql\\Qu...', Array, Array)
+#12 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/BaseYii.php(345): yii\di\Container->get('yii\\db\\mysql\\Qu...', Array)
+#13 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/Schema.php(225): yii\BaseYii::createObject('yii\\db\\mysql\\Qu...', Array)
+#14 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Schema.php(247): yii\db\mysql\Schema->createQueryBuilder()
+#15 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(884): yii\db\Schema->getQueryBuilder()
+#16 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/ActiveQuery.php(328): yii\db\Connection->getQueryBuilder()
+#17 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Query.php(249): yii\db\ActiveQuery->createCommand(Object(yii\db\Connection))
+#18 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/ActiveQuery.php(133): yii\db\Query->all(NULL)
+#19 /home/gekbhbrchosting/public_html/phavico/frontend/views/layouts/main.php(36): yii\db\ActiveQuery->all()
+#20 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/View.php(347): require('/home/gekbhbrch...')
+#21 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/View.php(257): yii\base\View->renderPhpFile('/home/gekbhbrch...', Array)
+#22 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(422): yii\base\View->renderFile('/home/gekbhbrch...', Array, Object(frontend\controllers\SiteController))
+#23 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(408): yii\base\Controller->renderContent('<div class="sit...')
+#24 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorAction.php(139): yii\base\Controller->render('error', Array)
+#25 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorAction.php(118): yii\web\ErrorAction->renderHtmlResponse()
+#26 [internal function]: yii\web\ErrorAction->run()
+#27 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Action.php(93): call_user_func_array(Array, Array)
+#28 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(178): yii\base\Action->runWithParams(Array)
+#29 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Module.php(552): yii\base\Controller->runAction('error', Array)
+#30 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorHandler.php(109): yii\base\Module->runAction('site/error')
+#31 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/ErrorHandler.php(152): yii\web\ErrorHandler->renderException(Object(yii\web\NotFoundHttpException))
+#32 [internal function]: yii\base\ErrorHandler->handleException(Object(yii\web\NotFoundHttpException))
+#33 {main}
+
+Next yii\db\Exception: SQLSTATE[HY000] [1040] Too many connections in /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php:648
+Stack trace:
+#0 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(1067): yii\db\Connection->open()
+#1 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(1054): yii\db\Connection->getMasterPdo()
+#2 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(413): yii\db\Connection->getSlavePdo(true)
+#3 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(437): yii\db\mysql\QueryBuilder->supportsFractionalSeconds()
+#4 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(59): yii\db\mysql\QueryBuilder->defaultTimeTypeMap()
+#5 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/BaseObject.php(109): yii\db\mysql\QueryBuilder->init()
+#6 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/QueryBuilder.php(116): yii\base\BaseObject->__construct(Array)
+#7 [internal function]: yii\db\QueryBuilder->__construct(Object(yii\db\Connection), Array)
+#8 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/di/Container.php(411): ReflectionClass->newInstanceArgs(Array)
+#9 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/di/Container.php(170): yii\di\Container->build('yii\\db\\mysql\\Qu...', Array, Array)
+#10 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/BaseYii.php(345): yii\di\Container->get('yii\\db\\mysql\\Qu...', Array)
+#11 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/Schema.php(225): yii\BaseYii::createObject('yii\\db\\mysql\\Qu...', Array)
+#12 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Schema.php(247): yii\db\mysql\Schema->createQueryBuilder()
+#13 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(884): yii\db\Schema->getQueryBuilder()
+#14 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/ActiveQuery.php(328): yii\db\Connection->getQueryBuilder()
+#15 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Query.php(249): yii\db\ActiveQuery->createCommand(Object(yii\db\Connection))
+#16 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/ActiveQuery.php(133): yii\db\Query->all(NULL)
+#17 /home/gekbhbrchosting/public_html/phavico/frontend/views/layouts/main.php(36): yii\db\ActiveQuery->all()
+#18 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/View.php(347): require('/home/gekbhbrch...')
+#19 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/View.php(257): yii\base\View->renderPhpFile('/home/gekbhbrch...', Array)
+#20 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(422): yii\base\View->renderFile('/home/gekbhbrch...', Array, Object(frontend\controllers\SiteController))
+#21 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(408): yii\base\Controller->renderContent('<div class="sit...')
+#22 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorAction.php(139): yii\base\Controller->render('error', Array)
+#23 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorAction.php(118): yii\web\ErrorAction->renderHtmlResponse()
+#24 [internal function]: yii\web\ErrorAction->run()
+#25 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Action.php(93): call_user_func_array(Array, Array)
+#26 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(178): yii\base\Action->runWithParams(Array)
+#27 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Module.php(552): yii\base\Controller->runAction('error', Array)
+#28 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorHandler.php(109): yii\base\Module->runAction('site/error')
+#29 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/ErrorHandler.php(152): yii\web\ErrorHandler->renderException(Object(yii\web\NotFoundHttpException))
+#30 [internal function]: yii\base\ErrorHandler->handleException(Object(yii\web\NotFoundHttpException))
+#31 {main}
+Additional Information:
+Array
+(
+    [0] => HY000
+    [1] => 1040
+    [2] => Too many connections
+)
+
+Previous exception:
+yii\base\InvalidRouteException: Unable to resolve the request "themes/agrikon/wp-content/plugins/elementor/assets/lib/font-awesome/webfonts/fa-regular-400.woff". in /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Module.php:561
+Stack trace:
+#0 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/Application.php(103): yii\base\Module->runAction('themes/agrikon/...', Array)
+#1 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Application.php(384): yii\web\Application->handleRequest(Object(yii\web\Request))
+#2 /home/gekbhbrchosting/public_html/phavico/frontend/web/index.php(18): yii\base\Application->run()
+#3 {main}
+
+Next yii\web\NotFoundHttpException: Page not found. in /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/Application.php:115
+Stack trace:
+#0 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Application.php(384): yii\web\Application->handleRequest(Object(yii\web\Request))
+#1 /home/gekbhbrchosting/public_html/phavico/frontend/web/index.php(18): yii\base\Application->run()
+#2 {main}
+$_SERVER = [
+    'PATH' => '/usr/local/bin:/bin:/usr/bin',
+    'HTTP_ACCEPT' => '*/*',
+    'HTTP_ACCEPT_ENCODING' => 'gzip, deflate, br',
+    'HTTP_ACCEPT_LANGUAGE' => 'en-US,en;q=0.9',
+    'HTTP_COOKIE' => '_ga=GA1.1.1171571996.1689851766; _ga_GNSZR91JYF=GS1.1.1689854821.2.1.1689854937.0.0.0; advanced-frontend=a6b8119ad79d734ba27ab1344997b99d; _ga_RBXMQEX8JH=GS1.1.1692849599.4.1.1692849941.0.0.0',
+    'HTTP_HOST' => 'phavico.com',
+    'HTTP_REFERER' => 'https://phavico.com/css/layout.css',
+    'HTTP_USER_AGENT' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36 Edg/115.0.1901.203',
+    'HTTP_SEC_CH_UA' => '"Not/A)Brand";v="99", "Microsoft Edge";v="115", "Chromium";v="115"',
+    'HTTP_ORIGIN' => 'https://phavico.com',
+    'HTTP_SEC_CH_UA_MOBILE' => '?0',
+    'HTTP_SEC_CH_UA_PLATFORM' => '"Windows"',
+    'HTTP_SEC_FETCH_SITE' => 'same-origin',
+    'HTTP_SEC_FETCH_MODE' => 'cors',
+    'HTTP_SEC_FETCH_DEST' => 'font',
+    'HTTP_X_HTTPS' => '1',
+    'DOCUMENT_ROOT' => '/home/gekbhbrchosting/public_html/phavico/frontend/web',
+    'REMOTE_ADDR' => '14.224.147.202',
+    'REMOTE_PORT' => '56269',
+    'SERVER_ADDR' => '103.75.187.81',
+    'SERVER_NAME' => 'phavico.com',
+    'SERVER_ADMIN' => 'webmaster@phavico.com.fsfuugwe.000web.xyz',
+    'SERVER_PORT' => '443',
+    'REQUEST_SCHEME' => 'https',
+    'REQUEST_URI' => '/themes/agrikon/wp-content/plugins/elementor/assets/lib/font-awesome/webfonts/fa-regular-400.woff',
+    'REDIRECT_URL' => '/themes/agrikon/wp-content/plugins/elementor/assets/lib/font-awesome/webfonts/fa-regular-400.woff',
+    'REDIRECT_REQUEST_METHOD' => 'GET',
+    'HTTPS' => 'on',
+    'REDIRECT_STATUS' => '200',
+    'X_SPDY' => 'HTTP2',
+    'SSL_PROTOCOL' => 'TLSv1.3',
+    'SSL_CIPHER' => 'TLS_AES_128_GCM_SHA256',
+    'SSL_CIPHER_USEKEYSIZE' => '128',
+    'SSL_CIPHER_ALGKEYSIZE' => '128',
+    'SCRIPT_FILENAME' => '/home/gekbhbrchosting/public_html/phavico/frontend/web/index.php',
+    'QUERY_STRING' => '',
+    'SCRIPT_URI' => 'https://phavico.com/themes/agrikon/wp-content/plugins/elementor/assets/lib/font-awesome/webfonts/fa-regular-400.woff',
+    'SCRIPT_URL' => '/themes/agrikon/wp-content/plugins/elementor/assets/lib/font-awesome/webfonts/fa-regular-400.woff',
+    'SCRIPT_NAME' => '/index.php',
+    'SERVER_PROTOCOL' => 'HTTP/1.1',
+    'SERVER_SOFTWARE' => 'LiteSpeed',
+    'REQUEST_METHOD' => 'GET',
+    'X-LSCACHE' => 'on,crawler',
+    'PHP_SELF' => '/index.php',
+    'REQUEST_TIME_FLOAT' => 1692849948.976919,
+    'REQUEST_TIME' => 1692849948,
+]
+[24-Aug-2023 11:05:49 Asia/Ho_Chi_Minh] An Error occurred while handling another error:
+PDOException: SQLSTATE[HY000] [1040] Too many connections in /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php:722
+Stack trace:
+#0 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(722): PDO->__construct('mysql:host=loca...', 'gekbhbrchosting...', 'LiWY_1txJpAh', NULL)
+#1 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(637): yii\db\Connection->createPdoInstance()
+#2 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(1067): yii\db\Connection->open()
+#3 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(1054): yii\db\Connection->getMasterPdo()
+#4 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(413): yii\db\Connection->getSlavePdo(true)
+#5 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(437): yii\db\mysql\QueryBuilder->supportsFractionalSeconds()
+#6 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(59): yii\db\mysql\QueryBuilder->defaultTimeTypeMap()
+#7 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/BaseObject.php(109): yii\db\mysql\QueryBuilder->init()
+#8 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/QueryBuilder.php(116): yii\base\BaseObject->__construct(Array)
+#9 [internal function]: yii\db\QueryBuilder->__construct(Object(yii\db\Connection), Array)
+#10 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/di/Container.php(411): ReflectionClass->newInstanceArgs(Array)
+#11 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/di/Container.php(170): yii\di\Container->build('yii\\db\\mysql\\Qu...', Array, Array)
+#12 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/BaseYii.php(345): yii\di\Container->get('yii\\db\\mysql\\Qu...', Array)
+#13 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/Schema.php(225): yii\BaseYii::createObject('yii\\db\\mysql\\Qu...', Array)
+#14 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Schema.php(247): yii\db\mysql\Schema->createQueryBuilder()
+#15 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(884): yii\db\Schema->getQueryBuilder()
+#16 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/ActiveQuery.php(328): yii\db\Connection->getQueryBuilder()
+#17 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Query.php(249): yii\db\ActiveQuery->createCommand(Object(yii\db\Connection))
+#18 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/ActiveQuery.php(133): yii\db\Query->all(NULL)
+#19 /home/gekbhbrchosting/public_html/phavico/frontend/views/layouts/main.php(36): yii\db\ActiveQuery->all()
+#20 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/View.php(347): require('/home/gekbhbrch...')
+#21 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/View.php(257): yii\base\View->renderPhpFile('/home/gekbhbrch...', Array)
+#22 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(422): yii\base\View->renderFile('/home/gekbhbrch...', Array, Object(frontend\controllers\SiteController))
+#23 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(408): yii\base\Controller->renderContent('<div class="sit...')
+#24 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorAction.php(139): yii\base\Controller->render('error', Array)
+#25 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorAction.php(118): yii\web\ErrorAction->renderHtmlResponse()
+#26 [internal function]: yii\web\ErrorAction->run()
+#27 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Action.php(93): call_user_func_array(Array, Array)
+#28 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(178): yii\base\Action->runWithParams(Array)
+#29 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Module.php(552): yii\base\Controller->runAction('error', Array)
+#30 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorHandler.php(109): yii\base\Module->runAction('site/error')
+#31 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/ErrorHandler.php(152): yii\web\ErrorHandler->renderException(Object(yii\web\NotFoundHttpException))
+#32 [internal function]: yii\base\ErrorHandler->handleException(Object(yii\web\NotFoundHttpException))
+#33 {main}
+
+Next yii\db\Exception: SQLSTATE[HY000] [1040] Too many connections in /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php:648
+Stack trace:
+#0 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(1067): yii\db\Connection->open()
+#1 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(1054): yii\db\Connection->getMasterPdo()
+#2 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(413): yii\db\Connection->getSlavePdo(true)
+#3 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(437): yii\db\mysql\QueryBuilder->supportsFractionalSeconds()
+#4 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(59): yii\db\mysql\QueryBuilder->defaultTimeTypeMap()
+#5 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/BaseObject.php(109): yii\db\mysql\QueryBuilder->init()
+#6 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/QueryBuilder.php(116): yii\base\BaseObject->__construct(Array)
+#7 [internal function]: yii\db\QueryBuilder->__construct(Object(yii\db\Connection), Array)
+#8 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/di/Container.php(411): ReflectionClass->newInstanceArgs(Array)
+#9 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/di/Container.php(170): yii\di\Container->build('yii\\db\\mysql\\Qu...', Array, Array)
+#10 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/BaseYii.php(345): yii\di\Container->get('yii\\db\\mysql\\Qu...', Array)
+#11 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/Schema.php(225): yii\BaseYii::createObject('yii\\db\\mysql\\Qu...', Array)
+#12 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Schema.php(247): yii\db\mysql\Schema->createQueryBuilder()
+#13 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(884): yii\db\Schema->getQueryBuilder()
+#14 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/ActiveQuery.php(328): yii\db\Connection->getQueryBuilder()
+#15 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Query.php(249): yii\db\ActiveQuery->createCommand(Object(yii\db\Connection))
+#16 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/ActiveQuery.php(133): yii\db\Query->all(NULL)
+#17 /home/gekbhbrchosting/public_html/phavico/frontend/views/layouts/main.php(36): yii\db\ActiveQuery->all()
+#18 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/View.php(347): require('/home/gekbhbrch...')
+#19 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/View.php(257): yii\base\View->renderPhpFile('/home/gekbhbrch...', Array)
+#20 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(422): yii\base\View->renderFile('/home/gekbhbrch...', Array, Object(frontend\controllers\SiteController))
+#21 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(408): yii\base\Controller->renderContent('<div class="sit...')
+#22 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorAction.php(139): yii\base\Controller->render('error', Array)
+#23 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorAction.php(118): yii\web\ErrorAction->renderHtmlResponse()
+#24 [internal function]: yii\web\ErrorAction->run()
+#25 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Action.php(93): call_user_func_array(Array, Array)
+#26 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(178): yii\base\Action->runWithParams(Array)
+#27 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Module.php(552): yii\base\Controller->runAction('error', Array)
+#28 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorHandler.php(109): yii\base\Module->runAction('site/error')
+#29 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/ErrorHandler.php(152): yii\web\ErrorHandler->renderException(Object(yii\web\NotFoundHttpException))
+#30 [internal function]: yii\base\ErrorHandler->handleException(Object(yii\web\NotFoundHttpException))
+#31 {main}
+Additional Information:
+Array
+(
+    [0] => HY000
+    [1] => 1040
+    [2] => Too many connections
+)
+
+Previous exception:
+yii\base\InvalidRouteException: Unable to resolve the request "themes/agrikon/wp-content/themes/agrikon/fonts/fa-light-300.woff". in /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Module.php:561
+Stack trace:
+#0 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/Application.php(103): yii\base\Module->runAction('themes/agrikon/...', Array)
+#1 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Application.php(384): yii\web\Application->handleRequest(Object(yii\web\Request))
+#2 /home/gekbhbrchosting/public_html/phavico/frontend/web/index.php(18): yii\base\Application->run()
+#3 {main}
+
+Next yii\web\NotFoundHttpException: Page not found. in /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/Application.php:115
+Stack trace:
+#0 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Application.php(384): yii\web\Application->handleRequest(Object(yii\web\Request))
+#1 /home/gekbhbrchosting/public_html/phavico/frontend/web/index.php(18): yii\base\Application->run()
+#2 {main}
+$_SERVER = [
+    'PATH' => '/usr/local/bin:/bin:/usr/bin',
+    'HTTP_ACCEPT' => '*/*',
+    'HTTP_ACCEPT_ENCODING' => 'gzip, deflate, br',
+    'HTTP_ACCEPT_LANGUAGE' => 'en-US,en;q=0.9',
+    'HTTP_COOKIE' => '_ga=GA1.1.1171571996.1689851766; _ga_GNSZR91JYF=GS1.1.1689854821.2.1.1689854937.0.0.0; advanced-frontend=a6b8119ad79d734ba27ab1344997b99d; _ga_RBXMQEX8JH=GS1.1.1692849599.4.1.1692849941.0.0.0',
+    'HTTP_HOST' => 'phavico.com',
+    'HTTP_REFERER' => 'https://phavico.com/css/layout.css',
+    'HTTP_USER_AGENT' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36 Edg/115.0.1901.203',
+    'HTTP_SEC_CH_UA' => '"Not/A)Brand";v="99", "Microsoft Edge";v="115", "Chromium";v="115"',
+    'HTTP_ORIGIN' => 'https://phavico.com',
+    'HTTP_SEC_CH_UA_MOBILE' => '?0',
+    'HTTP_SEC_CH_UA_PLATFORM' => '"Windows"',
+    'HTTP_SEC_FETCH_SITE' => 'same-origin',
+    'HTTP_SEC_FETCH_MODE' => 'cors',
+    'HTTP_SEC_FETCH_DEST' => 'font',
+    'HTTP_X_HTTPS' => '1',
+    'DOCUMENT_ROOT' => '/home/gekbhbrchosting/public_html/phavico/frontend/web',
+    'REMOTE_ADDR' => '14.224.147.202',
+    'REMOTE_PORT' => '56269',
+    'SERVER_ADDR' => '103.75.187.81',
+    'SERVER_NAME' => 'phavico.com',
+    'SERVER_ADMIN' => 'webmaster@phavico.com.fsfuugwe.000web.xyz',
+    'SERVER_PORT' => '443',
+    'REQUEST_SCHEME' => 'https',
+    'REQUEST_URI' => '/themes/agrikon/wp-content/themes/agrikon/fonts/fa-light-300.woff',
+    'REDIRECT_URL' => '/themes/agrikon/wp-content/themes/agrikon/fonts/fa-light-300.woff',
+    'REDIRECT_REQUEST_METHOD' => 'GET',
+    'HTTPS' => 'on',
+    'REDIRECT_STATUS' => '200',
+    'X_SPDY' => 'HTTP2',
+    'SSL_PROTOCOL' => 'TLSv1.3',
+    'SSL_CIPHER' => 'TLS_AES_128_GCM_SHA256',
+    'SSL_CIPHER_USEKEYSIZE' => '128',
+    'SSL_CIPHER_ALGKEYSIZE' => '128',
+    'SCRIPT_FILENAME' => '/home/gekbhbrchosting/public_html/phavico/frontend/web/index.php',
+    'QUERY_STRING' => '',
+    'SCRIPT_URI' => 'https://phavico.com/themes/agrikon/wp-content/themes/agrikon/fonts/fa-light-300.woff',
+    'SCRIPT_URL' => '/themes/agrikon/wp-content/themes/agrikon/fonts/fa-light-300.woff',
+    'SCRIPT_NAME' => '/index.php',
+    'SERVER_PROTOCOL' => 'HTTP/1.1',
+    'SERVER_SOFTWARE' => 'LiteSpeed',
+    'REQUEST_METHOD' => 'GET',
+    'X-LSCACHE' => 'on,crawler',
+    'PHP_SELF' => '/index.php',
+    'REQUEST_TIME_FLOAT' => 1692849949.055839,
+    'REQUEST_TIME' => 1692849949,
+]
+[24-Aug-2023 11:05:49 Asia/Ho_Chi_Minh] An Error occurred while handling another error:
+PDOException: SQLSTATE[HY000] [1040] Too many connections in /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php:722
+Stack trace:
+#0 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(722): PDO->__construct('mysql:host=loca...', 'gekbhbrchosting...', 'LiWY_1txJpAh', NULL)
+#1 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(637): yii\db\Connection->createPdoInstance()
+#2 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(1067): yii\db\Connection->open()
+#3 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(1054): yii\db\Connection->getMasterPdo()
+#4 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(413): yii\db\Connection->getSlavePdo(true)
+#5 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(437): yii\db\mysql\QueryBuilder->supportsFractionalSeconds()
+#6 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(59): yii\db\mysql\QueryBuilder->defaultTimeTypeMap()
+#7 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/BaseObject.php(109): yii\db\mysql\QueryBuilder->init()
+#8 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/QueryBuilder.php(116): yii\base\BaseObject->__construct(Array)
+#9 [internal function]: yii\db\QueryBuilder->__construct(Object(yii\db\Connection), Array)
+#10 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/di/Container.php(411): ReflectionClass->newInstanceArgs(Array)
+#11 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/di/Container.php(170): yii\di\Container->build('yii\\db\\mysql\\Qu...', Array, Array)
+#12 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/BaseYii.php(345): yii\di\Container->get('yii\\db\\mysql\\Qu...', Array)
+#13 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/Schema.php(225): yii\BaseYii::createObject('yii\\db\\mysql\\Qu...', Array)
+#14 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Schema.php(247): yii\db\mysql\Schema->createQueryBuilder()
+#15 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(884): yii\db\Schema->getQueryBuilder()
+#16 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/ActiveQuery.php(328): yii\db\Connection->getQueryBuilder()
+#17 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Query.php(249): yii\db\ActiveQuery->createCommand(Object(yii\db\Connection))
+#18 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/ActiveQuery.php(133): yii\db\Query->all(NULL)
+#19 /home/gekbhbrchosting/public_html/phavico/frontend/views/layouts/main.php(36): yii\db\ActiveQuery->all()
+#20 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/View.php(347): require('/home/gekbhbrch...')
+#21 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/View.php(257): yii\base\View->renderPhpFile('/home/gekbhbrch...', Array)
+#22 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(422): yii\base\View->renderFile('/home/gekbhbrch...', Array, Object(frontend\controllers\SiteController))
+#23 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(408): yii\base\Controller->renderContent('<div class="sit...')
+#24 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorAction.php(139): yii\base\Controller->render('error', Array)
+#25 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorAction.php(118): yii\web\ErrorAction->renderHtmlResponse()
+#26 [internal function]: yii\web\ErrorAction->run()
+#27 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Action.php(93): call_user_func_array(Array, Array)
+#28 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(178): yii\base\Action->runWithParams(Array)
+#29 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Module.php(552): yii\base\Controller->runAction('error', Array)
+#30 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorHandler.php(109): yii\base\Module->runAction('site/error')
+#31 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/ErrorHandler.php(152): yii\web\ErrorHandler->renderException(Object(yii\web\NotFoundHttpException))
+#32 [internal function]: yii\base\ErrorHandler->handleException(Object(yii\web\NotFoundHttpException))
+#33 {main}
+
+Next yii\db\Exception: SQLSTATE[HY000] [1040] Too many connections in /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php:648
+Stack trace:
+#0 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(1067): yii\db\Connection->open()
+#1 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(1054): yii\db\Connection->getMasterPdo()
+#2 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(413): yii\db\Connection->getSlavePdo(true)
+#3 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(437): yii\db\mysql\QueryBuilder->supportsFractionalSeconds()
+#4 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(59): yii\db\mysql\QueryBuilder->defaultTimeTypeMap()
+#5 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/BaseObject.php(109): yii\db\mysql\QueryBuilder->init()
+#6 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/QueryBuilder.php(116): yii\base\BaseObject->__construct(Array)
+#7 [internal function]: yii\db\QueryBuilder->__construct(Object(yii\db\Connection), Array)
+#8 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/di/Container.php(411): ReflectionClass->newInstanceArgs(Array)
+#9 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/di/Container.php(170): yii\di\Container->build('yii\\db\\mysql\\Qu...', Array, Array)
+#10 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/BaseYii.php(345): yii\di\Container->get('yii\\db\\mysql\\Qu...', Array)
+#11 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/Schema.php(225): yii\BaseYii::createObject('yii\\db\\mysql\\Qu...', Array)
+#12 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Schema.php(247): yii\db\mysql\Schema->createQueryBuilder()
+#13 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(884): yii\db\Schema->getQueryBuilder()
+#14 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/ActiveQuery.php(328): yii\db\Connection->getQueryBuilder()
+#15 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Query.php(249): yii\db\ActiveQuery->createCommand(Object(yii\db\Connection))
+#16 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/ActiveQuery.php(133): yii\db\Query->all(NULL)
+#17 /home/gekbhbrchosting/public_html/phavico/frontend/views/layouts/main.php(36): yii\db\ActiveQuery->all()
+#18 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/View.php(347): require('/home/gekbhbrch...')
+#19 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/View.php(257): yii\base\View->renderPhpFile('/home/gekbhbrch...', Array)
+#20 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(422): yii\base\View->renderFile('/home/gekbhbrch...', Array, Object(frontend\controllers\SiteController))
+#21 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(408): yii\base\Controller->renderContent('<div class="sit...')
+#22 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorAction.php(139): yii\base\Controller->render('error', Array)
+#23 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorAction.php(118): yii\web\ErrorAction->renderHtmlResponse()
+#24 [internal function]: yii\web\ErrorAction->run()
+#25 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Action.php(93): call_user_func_array(Array, Array)
+#26 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(178): yii\base\Action->runWithParams(Array)
+#27 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Module.php(552): yii\base\Controller->runAction('error', Array)
+#28 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorHandler.php(109): yii\base\Module->runAction('site/error')
+#29 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/ErrorHandler.php(152): yii\web\ErrorHandler->renderException(Object(yii\web\NotFoundHttpException))
+#30 [internal function]: yii\base\ErrorHandler->handleException(Object(yii\web\NotFoundHttpException))
+#31 {main}
+Additional Information:
+Array
+(
+    [0] => HY000
+    [1] => 1040
+    [2] => Too many connections
+)
+
+Previous exception:
+yii\base\InvalidRouteException: Unable to resolve the request "themes/agrikon/wp-content/plugins/elementor/assets/lib/font-awesome/webfonts/fa-regular-400.ttf". in /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Module.php:561
+Stack trace:
+#0 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/Application.php(103): yii\base\Module->runAction('themes/agrikon/...', Array)
+#1 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Application.php(384): yii\web\Application->handleRequest(Object(yii\web\Request))
+#2 /home/gekbhbrchosting/public_html/phavico/frontend/web/index.php(18): yii\base\Application->run()
+#3 {main}
+
+Next yii\web\NotFoundHttpException: Page not found. in /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/Application.php:115
+Stack trace:
+#0 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Application.php(384): yii\web\Application->handleRequest(Object(yii\web\Request))
+#1 /home/gekbhbrchosting/public_html/phavico/frontend/web/index.php(18): yii\base\Application->run()
+#2 {main}
+$_SERVER = [
+    'PATH' => '/usr/local/bin:/bin:/usr/bin',
+    'HTTP_ACCEPT' => '*/*',
+    'HTTP_ACCEPT_ENCODING' => 'gzip, deflate, br',
+    'HTTP_ACCEPT_LANGUAGE' => 'en-US,en;q=0.9',
+    'HTTP_COOKIE' => '_ga=GA1.1.1171571996.1689851766; _ga_GNSZR91JYF=GS1.1.1689854821.2.1.1689854937.0.0.0; advanced-frontend=a6b8119ad79d734ba27ab1344997b99d; _ga_RBXMQEX8JH=GS1.1.1692849599.4.1.1692849941.0.0.0',
+    'HTTP_HOST' => 'phavico.com',
+    'HTTP_REFERER' => 'https://phavico.com/css/layout.css',
+    'HTTP_USER_AGENT' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36 Edg/115.0.1901.203',
+    'HTTP_SEC_CH_UA' => '"Not/A)Brand";v="99", "Microsoft Edge";v="115", "Chromium";v="115"',
+    'HTTP_ORIGIN' => 'https://phavico.com',
+    'HTTP_SEC_CH_UA_MOBILE' => '?0',
+    'HTTP_SEC_CH_UA_PLATFORM' => '"Windows"',
+    'HTTP_SEC_FETCH_SITE' => 'same-origin',
+    'HTTP_SEC_FETCH_MODE' => 'cors',
+    'HTTP_SEC_FETCH_DEST' => 'font',
+    'HTTP_X_HTTPS' => '1',
+    'DOCUMENT_ROOT' => '/home/gekbhbrchosting/public_html/phavico/frontend/web',
+    'REMOTE_ADDR' => '14.224.147.202',
+    'REMOTE_PORT' => '56269',
+    'SERVER_ADDR' => '103.75.187.81',
+    'SERVER_NAME' => 'phavico.com',
+    'SERVER_ADMIN' => 'webmaster@phavico.com.fsfuugwe.000web.xyz',
+    'SERVER_PORT' => '443',
+    'REQUEST_SCHEME' => 'https',
+    'REQUEST_URI' => '/themes/agrikon/wp-content/plugins/elementor/assets/lib/font-awesome/webfonts/fa-regular-400.ttf',
+    'REDIRECT_URL' => '/themes/agrikon/wp-content/plugins/elementor/assets/lib/font-awesome/webfonts/fa-regular-400.ttf',
+    'REDIRECT_REQUEST_METHOD' => 'GET',
+    'HTTPS' => 'on',
+    'REDIRECT_STATUS' => '200',
+    'X_SPDY' => 'HTTP2',
+    'SSL_PROTOCOL' => 'TLSv1.3',
+    'SSL_CIPHER' => 'TLS_AES_128_GCM_SHA256',
+    'SSL_CIPHER_USEKEYSIZE' => '128',
+    'SSL_CIPHER_ALGKEYSIZE' => '128',
+    'SCRIPT_FILENAME' => '/home/gekbhbrchosting/public_html/phavico/frontend/web/index.php',
+    'QUERY_STRING' => '',
+    'SCRIPT_URI' => 'https://phavico.com/themes/agrikon/wp-content/plugins/elementor/assets/lib/font-awesome/webfonts/fa-regular-400.ttf',
+    'SCRIPT_URL' => '/themes/agrikon/wp-content/plugins/elementor/assets/lib/font-awesome/webfonts/fa-regular-400.ttf',
+    'SCRIPT_NAME' => '/index.php',
+    'SERVER_PROTOCOL' => 'HTTP/1.1',
+    'SERVER_SOFTWARE' => 'LiteSpeed',
+    'REQUEST_METHOD' => 'GET',
+    'X-LSCACHE' => 'on,crawler',
+    'PHP_SELF' => '/index.php',
+    'REQUEST_TIME_FLOAT' => 1692849949.196857,
+    'REQUEST_TIME' => 1692849949,
+]
+[24-Aug-2023 11:05:49 Asia/Ho_Chi_Minh] An Error occurred while handling another error:
+PDOException: SQLSTATE[HY000] [1040] Too many connections in /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php:722
+Stack trace:
+#0 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(722): PDO->__construct('mysql:host=loca...', 'gekbhbrchosting...', 'LiWY_1txJpAh', NULL)
+#1 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(637): yii\db\Connection->createPdoInstance()
+#2 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(1067): yii\db\Connection->open()
+#3 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(1054): yii\db\Connection->getMasterPdo()
+#4 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(413): yii\db\Connection->getSlavePdo(true)
+#5 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(437): yii\db\mysql\QueryBuilder->supportsFractionalSeconds()
+#6 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(59): yii\db\mysql\QueryBuilder->defaultTimeTypeMap()
+#7 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/BaseObject.php(109): yii\db\mysql\QueryBuilder->init()
+#8 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/QueryBuilder.php(116): yii\base\BaseObject->__construct(Array)
+#9 [internal function]: yii\db\QueryBuilder->__construct(Object(yii\db\Connection), Array)
+#10 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/di/Container.php(411): ReflectionClass->newInstanceArgs(Array)
+#11 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/di/Container.php(170): yii\di\Container->build('yii\\db\\mysql\\Qu...', Array, Array)
+#12 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/BaseYii.php(345): yii\di\Container->get('yii\\db\\mysql\\Qu...', Array)
+#13 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/Schema.php(225): yii\BaseYii::createObject('yii\\db\\mysql\\Qu...', Array)
+#14 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Schema.php(247): yii\db\mysql\Schema->createQueryBuilder()
+#15 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(884): yii\db\Schema->getQueryBuilder()
+#16 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/ActiveQuery.php(328): yii\db\Connection->getQueryBuilder()
+#17 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Query.php(249): yii\db\ActiveQuery->createCommand(Object(yii\db\Connection))
+#18 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/ActiveQuery.php(133): yii\db\Query->all(NULL)
+#19 /home/gekbhbrchosting/public_html/phavico/frontend/views/layouts/main.php(36): yii\db\ActiveQuery->all()
+#20 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/View.php(347): require('/home/gekbhbrch...')
+#21 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/View.php(257): yii\base\View->renderPhpFile('/home/gekbhbrch...', Array)
+#22 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(422): yii\base\View->renderFile('/home/gekbhbrch...', Array, Object(frontend\controllers\SiteController))
+#23 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(408): yii\base\Controller->renderContent('<div class="sit...')
+#24 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorAction.php(139): yii\base\Controller->render('error', Array)
+#25 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorAction.php(118): yii\web\ErrorAction->renderHtmlResponse()
+#26 [internal function]: yii\web\ErrorAction->run()
+#27 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Action.php(93): call_user_func_array(Array, Array)
+#28 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(178): yii\base\Action->runWithParams(Array)
+#29 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Module.php(552): yii\base\Controller->runAction('error', Array)
+#30 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorHandler.php(109): yii\base\Module->runAction('site/error')
+#31 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/ErrorHandler.php(152): yii\web\ErrorHandler->renderException(Object(yii\web\NotFoundHttpException))
+#32 [internal function]: yii\base\ErrorHandler->handleException(Object(yii\web\NotFoundHttpException))
+#33 {main}
+
+Next yii\db\Exception: SQLSTATE[HY000] [1040] Too many connections in /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php:648
+Stack trace:
+#0 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(1067): yii\db\Connection->open()
+#1 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(1054): yii\db\Connection->getMasterPdo()
+#2 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(413): yii\db\Connection->getSlavePdo(true)
+#3 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(437): yii\db\mysql\QueryBuilder->supportsFractionalSeconds()
+#4 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/QueryBuilder.php(59): yii\db\mysql\QueryBuilder->defaultTimeTypeMap()
+#5 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/BaseObject.php(109): yii\db\mysql\QueryBuilder->init()
+#6 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/QueryBuilder.php(116): yii\base\BaseObject->__construct(Array)
+#7 [internal function]: yii\db\QueryBuilder->__construct(Object(yii\db\Connection), Array)
+#8 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/di/Container.php(411): ReflectionClass->newInstanceArgs(Array)
+#9 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/di/Container.php(170): yii\di\Container->build('yii\\db\\mysql\\Qu...', Array, Array)
+#10 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/BaseYii.php(345): yii\di\Container->get('yii\\db\\mysql\\Qu...', Array)
+#11 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/mysql/Schema.php(225): yii\BaseYii::createObject('yii\\db\\mysql\\Qu...', Array)
+#12 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Schema.php(247): yii\db\mysql\Schema->createQueryBuilder()
+#13 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Connection.php(884): yii\db\Schema->getQueryBuilder()
+#14 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/ActiveQuery.php(328): yii\db\Connection->getQueryBuilder()
+#15 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/Query.php(249): yii\db\ActiveQuery->createCommand(Object(yii\db\Connection))
+#16 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/db/ActiveQuery.php(133): yii\db\Query->all(NULL)
+#17 /home/gekbhbrchosting/public_html/phavico/frontend/views/layouts/main.php(36): yii\db\ActiveQuery->all()
+#18 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/View.php(347): require('/home/gekbhbrch...')
+#19 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/View.php(257): yii\base\View->renderPhpFile('/home/gekbhbrch...', Array)
+#20 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(422): yii\base\View->renderFile('/home/gekbhbrch...', Array, Object(frontend\controllers\SiteController))
+#21 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(408): yii\base\Controller->renderContent('<div class="sit...')
+#22 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorAction.php(139): yii\base\Controller->render('error', Array)
+#23 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorAction.php(118): yii\web\ErrorAction->renderHtmlResponse()
+#24 [internal function]: yii\web\ErrorAction->run()
+#25 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Action.php(93): call_user_func_array(Array, Array)
+#26 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Controller.php(178): yii\base\Action->runWithParams(Array)
+#27 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Module.php(552): yii\base\Controller->runAction('error', Array)
+#28 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/ErrorHandler.php(109): yii\base\Module->runAction('site/error')
+#29 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/ErrorHandler.php(152): yii\web\ErrorHandler->renderException(Object(yii\web\NotFoundHttpException))
+#30 [internal function]: yii\base\ErrorHandler->handleException(Object(yii\web\NotFoundHttpException))
+#31 {main}
+Additional Information:
+Array
+(
+    [0] => HY000
+    [1] => 1040
+    [2] => Too many connections
+)
+
+Previous exception:
+yii\base\InvalidRouteException: Unable to resolve the request "themes/agrikon/wp-content/themes/agrikon/fonts/fa-light-300.ttf". in /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Module.php:561
+Stack trace:
+#0 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/Application.php(103): yii\base\Module->runAction('themes/agrikon/...', Array)
+#1 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Application.php(384): yii\web\Application->handleRequest(Object(yii\web\Request))
+#2 /home/gekbhbrchosting/public_html/phavico/frontend/web/index.php(18): yii\base\Application->run()
+#3 {main}
+
+Next yii\web\NotFoundHttpException: Page not found. in /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/web/Application.php:115
+Stack trace:
+#0 /home/gekbhbrchosting/public_html/phavico/vendor/yiisoft/yii2/base/Application.php(384): yii\web\Application->handleRequest(Object(yii\web\Request))
+#1 /home/gekbhbrchosting/public_html/phavico/frontend/web/index.php(18): yii\base\Application->run()
+#2 {main}
+$_SERVER = [
+    'PATH' => '/usr/local/bin:/bin:/usr/bin',
+    'HTTP_ACCEPT' => '*/*',
+    'HTTP_ACCEPT_ENCODING' => 'gzip, deflate, br',
+    'HTTP_ACCEPT_LANGUAGE' => 'en-US,en;q=0.9',
+    'HTTP_COOKIE' => '_ga=GA1.1.1171571996.1689851766; _ga_GNSZR91JYF=GS1.1.1689854821.2.1.1689854937.0.0.0; advanced-frontend=a6b8119ad79d734ba27ab1344997b99d; _ga_RBXMQEX8JH=GS1.1.1692849599.4.1.1692849941.0.0.0',
+    'HTTP_HOST' => 'phavico.com',
+    'HTTP_REFERER' => 'https://phavico.com/css/layout.css',
+    'HTTP_USER_AGENT' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36 Edg/115.0.1901.203',
+    'HTTP_SEC_CH_UA' => '"Not/A)Brand";v="99", "Microsoft Edge";v="115", "Chromium";v="115"',
+    'HTTP_ORIGIN' => 'https://phavico.com',
+    'HTTP_SEC_CH_UA_MOBILE' => '?0',
+    'HTTP_SEC_CH_UA_PLATFORM' => '"Windows"',
+    'HTTP_SEC_FETCH_SITE' => 'same-origin',
+    'HTTP_SEC_FETCH_MODE' => 'cors',
+    'HTTP_SEC_FETCH_DEST' => 'font',
+    'HTTP_X_HTTPS' => '1',
+    'DOCUMENT_ROOT' => '/home/gekbhbrchosting/public_html/phavico/frontend/web',
+    'REMOTE_ADDR' => '14.224.147.202',
+    'REMOTE_PORT' => '56269',
+    'SERVER_ADDR' => '103.75.187.81',
+    'SERVER_NAME' => 'phavico.com',
+    'SERVER_ADMIN' => 'webmaster@phavico.com.fsfuugwe.000web.xyz',
+    'SERVER_PORT' => '443',
+    'REQUEST_SCHEME' => 'https',
+    'REQUEST_URI' => '/themes/agrikon/wp-content/themes/agrikon/fonts/fa-light-300.ttf',
+    'REDIRECT_URL' => '/themes/agrikon/wp-content/themes/agrikon/fonts/fa-light-300.ttf',
+    'REDIRECT_REQUEST_METHOD' => 'GET',
+    'HTTPS' => 'on',
+    'REDIRECT_STATUS' => '200',
+    'X_SPDY' => 'HTTP2',
+    'SSL_PROTOCOL' => 'TLSv1.3',
+    'SSL_CIPHER' => 'TLS_AES_128_GCM_SHA256',
+    'SSL_CIPHER_USEKEYSIZE' => '128',
+    'SSL_CIPHER_ALGKEYSIZE' => '128',
+    'SCRIPT_FILENAME' => '/home/gekbhbrchosting/public_html/phavico/frontend/web/index.php',
+    'QUERY_STRING' => '',
+    'SCRIPT_URI' => 'https://phavico.com/themes/agrikon/wp-content/themes/agrikon/fonts/fa-light-300.ttf',
+    'SCRIPT_URL' => '/themes/agrikon/wp-content/themes/agrikon/fonts/fa-light-300.ttf',
+    'SCRIPT_NAME' => '/index.php',
+    'SERVER_PROTOCOL' => 'HTTP/1.1',
+    'SERVER_SOFTWARE' => 'LiteSpeed',
+    'REQUEST_METHOD' => 'GET',
+    'X-LSCACHE' => 'on,crawler',
+    'PHP_SELF' => '/index.php',
+    'REQUEST_TIME_FLOAT' => 1692849949.35969,
+    'REQUEST_TIME' => 1692849949,
+]
+[24-Aug-2023 14:36:12 UTC] PHP Notice:  Undefined offset: 1 in /home/gekbhbrchosting/public_html/nongnghiep/wp-content/plugins/wp-super-cache/wp-cache-phase2.php on line 3085
+[29-Aug-2023 07:35:51 UTC] PHP Notice:  Undefined offset: 1 in /home/gekbhbrchosting/public_html/nongnghiep/wp-content/plugins/wp-super-cache/wp-cache-phase2.php on line 3085
+[30-Aug-2023 08:50:52 UTC] PHP Notice:  Undefined offset: 1 in /home/gekbhbrchosting/public_html/nongnghiep/wp-content/plugins/wp-super-cache/wp-cache-phase2.php on line 3085
+[30-Aug-2023 15:58:02 UTC] PHP Notice:  Undefined offset: 1 in /home/gekbhbrchosting/public_html/nongnghiep/wp-content/plugins/wp-super-cache/wp-cache-phase2.php on line 3085
+[30-Aug-2023 16:20:48 UTC] PHP Notice:  Undefined offset: 1 in /home/gekbhbrchosting/public_html/nongnghiep/wp-content/plugins/wp-super-cache/wp-cache-phase2.php on line 3085
+[31-Aug-2023 12:08:39 UTC] PHP Notice:  Undefined offset: 1 in /home/gekbhbrchosting/public_html/nongnghiep/wp-content/plugins/wp-super-cache/wp-cache-phase2.php on line 3085
+[31-Aug-2023 12:08:52 UTC] PHP Notice:  Undefined offset: 1 in /home/gekbhbrchosting/public_html/nongnghiep/wp-content/plugins/wp-super-cache/wp-cache-phase2.php on line 3085
+[01-Sep-2023 00:01:47 UTC] PHP Notice:  Undefined offset: 1 in /home/gekbhbrchosting/public_html/nongnghiep/wp-content/plugins/wp-super-cache/wp-cache-phase2.php on line 3085
+[01-Sep-2023 00:02:49 UTC] PHP Notice:  Undefined offset: 1 in /home/gekbhbrchosting/public_html/nongnghiep/wp-content/plugins/wp-super-cache/wp-cache-phase2.php on line 3085
+[04-Sep-2023 05:28:13 UTC] PHP Notice:  Undefined offset: 1 in /home/gekbhbrchosting/public_html/nongnghiep/wp-content/plugins/wp-super-cache/wp-cache-phase2.php on line 3085
+[06-Sep-2023 16:37:20 UTC] PHP Notice:  Undefined offset: 1 in /home/gekbhbrchosting/public_html/nongnghiep/wp-content/plugins/wp-super-cache/wp-cache-phase2.php on line 3085
+[09-Sep-2023 13:19:47 UTC] PHP Notice:  Undefined offset: 1 in /home/gekbhbrchosting/public_html/nongnghiep/wp-content/plugins/wp-super-cache/wp-cache-phase2.php on line 3085
+[11-Sep-2023 00:27:15 UTC] PHP Notice:  Undefined offset: 1 in /home/gekbhbrchosting/public_html/nongnghiep/wp-content/plugins/wp-super-cache/wp-cache-phase2.php on line 3085
+[12-Sep-2023 02:27:25 UTC] PHP Notice:  Undefined offset: 1 in /home/gekbhbrchosting/public_html/nongnghiep/wp-content/plugins/wp-super-cache/wp-cache-phase2.php on line 3085
+[12-Sep-2023 12:31:41 UTC] PHP Notice:  Undefined offset: 1 in /home/gekbhbrchosting/public_html/nongnghiep/wp-content/plugins/wp-super-cache/wp-cache-phase2.php on line 3085
+[13-Sep-2023 23:35:03 UTC] PHP Notice:  Undefined offset: 1 in /home/gekbhbrchosting/public_html/nongnghiep/wp-content/plugins/wp-super-cache/wp-cache-phase2.php on line 3085
+[14-Sep-2023 04:15:26 UTC] PHP Notice:  Undefined offset: 1 in /home/gekbhbrchosting/public_html/nongnghiep/wp-content/plugins/wp-super-cache/wp-cache-phase2.php on line 3085
+[14-Sep-2023 06:56:29 UTC] PHP Notice:  Undefined offset: 1 in /home/gekbhbrchosting/public_html/nongnghiep/wp-content/plugins/wp-super-cache/wp-cache-phase2.php on line 3085
+[14-Sep-2023 11:43:38 UTC] PHP Notice:  Undefined offset: 1 in /home/gekbhbrchosting/public_html/nongnghiep/wp-content/plugins/wp-super-cache/wp-cache-phase2.php on line 3085
+[15-Sep-2023 00:32:39 UTC] PHP Notice:  Undefined offset: 1 in /home/gekbhbrchosting/public_html/nongnghiep/wp-content/plugins/wp-super-cache/wp-cache-phase2.php on line 3085
+[22-Sep-2023 13:57:44 UTC] PHP Notice:  Undefined offset: 1 in /home/gekbhbrchosting/public_html/nongnghiep/wp-content/plugins/wp-super-cache/wp-cache-phase2.php on line 3085
+[23-Sep-2023 03:30:16 UTC] PHP Notice:  Undefined offset: 1 in /home/gekbhbrchosting/public_html/nongnghiep/wp-content/plugins/wp-super-cache/wp-cache-phase2.php on line 3085
+[24-Sep-2023 23:26:23 UTC] PHP Notice:  Undefined offset: 1 in /home/gekbhbrchosting/public_html/nongnghiep/wp-content/plugins/wp-super-cache/wp-cache-phase2.php on line 3085
+[26-Sep-2023 23:07:23 UTC] PHP Notice:  Undefined offset: 1 in /home/gekbhbrchosting/public_html/nongnghiep/wp-content/plugins/wp-super-cache/wp-cache-phase2.php on line 3085
