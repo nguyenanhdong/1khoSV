@@ -28,6 +28,7 @@ use backend\models\NotifyUnRead;
 use backend\models\Config;
 use backend\models\Order;
 use backend\models\UserDeliveryAddress;
+use backend\models\UserFavouriteProduct;
 use backend\models\UserFollowAgent;
 use common\helpers\Helper;
 use yii\helpers\ArrayHelper;
@@ -45,6 +46,7 @@ class ApiController extends Controller
 
     const PLATFORM_GG= 'google';
     const PLATFORM_FB= 'facebook';
+    const PLATFORM_APPLE= 'apple';
 
     public $urlDomain = '';
     public $urlDomainAvatarStaff = 'https://api.1khosv.com';
@@ -138,7 +140,7 @@ class ApiController extends Controller
                     if ($type == self::TYPE_ARRAY && (empty($paramsReturn[$name]) || !is_array($paramsReturn[$name]))) {
                         $paramsReturn[$name] = [];
                     } else if ($type == self::TYPE_STRING) {
-                        $paramsReturn[$name] = trim(strip_tags($params[$name]));
+                        $paramsReturn[$name] = $params[$name] ? trim(strip_tags($params[$name])) : '';
                     }
                 } else {
                     $paramsReturn[$name] = $type == self::TYPE_INT ? ( isset($objParams['default']) ? $objParams['default'] : 0 ) : ($type == self::TYPE_ARRAY ? [] : ( isset($objParams['default']) ? $objParams['default'] : "" ));
@@ -293,7 +295,6 @@ class ApiController extends Controller
                     $access_token   = $rsAccessToken['access_token'];
                     $urlCheckToken  = "https://graph.facebook.com/debug_token?input_token=$idToken&access_token=$access_token";
                     $rsCheckToken   = Request::getRequest($urlCheckToken);
-
                     if( $rsCheckToken ){
                         $rsCheckToken = json_decode($rsCheckToken, true);
                         if( is_array($rsCheckToken) && isset($rsCheckToken['data']) && isset($rsCheckToken['data']['user_id']) ){
@@ -310,6 +311,8 @@ class ApiController extends Controller
 
                 }
             }
+        }else if( $platform == self::PLATFORM_APPLE ){
+            $data = ['id' => $idToken, 'name' => ''];
         }
 
         return $data;
@@ -325,9 +328,12 @@ class ApiController extends Controller
         $responseObj->district  = !empty($resUser->district) ? $resUser->district : '';
         $responseObj->province  = !empty($resUser->province) ? $resUser->province : '';
         $responseObj->avatar    = $this->urlDomain . (!empty($resUser->avatar) ? $resUser->avatar : '/img/avatar.png');
+        if( !empty($user->fb_id) && empty($user->avatar) ){
+            $responseObj->avatar = 'https://graph.facebook.com/' . $user->fb_id . '/picture?type=large';
+        }
         $responseObj->referral_code = $resUser->referral_code;
         $responseObj->wallet_point  = (int)$resUser->wallet_point;
-        $responseObj->is_verify_account = $resUser->is_verify_account;
+        $responseObj->is_verify_account = $resUser->is_verify_account ? 1 : 0;
         $responseObj->device_id = $resUser->device_id;
         $responseObj->app_version = $resUser->clientver;
 
@@ -437,6 +443,14 @@ class ApiController extends Controller
                 'clientver' => [
                     'type' => self::TYPE_STRING,
                     'validate' => Response::KEY_REQUIRED
+                ],
+                'fullname' => [
+                    'type' => self::TYPE_STRING,
+                    'default' => ''
+                ],
+                'email' => [
+                    'type' => self::TYPE_STRING,
+                    'default' => ''
                 ]
             ]);
             if( !empty($params['listError']) ){
@@ -457,18 +471,29 @@ class ApiController extends Controller
                 return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage($keyMsg, Response::KEY_INVALID)]);
             }
 
+
             $condition  = $platform == self::PLATFORM_GG ? ['gg_id' => $dataToken['id']] : ['fb_id' => $dataToken['id']];
+            if( $platform == self::PLATFORM_APPLE ){
+                $dataToken['name'] = $params['fullname'];
+                if( empty($dataToken['name']) && !empty($params['email']) ){
+                    $email = explode('@', $params['email']);
+                    $dataToken['name'] = $email[0];
+                }
+                $condition = ['apple_id' => $dataToken['id']];
+            }
 
             $user       = Customer::findOne($condition);
             
             //Khởi tạo tài khoản user trường hợp chưa có
             if (!$user) {
-                $user           = new Customer;
-                $user->fullname = $dataToken['name'];
+                $user               = new Customer;
+                $user->fullname     = $dataToken['name'];
                 if( $platform == self::PLATFORM_GG )
                     $user->gg_id    = $dataToken['id'];
                 else if( $platform == self::PLATFORM_FB )
                     $user->fb_id    = $dataToken['id'];
+                else if( $platform == self::PLATFORM_APPLE )
+                    $user->apple_id    = $dataToken['id'];
             }else{
                 if( $user->status == Customer::STATUS_BANNED ){
                     return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('banned', Response::KEY_FORBIDDEN)]);
@@ -495,6 +520,102 @@ class ApiController extends Controller
             return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
         }
     }
+
+    /**
+     * API đăng nhập mạng xã hội ver 2
+     */
+    public function actionLoginWithSocialNew(){
+        try{
+            $params = self::getParamsRequest([
+                'social_id' => [
+                    'type' => self::TYPE_STRING,
+                    'validate' => [Response::KEY_REQUIRED, Response::KEY_INVALID => ['min' => 10]]
+                ],
+                'platform' => [
+                    'type' => self::TYPE_STRING,
+                    'validate' => Response::KEY_REQUIRED
+                ],
+                'did' => [
+                    'type' => self::TYPE_STRING,
+                    'validate' => Response::KEY_REQUIRED
+                ],
+                'clientver' => [
+                    'type' => self::TYPE_STRING,
+                    'validate' => Response::KEY_REQUIRED
+                ],
+                'fullname' => [
+                    'type' => self::TYPE_STRING,
+                    'default' => ''
+                ],
+                'email' => [
+                    'type' => self::TYPE_STRING,
+                    'default' => ''
+                ]
+            ]);
+            if( !empty($params['listError']) ){
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $params['listError']);
+            }
+
+            $this->writeLogFile('login-with-social', $params);
+
+            $platform   = $params['platform'];
+            $social_id  = $params['social_id'];
+            $did        = $params['did'];
+            $clientver  = $params['clientver'];
+            $fullname   = $params['fullname'];
+            $email      = $params['email'];
+            
+
+            $condition  = $platform == self::PLATFORM_GG ? ['gg_id' => $social_id] : ['fb_id' => $social_id];
+            if( $platform == self::PLATFORM_APPLE ){
+                
+                $condition = ['apple_id' => $social_id];
+            }
+
+            if( empty($fullname) && !empty($email) ){
+                $email = explode('@', $params['email']);
+                $fullname = $email[0];
+            }
+
+            $user       = Customer::findOne($condition);
+            
+            //Khởi tạo tài khoản user trường hợp chưa có
+            if (!$user) {
+                $user               = new Customer;
+                $user->fullname     = $fullname;
+                if( $platform == self::PLATFORM_GG )
+                    $user->gg_id    = $social_id;
+                else if( $platform == self::PLATFORM_FB )
+                    $user->fb_id    = $social_id;
+                else if( $platform == self::PLATFORM_APPLE )
+                    $user->apple_id    = $social_id;
+            }else{
+                if( $user->status == Customer::STATUS_BANNED ){
+                    return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('banned', Response::KEY_FORBIDDEN)]);
+                }
+            }
+
+            $user->device_id    = $did;
+            $user->clientver    = $clientver;
+            $user->last_login   = date('Y-m-d H:i:s');
+            $user->save(false);
+
+            if( !$user->referral_code	){
+                $user->referral_code = Helper::generateReferralCode($user->id);
+                $user->save(false);
+            }
+
+            $userRes = $this->getUserInfoRes($user);
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $userRes);
+        }catch(\Exception $e){
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
+    }
+
     /**
      * API làm mới mã accessToken
      */
@@ -1458,6 +1579,44 @@ class ApiController extends Controller
     }
 
     /**
+     * API yêu thích/bỏ yêu thích sản phẩm
+     */
+    public function actionToggleFavouriteProduct(){
+        try{
+            $params = self::getParamsRequest([
+                'product_id' => [
+                    'type' => self::TYPE_INT,
+                    'validate' => Response::KEY_REQUIRED
+                ]
+            ]);
+
+            if( !empty($params['listError']) || !$this->userId ){
+                $listErr = !empty($params['listError']) ? $params['listError'] : [Response::getErrorMessage('info', Response::KEY_FORBIDDEN)];
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+            }
+
+            $product_id       = $params['product_id'];
+
+            $modelProduct     = Product::findOne($product_id);
+            if( !$modelProduct || !$modelProduct->status ){
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('product', Response::KEY_NOT_FOUND)]);
+            }
+
+            $resultFavourites  = UserFavouriteProduct::toggleFavourites($this->userId, $product_id);
+            $dataRes       = [
+                'status_favourites' => $resultFavourites
+            ];
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+        } catch (\Exception $e) {
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
+    }
+
+    /**
      * API đặt hàng
      */
     public function actionOrder(){
@@ -1589,13 +1748,16 @@ class ApiController extends Controller
 
             $total_price_order      = ($price_order + $fee_ship) - $price_deduct;
 
+            $bank_payment           = Config::getConfigApp("BANK_PAYMENT");
+
             $dataRes                = [
                 'price_voucher'     => $price_voucher,
                 'fee_ship'          => $fee_ship,
                 'wallet_point'      => $user->wallet_point,
                 'price_order'       => $price_order,
                 'total_price_order' => $total_price_order,
-                'delivery_address'  => $delivery_address
+                'delivery_address'  => $delivery_address,
+                'bank_payment'      => $bank_payment
             ];
 
             return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
@@ -1687,6 +1849,48 @@ class ApiController extends Controller
             }
 
             $dataRes    = UserDeliveryAddress::addDeliveryAddress($params, $this->userId);
+            
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+        } catch (\Exception $e) {
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
+    }
+
+    /**
+     * API đơn hàng của tôi
+     */
+
+    public function actionMyOrder(){
+        try{
+            $params = self::getParamsRequest([
+                'type' => [
+                    'type' => self::TYPE_STRING,
+                    'validate' => Response::KEY_REQUIRED
+                ],
+                'limit'    => [
+                    'type' => self::TYPE_INT,
+                    'default' => 10
+                ],
+                'page'    => [
+                    'type' => self::TYPE_INT,
+                    'default' => 1
+                ]
+            ]);
+            if( !empty($params['listError']) || !$this->userId ){
+                $listErr = !empty($params['listError']) ? $params['listError'] : [Response::getErrorMessage('info', Response::KEY_FORBIDDEN)];
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+            }
+
+            $type       = $params['type'];
+            $limit      = $params['limit'];
+            $page       = $params['page'];
+            $offset     = ($page - 1) * $limit;
+            
+            $dataRes    = Order::getOrderOfUserByType($type, $this->userId, $limit, $offset);
             
             return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
         } catch (\Exception $e) {

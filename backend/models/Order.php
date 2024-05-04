@@ -10,6 +10,11 @@ use common\helpers\Response;
 
 class Order extends \yii\db\ActiveRecord
 {
+    const STATUS_PENDING = 0;
+    const STATUS_CONFIRM = 1;
+    const STATUS_DELIVERING = 2;
+    const STATUS_PURCHASED = 3;
+    const STATUS_REFUND = 4;
     /**
      * @inheritdoc
      */
@@ -145,7 +150,7 @@ class Order extends \yii\db\ActiveRecord
                     $modelOrderProduct                          = new OrderProduct;
                     $modelOrderProduct->order_id                = $modelOrder->id;
                     $modelOrderProduct->product_id              = $product['product_id'];
-                    $modelOrderProduct->price                   = $product['total_price'];
+                    $modelOrderProduct->price                   = $product['total_price']/$product['quantity'];
                     $modelOrderProduct->quantity                = $product['quantity'];
                     $modelOrderProduct->total_price             = $total_price_order;
                     $modelOrderProduct->product_classification_id = $product['id'];
@@ -200,5 +205,84 @@ class Order extends \yii\db\ActiveRecord
         }
 
         return $dataReturn;
+    }
+
+    public static function getOrderOfUserByType($type , $user_id, $limit = null, $offset = null){
+        $condition = ['A.user_id' => $user_id];
+        switch($type){
+            case 'pending'://Chờ xác nhận
+                $condition['A.status'] = self::STATUS_PENDING;
+                break;
+            case 'confirm'://Đã xác nhận
+                $condition['A.status'] = self::STATUS_CONFIRM;
+                break;
+            case 'are_delivering'://Đang giao
+                $condition['A.status'] = self::STATUS_DELIVERING;
+                break;
+            case 'purchased'://Đã mua
+                $condition['A.status'] = self::STATUS_PURCHASED;
+                break;
+            case 'refund'://Trả hàng/hoàn tiền
+                $condition['A.status'] = self::STATUS_REFUND;
+                break;
+            default:
+                break;
+        }
+        $query = self::find()
+        ->select('A.id, A.status, B.product_id, C.name as product_name, C.image as product_image, C.star as product_star, C.price as product_price, B.price as price_buy, A.total_price, B.quantity, B.product_classification_id, D.fullname as agent_name')
+        ->from(self::tableName() . ' A')
+        ->innerJoin(OrderProduct::tableName() . ' B', 'A.id = B.order_id')
+        ->innerJoin(Product::tableName() . ' C', 'C.id = B.product_id')
+        ->leftJoin(Agent::tableName() . ' D', 'D.id = C.agent_id')
+        ->where($condition);
+
+        if( !is_null($limit) )
+            $query->limit($limit);
+        if( !is_null($offset) )
+            $query->offset($offset);
+
+        $query->orderBy(['A.id' => SORT_DESC]);
+
+        $result = $query->asArray()->all();
+        if( !empty($result) ){
+            return self::getItemApp($result);
+        }
+        return [];
+    }
+
+    public static function getItemApp($listItem){
+        $data   = [];
+        $domain = Yii::$app->params['urlDomain'];
+        foreach($listItem as $item){
+            $quantity   = (int)$item['quantity'];
+            $agent_name = $item['agent_name'] ? $item['agent_name'] : '1KHO';
+            $price      = $item['price_buy'];//Giá tại thời điểm mua
+            $price_old  = $item['product_price'];//Giá gốc sản phẩm
+            $percent_discount = $price < $price_old ? round((($price_old - $price)/$price_old)*100) : 0;
+            $imageShow = "";
+            if( $item['product_image'] != "" ){
+                $image =  explode(';', $item['product_image']);
+                $imageShow = $domain . $image[0];
+            }
+
+            $row = [
+                'order_id' => (int)$item['id'],
+                'product_id'  => (int)$item['product_id'],
+                'agent_name'  => $agent_name,
+                'product_name' => $item['product_name'],
+                'product_image'=> $imageShow,
+                'status' => (int)$item['status'],
+                'can_cancel' => $item['status'] == 0 ? true : false,
+                'price'=> $price,
+                'price_old' => $price_old,
+                'percent_discount' => $percent_discount,
+                'star' => $item['product_star'],
+                'quantity' => $quantity,
+                'product_classification_id' => (int)$item['product_classification_id']
+            ];
+            $data[] = $row;
+        }
+        
+        return $data;
     }
 }

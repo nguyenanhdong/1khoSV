@@ -11,8 +11,8 @@ return [
     ],
     'socialKey'  => [
         'facebook' => [
-            'clientId' => '116204154102301246571',
-            'clientSecret' => '94bf675aa2fa90d8b5d125b876b54516538'
+            'clientId' => '337902925800694',
+            'clientSecret' => 'ea9d2533cc1321dff69ad23e0653959a'
         ]
     ]
 ];
