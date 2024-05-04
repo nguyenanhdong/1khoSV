@@ -35,7 +35,7 @@ use backend\controllers\CommonController;
         </div>
         <div class="cat_list_group">
             <?php for ($i = 0; $i < 8; $i++) { ?>
-                <a href="" class="cat_list_item">
+                <a href="<?= Url::to(['/category/index']) ?>" class="cat_list_item">
                     <div class="flex-center">
                         <img src="/images/page/may-no.png" alt="">
                     </div>
@@ -85,7 +85,7 @@ use backend\controllers\CommonController;
         <div class="product_list product_slide slick_global">
             <?php for ($i = 0; $i < 10; $i++) { ?> 
                 <div class="product_item">
-                        <a href="">
+                        <a href="<?= Url::to(['/product/detail']) ?>">
                             <span class="prod_sale">56% <br> OFF</span>
                             <img class="prod_avatar" src="/images/page/product-maycay.png" alt="">
                             <div class="prod_price_star">
@@ -106,10 +106,10 @@ use backend\controllers\CommonController;
 
     <section class="sale_index">
         <h2>Săn sale cùng 1KHO</h2>
-        <div class="sale_list slick_global">
+        <div class="sale_list slide_sale slick_global">
             <?php for($i = 0; $i < 10; $i++) { ?>
                 <div class="sale_list_item">
-                    <a href="">
+                    <a href="<?= Url::to(['/product/detail']) ?>">
                         <span class="num_sale">-36%</span>
                         <div class="flex-center flex-column">
                             <img class="sale_prod_avatar" src="/images/page/may-cay.png" alt="">
@@ -128,7 +128,7 @@ use backend\controllers\CommonController;
             <?php } ?>
         </div>
         <div class="sale_see_more flex-center">
-            <button>Xem tất cả</button>
+            <a href="<?= Url::to(['/category/index-sale']) ?>">Xem tất cả</a>
         </div>
     </section>
 

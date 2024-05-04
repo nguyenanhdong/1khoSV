@@ -9,6 +9,9 @@ $show_search = true;
 $not_show_search = [
     'voucher/index',
     'category/index',
+    'product/index',
+    'product/shop',
+    'cart/index'
 ];
 $not_show_menu = [
     'voucher/index',
@@ -38,7 +41,7 @@ if (in_array($controller.'/'.$action, $not_show_search)) {
                     </button>
                 </div>
                 <div class="header_action">
-                    <a href="">
+                    <a href="<?= Url::to(['/product/delivery']) ?>">
                         <img src="/images/icon/gv-icon.svg" alt="">
                         <p>Rao vặt</p>
                     </a>
@@ -46,15 +49,15 @@ if (in_array($controller.'/'.$action, $not_show_search)) {
                         <img src="/images/icon/noti-icon.svg" alt="">
                         <p>Thông báo</p>
                     </a>
-                    <a href="">
+                    <a href="<?= Url::to(['/voucher/index']) ?>">
                         <img src="/images/icon/vi-icon.svg" alt="">
                         <p>Ví</p>
                     </a>
-                    <a href="">
+                    <a href="<?= Url::to(['/site/login']) ?>">
                         <img src="/images/icon/user-icon.svg" alt="">
                         <p>Đăng Nhập</p>
                     </a>
-                    <a href="">
+                    <a href="<?= Url::to(['/cart/index']) ?>">
                         <img src="/images/icon/cart-icon.svg" alt="">
                         <p>Giỏ hàng</p>
                     </a>

@@ -11,4 +11,9 @@ class CategoryController extends Controller
 
         return $this->render('index');
     }
+
+    public function actionIndexSale() {
+
+        return $this->render('index_sale');
+    }
 }
