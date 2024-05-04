@@ -1918,6 +1918,7 @@ input:checked[type=checkbox] {
   }
   #main_content {
     position: relative;
+    overflow: hidden;
   }
   section {
     margin-bottom: 0;

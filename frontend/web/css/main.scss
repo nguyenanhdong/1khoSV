@@ -2259,6 +2259,7 @@ left: 20px;
   #main_content {
     // z-index: -1;
     position: relative;
+    overflow: hidden;
   }
 
   section {
