@@ -7,14 +7,14 @@ use common\helpers\Format;
 use yii\db\Expression;
 use yii\helpers\ArrayHelper;
 
-class UserFavouriteProduct extends \yii\db\ActiveRecord
+class UserViewProduct extends \yii\db\ActiveRecord
 {
     /**
      * @inheritdoc
      */
     public static function tableName()
     {
-        return 'user_favourite_product';
+        return 'user_view_product';
     }
 
     /**
@@ -36,42 +36,33 @@ class UserFavouriteProduct extends \yii\db\ActiveRecord
             'id' => 'ID',
         ];
     }
-    
-    public static function checkStatusUserFavourites($user_id, $product_id){
-        $model = self::findOne(['user_id' => $user_id, 'product_id' => $product_id]);
-        return $model && $model->status ? true : false;
-    }
 
-    public static function toggleFavourites($user_id, $product_id){
+    public static function saveViewProduct($user_id, $product_id){
         $model = self::findOne(['user_id' => $user_id, 'product_id' => $product_id]);
-        if( $model ){
-            $model->status = $model->status ? 0 : 1;
-            $model->save(false);
-            return $model->status ? true : false;
-        }else{
-            $model          = new UserFavouriteProduct;
+        if( !$model ){
+            $model          = new UserViewProduct;
             $model->user_id = $user_id;
-            $model->product_id = $product_id;
-            $model->update_at = date('Y-m-d H:i:s');
-            $model->save(false);
-            return true;
+            $model->product_id = $product_id;            
         }
+
+        $model->last_time_view = date('Y-m-d H:i:s');
+        $model->save(false);
     }
 
-    public static function getListProductFavourites($user_id, $limit = null, $offset = null){
+    public static function getListProductView($user_id, $limit = null, $offset = null){
         
         $query = self::find()
         ->select('B.*')
         ->from(self::tableName() . ' A')
         ->innerJoin(Product::tableName() . ' B', 'A.product_id = B.id')
-        ->where(['A.user_id' => $user_id, 'A.status' => 1]);
+        ->where(['A.user_id' => $user_id]);
 
         if( !is_null($limit) )
             $query->limit($limit);
         if( !is_null($offset) )
             $query->offset($offset);
         
-        $query->orderBy(['A.update_at' => SORT_DESC]);
+        $query->orderBy(['A.last_time_view' => SORT_DESC]);
 
         $result = $query->asArray()->all();
 
@@ -101,7 +92,7 @@ class UserFavouriteProduct extends \yii\db\ActiveRecord
                 'star' => $item['star'],
                 'total_rate' => $item['total_rate'],
                 'quantity_sold' => $item['quantity_sold'],
-                'is_favourites' => true
+                'is_favourites' => UserFavouriteProduct::checkStatusUserFavourites($user_id, $item['id'])
             ];
 
             $data[] = $row;

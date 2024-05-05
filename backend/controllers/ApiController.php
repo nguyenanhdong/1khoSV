@@ -29,6 +29,7 @@ use backend\models\Config;
 use backend\models\Order;
 use backend\models\UserDeliveryAddress;
 use backend\models\UserFavouriteProduct;
+use backend\models\UserViewProduct;
 use backend\models\UserFollowAgent;
 use common\helpers\Helper;
 use yii\helpers\ArrayHelper;
@@ -1484,8 +1485,13 @@ class ApiController extends Controller
             $product_id  = $params['product_id'];
 
             $dataRes        = Product::getProductDetail($product_id, $this->userId);
+
             if( !$dataRes ){
                 return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('product', Response::KEY_NOT_FOUND)]);
+            }
+
+            if( $this->userId ){
+                UserViewProduct::saveViewProduct($this->userId, $product_id);
             }
 
             return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
@@ -1892,6 +1898,78 @@ class ApiController extends Controller
             
             $dataRes    = Order::getOrderOfUserByType($type, $this->userId, $limit, $offset);
             
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+        } catch (\Exception $e) {
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
+    }
+
+     /**
+     * API danh sách sản phẩm yêu thích
+     */
+    public function actionListProductFavourite(){
+        try{
+            $params = self::getParamsRequest([
+                'limit'    => [
+                    'type' => self::TYPE_INT,
+                    'default' => 10
+                ],
+                'page'    => [
+                    'type' => self::TYPE_INT,
+                    'default' => 1
+                ]
+            ]);
+
+            if( !empty($params['listError']) || !$this->userId ){
+                $listErr = !empty($params['listError']) ? $params['listError'] : [Response::getErrorMessage('info', Response::KEY_FORBIDDEN)];
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+            }
+
+            $limit       = $params['limit'];
+            $page       = $params['page'];
+            $offset     = ($page - 1) * $limit;
+
+            $dataRes       = UserFavouriteProduct::getListProductFavourites($this->userId, $limit, $offset);
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+        } catch (\Exception $e) {
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
+    }
+
+    /**
+     * API danh sách sản phẩm đã xem
+     */
+    public function actionListProductView(){
+        try{
+            $params = self::getParamsRequest([
+                'limit'    => [
+                    'type' => self::TYPE_INT,
+                    'default' => 10
+                ],
+                'page'    => [
+                    'type' => self::TYPE_INT,
+                    'default' => 1
+                ]
+            ]);
+
+            if( !empty($params['listError']) || !$this->userId ){
+                $listErr = !empty($params['listError']) ? $params['listError'] : [Response::getErrorMessage('info', Response::KEY_FORBIDDEN)];
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+            }
+
+            $limit       = $params['limit'];
+            $page       = $params['page'];
+            $offset     = ($page - 1) * $limit;
+
+            $dataRes       = UserViewProduct::getListProductView($this->userId, $limit, $offset);
             return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
         } catch (\Exception $e) {
             $action = Yii::$app->controller->action->id;
