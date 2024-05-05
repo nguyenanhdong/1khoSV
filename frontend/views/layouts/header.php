@@ -74,7 +74,7 @@ if (in_array($controller.'/'.$action, $not_show_search)) {
                 <img class="logo" src="/images/icon/logo.svg" alt="">
             </a>
             <div class="header_mobi_icon">
-                <a href="">
+                <a href="<?= Url::to(['/voucher/index']) ?>">
                     <img src="/images/icon/vi-icon.svg" alt="">
                 </a>
                 <a href="">
@@ -132,7 +132,9 @@ if (in_array($controller.'/'.$action, $not_show_search)) {
                     <input type="text" placeholder="Tìm kiếm sản phẩm...">
                 </div>
                 <div class="cart_mobi flex-center">
-                    <img src="/images/icon/cart-icon.svg" alt="">
+                    <a href="<?= Url::to(['/cart/index']) ?>">
+                        <img src="/images/icon/cart-icon.svg" alt="">
+                    </a>
                 </div>
             </div>
         </div>

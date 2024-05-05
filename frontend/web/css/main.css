@@ -1736,6 +1736,9 @@ input:checked[type=checkbox] {
 }
 
 @media screen and (max-width: 768px) {
+  .voucher .voucher_sidebar {
+    margin-top: 22px;
+  }
   .payment .payment_right .info_payment button {
     margin-top: 45px;
   }
