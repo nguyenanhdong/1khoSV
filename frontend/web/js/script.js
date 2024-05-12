@@ -103,6 +103,29 @@ $(document).on('click','.choose_btn_color',function(){
   $('.choose_btn_color').removeClass('active');
   $(this).addClass('active');
 });
+if ($(window).width() <= 768) {
+  $('.product_top_cat').slick({
+    autoplay: false,
+    speed: 800,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    centerMode: false,
+    focusOnSelect: false,
+    pauseOnHover:false,
+    dots:true,
+    infinite: false,
+  });
+}
+
+
+
+
+
+
+
+
+
+
 
 
 

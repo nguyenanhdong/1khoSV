@@ -1736,6 +1736,32 @@ input:checked[type=checkbox] {
 }
 
 @media screen and (max-width: 768px) {
+  .product_list .slick-list {
+    margin: 0 -5px;
+  }
+  .product_top_cat .slick-list {
+    margin: 0 -15px;
+  }
+  .product_top_cat .slick-next {
+    right: 0;
+  }
+  .product_top_cat .slick-prev {
+    left: -20px;
+    z-index: 1;
+  }
+  .product_top_cat .slick-prev:before, .product_top_cat .slick-next:before {
+    content: "";
+    width: 40px;
+    height: 40px;
+    display: inline-block;
+    background-size: 40px;
+  }
+  .product_top_cat .slick-next:before {
+    background-image: url(/images/icon/next.png);
+  }
+  .product_top_cat .slick-prev:before {
+    background-image: url(/images/icon/prev.png);
+  }
   .voucher .voucher_sidebar {
     margin-top: 22px;
   }
@@ -1994,6 +2020,7 @@ input:checked[type=checkbox] {
   }
   .product_top .product_top_cat .product_top_cat_item {
     grid-template-columns: unset;
+    margin: 0 10px;
   }
   .sale_list .sale_list_item {
     margin: 0 5px;
@@ -2036,6 +2063,7 @@ input:checked[type=checkbox] {
   .sale_index {
     background-image: unset;
     background-color: #FCBE11;
+    padding: 26px 15px 40px 15px;
   }
   .sale_list .sale_list_item .num_sale {
     font-size: 13px;
