@@ -150,6 +150,7 @@ class Order extends \yii\db\ActiveRecord
                     $modelOrderProduct                          = new OrderProduct;
                     $modelOrderProduct->order_id                = $modelOrder->id;
                     $modelOrderProduct->product_id              = $product['product_id'];
+                    $modelOrderProduct->price_origin            = $product['price_origin'];
                     $modelOrderProduct->price                   = $product['total_price']/$product['quantity'];
                     $modelOrderProduct->quantity                = $product['quantity'];
                     $modelOrderProduct->total_price             = $total_price_order;
@@ -283,6 +284,94 @@ class Order extends \yii\db\ActiveRecord
             $data[] = $row;
         }
         
+        return $data;
+    }
+
+    public static function getOrderDetail($id, $user_id){
+        $model = self::findOne(['id' => $id, 'user_id' => $user_id]);
+        if( !$model )
+            return null;
+
+        $product = OrderProduct::getProductByOrderId($model->id);
+
+        $can_cancel = false;
+        $can_refund = false;
+        $can_review = ProductReview::checkUserReviewOrder($user_id, $model->id);
+        $status_name= "";
+        $date_refund_expire = null;
+        switch($model->status){
+            case self::STATUS_PENDING:
+                $can_cancel = true;
+                $status_name= "Đơn hàng chờ xác nhận";
+                break;
+            case self::STATUS_CONFIRM:
+                $status_name= "Đơn hàng đã xác nhận";
+            case self::STATUS_DELIVERING:
+                $status_name= "Đơn hàng đang giao";
+                break;
+            case self::STATUS_PURCHASED:
+                $status_name= "Đơn hàng đã mua";
+                $time_refund_expire = strtotime('+ 10 day', strtotime($model->time_payment));
+                $date_refund_expire = date('d-m-Y', $time_refund_expire);
+                if( time() < $time_refund_expire || date('d-m-Y') == $date_refund_expire )
+                    $can_refund = true;
+
+                $can_review = true;
+                break;
+            case self::STATUS_REFUND:
+                $status_name= "Đơn hàng đã trả hàng/hoàn tiền";
+                break;
+        }
+        
+        $domain     = Yii::$app->params['urlDomain'];
+        $price      = $product['price'];
+        $price_old  = $product['price_origin'];
+        $percent_discount = $price < $price_old ? round((($price_old - $price)/$price)*100) : 0;
+        $imageShow = "";
+        if( $product['image'] != "" ){
+            $image =  explode(';', $product['image']);
+            $imageShow = $domain . $image[0];
+        }
+
+        $productInfo = [
+            'id' => $product['id'],
+            'name' => $product['name'],
+            'image' => $imageShow,
+            'price' => $price,
+            'percent_discount' => $percent_discount
+        ];
+
+        $shippingInformation = UserDeliveryAddress::getDeliveryAddressOrderDefault($model->user_id, $model->delivery_address_id);
+
+        $typePayment = $model->type_payment;
+        $typePaymentName = $typePayment == 1 ? 'Chuyển khoản' : 'Thanh toán khi nhận hàng';
+        $bankPaymentInfo = $typePayment == 1 ? Config::getConfigApp("BANK_PAYMENT") : null;
+
+        $payInfo = [
+            'price' => $model->price,
+            'price_voucher' => $model->price_voucher,
+            'price_wallet' => $model->price_wallet,
+            'fee_ship' => $model->fee_ship,
+            'total_price' => $model->total_price
+        ];
+
+        $data = [
+            'id' => $model->id,
+            'status_id' => $model->status,
+            'status_name' => $status_name,
+            'can_cancel' => $can_cancel,
+            'can_refund' => $can_refund,
+            'can_review' => $can_review,
+            'date_refund_expire' => $date_refund_expire,
+            'product_info' => $productInfo,
+            'shipping_info' => $shippingInformation,
+            'type_payment' => $typePayment,
+            'type_payment_name' => $typePaymentName,
+            'bank_payment_info' => $bankPaymentInfo,
+            'pay_info'     => $payInfo
+        ];
+
+
         return $data;
     }
 }

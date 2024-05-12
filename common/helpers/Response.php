@@ -35,7 +35,12 @@ class Response
             'agent'          => 'Mã đại lý không được trống',
             'voucher_id'     => 'Mã voucher không được trống',
             'product_combination' => 'Danh sách mã sản phẩm không được trống',
-            'social_id'      => 'ID mạng xã hội không được trống'
+            'social_id'      => 'ID mạng xã hội không được trống',
+            'order_id'       => 'Mã đơn hàng không được trống',
+            'video_image_review'    => 'Video, hình ảnh không được trống',
+            'content_review' => 'Nội dung đánh giá không được trống',
+            'image_upload'   => 'Hình ảnh không được trống',
+            'video_upload'   => 'Video không được trống',
         ],
         self::KEY_INVALID    => [
             'phone'          => 'Số điện thoại không hợp lệ',
@@ -47,7 +52,12 @@ class Response
             'request_method' => 'Phương thức yêu cầu không hợp lệ',
             'voucher'        => 'Voucher không hợp lệ',
             'order'          => 'Đơn hàng không hợp lệ',
-            'social_id'      => 'ID mạng xã hội không hợp lệ'
+            'social_id'      => 'ID mạng xã hội không hợp lệ',
+            'video_image_review' => 'Video, hình ảnh số lượng tối đa là 6',
+            'star_review'    => 'Số điểm đánh giá từ 1 đến 5',
+            'content_review' => 'Nội dung đánh giá quá dài',
+            'image_upload'   => 'Định dạng hình ảnh không hợp lệ. Chỉ chấp nhận hình ảnh có phần mở rộng là: .png, .jpg, .gif',
+            'video_upload'   => 'Định dạng video không hợp lệ. Chỉ chấp nhận video có phần mở rộng là: .mp4, .flv, .m4a, .mov',
         ],
         self::KEY_FORBIDDEN   => [
             'banned'         => 'Tài khoản đang bị khoá',
@@ -61,6 +71,7 @@ class Response
             'notify'         => 'Thông báo không tồn tại',
             'product'        => 'Sản phẩm không tồn tại',
             'delivery_address' => 'Địa chỉ giao hàng không tồn tại',
+            'order'          => 'Đơn hàng không tồn tại'
         ],
         self::KEY_EXISTS  => [
             'phone'          => 'Số điện thoại đã được sử dụng',
