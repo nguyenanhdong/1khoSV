@@ -2039,6 +2039,35 @@ left: 20px;
 @media screen and (min-width: 1024px) {}
 
 @media screen and (max-width: 768px) {
+  .product_list .slick-list{
+    margin: 0 -5px;
+  }
+  .product_top_cat{
+    .slick-list{
+      margin: 0 -15px;
+    }
+    .slick-next {
+      right: 0;
+  }
+    .slick-prev {
+      left: -20px;
+      z-index: 1;
+  }
+    .slick-prev:before, .slick-next:before{
+      content: "";
+      width: 40px;
+      height: 40px;
+      display: inline-block;
+      background-size: 40px;
+    }
+    .slick-next:before {
+      background-image: url(/images/icon/next.png);
+    }
+  
+    .slick-prev:before {
+      background-image: url(/images/icon/prev.png);
+    }
+  }
   .voucher .voucher_sidebar{
     margin-top: 22px;
   }
@@ -2355,6 +2384,7 @@ left: 20px;
 
       .product_top_cat_item {
         grid-template-columns: unset;
+        margin: 0 10px;
       }
     }
   }
@@ -2406,6 +2436,7 @@ left: 20px;
   .sale_index {
     background-image: unset;
     background-color: #FCBE11;
+    padding: 26px 15px 40px 15px;
   }
 
   .sale_list .sale_list_item .num_sale {
