@@ -2,6 +2,7 @@
 
 namespace backend\models;
 
+use common\helpers\Response;
 use Yii;
 
 class ProductReview extends \yii\db\ActiveRecord
@@ -74,5 +75,74 @@ class ProductReview extends \yii\db\ActiveRecord
         }
        
         return $data;
+    }
+
+    public static function checkUserReviewOrder($user_id, $order_id){
+        $model = self::findOne(['user_id' => $user_id, 'order_id' => $order_id]);
+        return $model ? false : true;
+    }
+
+    public static function createReview($user_id, $params){
+        $order_id           = $params['order_id'];
+        $product_id         = $params['product_id'];
+        $video_image        = $params['video_image_review'];
+        $star               = $params['star_review'];
+        $content            = $params['content_review'];
+
+        $flagCanReview      = self::checkUserReviewOrder($user_id, $order_id);
+        if( $flagCanReview ){
+            $modelOrder= Order::findOne(['id' => $order_id, 'user_id' => $user_id]);
+            if( !$modelOrder ){
+                return [
+                    'status' => false,
+                    'message'=> Response::getErrorMessage('order', Response::KEY_NOT_FOUND)
+                ];
+            }
+
+            $modelOrderProduct= OrderProduct::findOne(['order_id' => $order_id, 'product_id' => $product_id]);
+            if( !$modelOrderProduct ){
+                return [
+                    'status' => false,
+                    'message'=> 'Thông tin đơn hàng, sản phẩm không hợp lệ'
+                ];
+            }
+
+            $modelProduct   = Product::findOne($product_id);
+            if( !$modelProduct ){
+                return [
+                    'status' => false,
+                    'message'=> Response::getErrorMessage('product', Response::KEY_NOT_FOUND)
+                ];
+            }
+
+            $model          = new ProductReview;
+            $model->user_id = $user_id;
+            $model->order_id= $order_id;
+            $model->product_id = $product_id;
+            $model->rating_point = $star;
+            $model->content    = strip_tags($content);
+            $model->video_image= json_encode($video_image);
+            $model->save(false);
+
+            $prod_star = $modelProduct->star;
+            $prod_total_rate = $modelProduct->total_rate + 1;
+            $prod_total_rate_point = $modelProduct->total_rate_point + $star;
+            $prod_star = round($prod_total_rate_point/$prod_total_rate);
+
+            $modelProduct->star = $prod_star;
+            $modelProduct->total_rate = $prod_total_rate;
+            $modelProduct->total_rate_point = $prod_total_rate_point;
+            $modelProduct->save(false);
+
+            return [
+                'status' => true,
+                'message'=> 'Đánh giá sản phẩm thành công'
+            ];
+        }else{
+            return [
+                'status' => false,
+                'message'=> 'Bạn đã đánh giá sản phẩm rồi'
+            ];
+        }
     }
 }

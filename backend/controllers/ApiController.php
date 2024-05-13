@@ -37,6 +37,7 @@ use backend\models\Util;
 use common\helpers\Response;
 use common\helpers\Request;
 use common\helpers\Jwt\JWT;
+use yii\web\UploadedFile;
 
 class ApiController extends Controller
 {
@@ -183,7 +184,7 @@ class ApiController extends Controller
                         case Response::KEY_INVALID:
                             $isError    = false;
                             if( isset($objValidate['min']) || isset($objValidate['max']) ){
-                                $value_length = strlen($value);
+                                $value_length = is_array($value) ? count($value) : strlen($value);
                                 if( isset($objValidate['min']) && isset($objValidate['max']) ){
                                     if( $value_length < $objValidate['min'] || $value_length > $objValidate['max'] ){
                                         $isError = true;
@@ -196,7 +197,7 @@ class ApiController extends Controller
                                     $isError = true;
                                 }
                             }
-                            if( isset($objValidate['regex']) ){
+                            if( isset($objValidate['regex']) && !is_array($value) ){
                                 $regex = $objValidate['regex'];
                                 if(!preg_match($regex, $value)){
                                     $isError = true;
@@ -1345,13 +1346,12 @@ class ApiController extends Controller
             $dataRes        = NotifyUser::getDetailNotify($id, $this->userId, Notify::TYPE_CUSTOMER);
             if( !$dataRes ){
                 
-                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('notify', Response::KEY_NOT_FOUND)]);
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('order', Response::KEY_NOT_FOUND)]);
             }
             
             return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
 
         } catch (\Exception $e) {
-            var_dump($e->getMessage());die;
             $action = Yii::$app->controller->action->id;
             $this->writeLogFile("$action-error", [
                 'message' => $e->getMessage(),
@@ -1776,6 +1776,7 @@ class ApiController extends Controller
             return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
         }
     }
+    
     /**
      * API lấy danh sách địa chỉ giao hàng
      */
@@ -1972,6 +1973,134 @@ class ApiController extends Controller
             $dataRes       = UserViewProduct::getListProductView($this->userId, $limit, $offset);
             return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
         } catch (\Exception $e) {
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
+    }
+
+    /**
+     * API chi tiết đơn hàng
+     */
+    public function actionDetailOrder(){
+        try {
+            $params = self::getParamsRequest([
+                'order_id' => [
+                    'type' => self::TYPE_INT,
+                    'validate' => Response::KEY_REQUIRED
+                ]
+            ]);
+            
+            if( !empty($params['listError']) || !$this->userId ){
+                $listErr = !empty($params['listError']) ? $params['listError'] : [Response::getErrorMessage('info', Response::KEY_FORBIDDEN)];
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+            }
+
+            $id             = $params['order_id'];
+            $dataRes        = Order::getOrderDetail($id, $this->userId);
+            if( !$dataRes ){
+                
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('notify', Response::KEY_NOT_FOUND)]);
+            }
+            
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+
+        } catch (\Exception $e) {
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
+    }
+
+    /**
+     * API đánh giá sản phẩm
+     */
+    public function actionCreateReviewProduct(){
+        try {
+            $params = self::getParamsRequest([
+                'order_id' => [
+                    'type' => self::TYPE_INT,
+                    'validate' => Response::KEY_REQUIRED
+                ],
+                'product_id' => [
+                    'type' => self::TYPE_INT,
+                    'validate' => Response::KEY_REQUIRED
+                ],
+                'video_image_review' => [
+                    'type' => self::TYPE_ARRAY,
+                    'validate' => [Response::KEY_REQUIRED, Response::KEY_INVALID => ['min' => 1, 'max' => 6]]
+                ],
+                'star_review' => [
+                    'type' => self::TYPE_INT,
+                    'validate' => [Response::KEY_REQUIRED, Response::KEY_INVALID => ['min' => 1, 'max' => 5]]
+                ],
+                'content_review' => [
+                    'type' => self::TYPE_STRING,
+                    'validate' => [Response::KEY_REQUIRED, Response::KEY_INVALID => ['max' => 400]]
+                ]
+            ]);
+            
+            if( !empty($params['listError']) || !$this->userId ){
+                $listErr = !empty($params['listError']) ? $params['listError'] : [Response::getErrorMessage('info', Response::KEY_FORBIDDEN)];
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+            }
+
+            $dataRes            = ProductReview::createReview($this->userId, $params);
+            if( !$dataRes['status'] ){
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [$dataRes['message']]);
+            }
+
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, []);
+
+        } catch (\Exception $e) {
+            throw $e;
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
+    }
+
+    /**
+     * API upload ảnh
+     */
+    public function actionUploadImage(){
+        try {
+            $dataUpload = Helper::uploadFile('image');
+            if ($dataUpload['status']) {
+                return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataUpload['data']);
+            }else{
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+            }
+
+        } catch (\Exception $e) {
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
+    }
+
+    /**
+     * API upload video
+     */
+    public function actionUploadVideo(){
+        try {
+            $dataUpload = Helper::uploadFile('video');
+            if ($dataUpload['status']) {
+                return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataUpload['data']);
+            }else{
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+            }
+
+        } catch (\Exception $e) {
+            throw $e;
             $action = Yii::$app->controller->action->id;
             $this->writeLogFile("$action-error", [
                 'message' => $e->getMessage(),
