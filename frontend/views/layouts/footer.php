@@ -3,7 +3,7 @@
         <div class="footer_gr">
             <div class="footer_item">
                 <a href="">
-                    <img src="/images/icon/logo.svg" alt="">
+                    <img class="logo" src="/images/icon/logo.svg" alt="">
                 </a>
                 <h4>Contact Us</h4>
                 <div>

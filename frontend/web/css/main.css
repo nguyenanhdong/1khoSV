@@ -110,12 +110,15 @@ h6 {
 }
 
 #header .header_top {
-  background-color: #08469B;
+  background-color: #0091ff;
   padding: 12px 0;
 }
 #header .header_top .header_top_group {
   display: flex;
   justify-content: space-between;
+}
+#header .header_top .header_top_group .header_logo img {
+  height: 40px;
 }
 #header .header_top .header_top_group .header_search {
   margin: 0 83px 0 50px;
@@ -177,12 +180,12 @@ h6 {
   gap: 40px;
 }
 #header .header_menu ul i {
-  color: #08469B;
+  color: #0091ff;
   font-size: 15px;
 }
 
 #footer {
-  background-color: #08469B;
+  background-color: #0091ff;
   position: relative;
 }
 #footer:before {
@@ -203,6 +206,9 @@ h6 {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+#footer .footer_gr .footer_item .logo {
+  height: 55px;
 }
 #footer .footer_gr .footer_item ul {
   list-style: disc;
@@ -493,7 +499,7 @@ section h2 {
   position: absolute;
   top: 0;
   right: 0;
-  background-color: #08469B;
+  background-color: #0091ff;
   border-radius: 0 10px 0 10px;
   padding: 7px 10px;
   font-weight: 600;
@@ -519,7 +525,7 @@ section h2 {
 .product_list .product_item a .prod_price_star .des_prod span {
   font-size: 18px;
   font-weight: 700;
-  color: #08469B;
+  color: #0091ff;
   margin-right: 10px;
 }
 .product_list .product_item a .prod_price_star .des_prod p {
@@ -797,7 +803,7 @@ section h2 {
   justify-content: space-between;
 }
 .voucher .voucher_sidebar .sidebar_item a:hover {
-  color: #08469B;
+  color: #0091ff;
 }
 .voucher .voucher_sidebar .content_sidebar {
   margin-bottom: 10px;
@@ -854,7 +860,7 @@ section h2 {
   background-color: #DDDDDD;
 }
 .voucher .voucher_content .tab_voucher button.active {
-  background-color: #08469B;
+  background-color: #0091ff;
   color: #fff;
 }
 .voucher .voucher_content .voucher_list {
@@ -886,7 +892,7 @@ section h2 {
   line-height: 15.5px;
 }
 .voucher .voucher_content .voucher_list .voucher_item .voucher_desc a {
-  color: #08469B;
+  color: #0091ff;
 }
 .voucher .voucher_content .voucher_list .voucher_item .tooltips {
   position: absolute;
@@ -901,7 +907,7 @@ section h2 {
 }
 .see_more_product .see_more_btn {
   border-radius: 30px;
-  background-color: #08469B;
+  background-color: #0091ff;
   padding: 9px 22px;
   color: #fff;
   font-size: 16px;
@@ -927,8 +933,8 @@ section h2 {
   height: 35px;
 }
 .sort_product .sort_list .active {
-  color: #08469B;
-  border: 1px solid #08469B;
+  color: #0091ff;
+  border: 1px solid #0091ff;
   background-color: #DEECFF;
 }
 
@@ -1276,7 +1282,7 @@ section h2 {
   gap: 20px;
 }
 .type_delivery .item_type a div {
-  background-color: #08469B;
+  background-color: #0091ff;
   border-radius: 10px;
   height: 70px;
   width: 70px;
@@ -1286,7 +1292,7 @@ section h2 {
 }
 .type_delivery .item_type a p {
   font-size: 24px;
-  color: #08469B;
+  color: #0091ff;
   font-weight: 700;
 }
 
@@ -1463,7 +1469,7 @@ section h2 {
   font-size: 13px;
 }
 .cart .cart_group_product .cart_list_product .cart_item_product .desc_product .price_cart {
-  color: #08469B;
+  color: #0091ff;
   font-weight: 700;
 }
 
@@ -1623,7 +1629,7 @@ section h2 {
   color: #1D1E20;
 }
 .payment .payment_type .title_type a {
-  color: #08469B;
+  color: #0091ff;
 }
 .payment .payment_right h2 {
   font-size: 16px;
@@ -1934,7 +1940,7 @@ input:checked[type=checkbox] {
   }
   .sort_product .sort_list .active {
     border: unset;
-    border-bottom: 2px solid #08469B;
+    border-bottom: 2px solid #0091ff;
     background-color: unset;
     border-radius: 0;
   }
@@ -1976,7 +1982,7 @@ input:checked[type=checkbox] {
     color: #121212;
   }
   .cat_list_index .cat_list_index_title a {
-    color: #08469B;
+    color: #0091ff;
   }
   .cat_list_index .cat_list_group {
     grid-template-columns: repeat(4, 1fr);
@@ -2001,7 +2007,7 @@ input:checked[type=checkbox] {
   }
   .product_top {
     border-radius: 0;
-    background-color: #08469B;
+    background-color: #0091ff;
   }
   .product_top .product_top_title h2,
   .product_top .product_top_title a {
@@ -2197,7 +2203,7 @@ input:checked[type=checkbox] {
     display: block;
   }
   .header_top_mobi {
-    background-color: #08469B;
+    background-color: #0091ff;
     padding: 15px;
   }
   .header_top_mobi .header_gr_mobi {
@@ -2251,7 +2257,7 @@ input:checked[type=checkbox] {
     font-size: 15px;
   }
   .header_top_mobi .header_toggle_mobi .hotline a {
-    background-color: #08469B;
+    background-color: #0091ff;
     padding: 14px 20px;
     border-radius: 10px;
     display: flex;
@@ -2320,7 +2326,7 @@ input:checked[type=checkbox] {
     text-align: center;
   }
   .header_search_mobi .header_search_gr .cart_mobi {
-    background-color: #08469B;
+    background-color: #0091ff;
     border-radius: 10px;
     width: 50px;
     height: 50px;
