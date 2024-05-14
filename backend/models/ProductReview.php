@@ -3,6 +3,7 @@
 namespace backend\models;
 
 use common\helpers\Response;
+use yii\db\Expression;
 use Yii;
 
 class ProductReview extends \yii\db\ActiveRecord
@@ -70,6 +71,7 @@ class ProductReview extends \yii\db\ActiveRecord
                 'avatar' => $item['avatar'] ? $item['avatar'] : '',
                 'date_review' => date('d/m/Y', strtotime($item['create_at'])),
                 'point_review'=> $item['rating_point'],
+                'content'     => $item['content'],
                 'video_image' => $video_image
             ];
         }
@@ -92,7 +94,7 @@ class ProductReview extends \yii\db\ActiveRecord
         $flagCanReview      = self::checkUserReviewOrder($user_id, $order_id);
         if( $flagCanReview ){
             $modelOrder= Order::findOne(['id' => $order_id, 'user_id' => $user_id]);
-            if( !$modelOrder ){
+            if( !$modelOrder || $modelOrder->status != Order::STATUS_PURCHASED ){
                 return [
                     'status' => false,
                     'message'=> Response::getErrorMessage('order', Response::KEY_NOT_FOUND)
@@ -144,5 +146,85 @@ class ProductReview extends \yii\db\ActiveRecord
                 'message'=> 'Bạn đã đánh giá sản phẩm rồi'
             ];
         }
+    }
+
+    public static function getListReviewOfUser($user_id, $type, $limit = null, $offset = null){
+        if( $type == 0 ){//Chưa đánh giá
+            $query = self::find()
+            ->select('A.id, D.id as product_id, D.name as product_name, D.image as product_img, E.fullname as agent_name, C.price_origin, C.price, C.total_price, C.quantity')
+            ->from(Order::tableName() . ' A')
+            ->leftJoin(self::tableName() . ' B', 'A.id = B.order_id')
+            ->innerJoin(OrderProduct::tableName() . ' C', 'A.id = C.order_id')
+            ->innerJoin(Product::tableName() . ' D', 'C.product_id = D.id')
+            ->leftJoin(Agent::tableName() . ' E', 'D.agent_id = E.id')
+            ->where(['A.user_id' => $user_id, 'A.status' => Order::STATUS_PURCHASED])
+            ->andWhere(['IS', new Expression("B.id"), NULL]);
+        }else{//Đã đánh giá
+            $query = self::find()
+            ->select('A.*, B.fullname, B.avatar')
+            ->from(self::tableName() . ' A')
+            ->innerJoin(Customer::tableName() . ' B', 'A.user_id = B.id')
+            ->where(['A.user_id' => $user_id]);
+        }
+
+        if( !is_null($limit) )
+            $query->limit($limit);
+        if( !is_null($offset) )
+            $query->offset($offset);
+        
+        $query->orderBy(['A.create_at' => SORT_DESC]);
+
+        $result = $query->asArray()->all();
+
+        if( empty($result) ){
+            return [];
+        }
+        $data   = [];
+
+        $domain = Yii::$app->params['urlDomain'];
+        foreach($result as $item){
+
+            if( $type == 0 ){
+                $imageShow = "";
+                if( $item['product_img'] != "" ){
+                    $image =  explode(';', $item['product_img']);
+                    $imageShow = $domain . $image[0];
+                }
+                $price      = $item['price'];
+                $price_old  = $item['price_origin'];
+                $percent_discount = $price < $price_old ? round((($price_old - $price)/$price_old)*100) : 0;
+                $data[] = [
+                    'order_id' => (int)$item['id'],
+                    'product_id' => (int)$item['product_id'],
+                    'product_name' => $item['product_name'],
+                    'product_img' => $imageShow,
+                    'quantity'    => (int)$item['quantity'],
+                    'agent_name'  => $item['agent_name'] ? $item['agent_name'] : '1KHO',
+                    'price'=> $price,
+                    'price_old' => $price_old,
+                    'percent_discount' => $percent_discount,
+                    'status_name' => 'Đã mua'
+                ];
+            }else{
+                $video_image = [];
+                if( $item['video_image'] && strpos($item['video_image'], '[') !== false ){
+                    $video_image = json_decode($item['video_image'], true);
+                    $domain      = Yii::$app->params['urlDomain'];
+                    $video_image = preg_filter('/^/', $domain, $video_image);
+                }
+                $data[] = [
+                    'fullname' => $item['fullname'] ? $item['fullname'] : '',
+                    'avatar' => $item['avatar'] ? $item['avatar'] : '',
+                    'date_review' => date('d/m/Y', strtotime($item['create_at'])),
+                    'point_review'=> $item['rating_point'],
+                    'content'     => $item['content'],
+                    'video_image' => $video_image
+                ];
+            }
+
+            
+        }
+       
+        return $data;
     }
 }

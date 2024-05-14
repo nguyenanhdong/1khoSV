@@ -2100,6 +2100,48 @@ class ApiController extends Controller
             }
 
         } catch (\Exception $e) {
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
+    }
+
+    /**
+     * API list sản phẩm chưa đánh giá / đã đánh giá
+     */
+    public function actionListReviewOfUser(){
+        try {
+            $params = self::getParamsRequest([
+                'type_review' => [
+                    'type' => self::TYPE_INT,
+                    'default' => 0
+                ],
+                'limit'    => [
+                    'type' => self::TYPE_INT,
+                    'default' => 10
+                ],
+                'page'    => [
+                    'type' => self::TYPE_INT,
+                    'default' => 1
+                ]
+            ]);
+            
+            if( !empty($params['listError']) || !$this->userId ){
+                $listErr = !empty($params['listError']) ? $params['listError'] : [Response::getErrorMessage('info', Response::KEY_FORBIDDEN)];
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+            }
+
+            $type_review= $params['type_review'];
+            $limit      = $params['limit'];
+            $page       = $params['page'];
+            $offset     = ($page - 1) * $limit;
+
+            $dataRes            = ProductReview::getListReviewOfUser($this->userId, $type_review, $limit, $offset);
+            
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+        } catch (\Exception $e) {
             throw $e;
             $action = Yii::$app->controller->action->id;
             $this->writeLogFile("$action-error", [

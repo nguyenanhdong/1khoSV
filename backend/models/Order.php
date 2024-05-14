@@ -230,7 +230,7 @@ class Order extends \yii\db\ActiveRecord
                 break;
         }
         $query = self::find()
-        ->select('A.id, A.status, B.product_id, C.name as product_name, C.image as product_image, C.star as product_star, C.price as product_price, B.price as price_buy, A.total_price, B.quantity, B.product_classification_id, D.fullname as agent_name')
+        ->select('A.id, A.status, B.product_id, C.name as product_name, C.image as product_image, C.star as product_star, B.price_origin as product_price, B.price as price_buy, A.total_price, B.quantity, B.product_classification_id, D.fullname as agent_name')
         ->from(self::tableName() . ' A')
         ->innerJoin(OrderProduct::tableName() . ' B', 'A.id = B.order_id')
         ->innerJoin(Product::tableName() . ' C', 'C.id = B.product_id')
@@ -326,7 +326,7 @@ class Order extends \yii\db\ActiveRecord
         $domain     = Yii::$app->params['urlDomain'];
         $price      = $product['price'];
         $price_old  = $product['price_origin'];
-        $percent_discount = $price < $price_old ? round((($price_old - $price)/$price)*100) : 0;
+        $percent_discount = $price < $price_old ? round((($price_old - $price)/$price_old)*100) : 0;
         $imageShow = "";
         if( $product['image'] != "" ){
             $image =  explode(';', $product['image']);

@@ -36,6 +36,17 @@ class Helper
         $file_name  = time() . '_' . preg_replace('/[^a-zA-Z0-9]+/', '_', $fileUpload['name']);
         $file_type  = $fileUpload['type'];
         $file_size  = $fileUpload['size'];
+        $maxSizeImage = 1048576;//1MB
+        $maxSizeVideo = 20971520;//20MB
+        if( $name == 'image' ){
+            if( $file_size > $maxSizeImage ){
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], ["Dung lượng ảnh quá lớn. Tối đa 1 MB"]);
+            }
+        }else if( $name == 'video' ){
+            if( $file_size > $maxSizeVideo ){
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], ["Dung lượng video quá lớn. Tối đa 20 MB"]);
+            }
+        }
         $extFileType    =pathinfo($fileUpload['name'], PATHINFO_EXTENSION);
 
         $allowed    = $name == 'image' ? array("jpg", "jpeg", "gif", "png") : [];
