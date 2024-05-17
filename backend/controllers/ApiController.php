@@ -2075,7 +2075,7 @@ class ApiController extends Controller
             if ($dataUpload['status']) {
                 return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataUpload['data']);
             }else{
-                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [$dataUpload['message']]);
             }
 
         } catch (\Exception $e) {
@@ -2096,7 +2096,7 @@ class ApiController extends Controller
             if ($dataUpload['status']) {
                 return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataUpload['data']);
             }else{
-                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [$dataUpload['message']]);
             }
 
         } catch (\Exception $e) {

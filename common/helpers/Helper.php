@@ -40,11 +40,17 @@ class Helper
         $maxSizeVideo = 20971520;//20MB
         if( $name == 'image' ){
             if( $file_size > $maxSizeImage ){
-                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], ["Dung lượng ảnh quá lớn. Tối đa 1 MB"]);
+                return [
+                    'status' => false,
+                    'message'=> "Dung lượng ảnh quá lớn. Tối đa 1 MB"
+                ];
             }
         }else if( $name == 'video' ){
             if( $file_size > $maxSizeVideo ){
-                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], ["Dung lượng video quá lớn. Tối đa 20 MB"]);
+                return [
+                    'status' => false,
+                    'message'=> "Dung lượng video quá lớn. Tối đa 20 MB"
+                ];
             }
         }
         $extFileType    =pathinfo($fileUpload['name'], PATHINFO_EXTENSION);
@@ -54,7 +60,10 @@ class Helper
             $allowed    = array("mp4", "flv", "m4a", "mov");
         }
         if(!in_array($extFileType, $allowed)) {
-            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage($name . '_upload', Response::KEY_INVALID)]);
+            return [
+                'status' => false,
+                'message'=> Response::getErrorMessage($name . '_upload', Response::KEY_INVALID)
+            ];
         }
 
         $type       = isset($params['type']) && !empty($params['type']) ? preg_replace('/[^a-zA-Z0-9]+/', '_', $params['type']) : 'file';
@@ -80,7 +89,8 @@ class Helper
         }
 
         return [
-            'status' => false
+            'status' => false,
+            'message'=> 'Có lỗi xảy ra! Vui lòng thử lại sau'
         ];
     }
 }
