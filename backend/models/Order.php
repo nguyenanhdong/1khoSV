@@ -338,7 +338,8 @@ class Order extends \yii\db\ActiveRecord
             'name' => $product['name'],
             'image' => $imageShow,
             'price' => $price,
-            'percent_discount' => $percent_discount
+            'percent_discount' => $percent_discount,
+            'quantity' => $product['quantity']
         ];
 
         $shippingInformation = UserDeliveryAddress::getDeliveryAddressOrderDefault($model->user_id, $model->delivery_address_id);

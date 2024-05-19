@@ -41,6 +41,8 @@ class Response
             'content_review' => 'Nội dung đánh giá không được trống',
             'image_upload'   => 'Hình ảnh không được trống',
             'video_upload'   => 'Video không được trống',
+            'type_situation' => 'Tình huống đang gặp không được trống',
+            'reason_refund'  => 'Lý do không được trống'
         ],
         self::KEY_INVALID    => [
             'phone'          => 'Số điện thoại không hợp lệ',
@@ -58,6 +60,7 @@ class Response
             'content_review' => 'Nội dung đánh giá quá dài',
             'image_upload'   => 'Định dạng hình ảnh không hợp lệ. Chỉ chấp nhận hình ảnh có phần mở rộng là: .png, .jpg, .gif',
             'video_upload'   => 'Định dạng video không hợp lệ. Chỉ chấp nhận video có phần mở rộng là: .mp4, .flv, .m4a, .mov',
+            'type_situation' => 'Tình huống đang gặp không hợp lệ'
         ],
         self::KEY_FORBIDDEN   => [
             'banned'         => 'Tài khoản đang bị khoá',
@@ -75,6 +78,9 @@ class Response
         ],
         self::KEY_EXISTS  => [
             'phone'          => 'Số điện thoại đã được sử dụng',
+            'order_refund_pending'   => 'Bạn đã gửi yêu cầu trả hàng/hoàn tiền. Không thể gửi thêm yêu cầu',
+            'order_refund_approve'    => 'Yêu cầu trả hàng/hoàn tiền đã được chấp nhận. Không thể gửi thêm yêu cầu',
+            'order_refund_reject'    => 'Yêu cầu trả hàng/hoàn tiền đã bị từ chối. Không thể gửi thêm yêu cầu'
         ],
         self::KEY_SYS_ERR    => [
             'sys'            => 'Lỗi! Vui lòng thử lại sau',

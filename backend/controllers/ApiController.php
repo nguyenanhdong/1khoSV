@@ -27,6 +27,7 @@ use backend\models\NotifyUser;
 use backend\models\NotifyUnRead;
 use backend\models\Config;
 use backend\models\Order;
+use backend\models\OrderRefund;
 use backend\models\UserDeliveryAddress;
 use backend\models\UserFavouriteProduct;
 use backend\models\UserViewProduct;
@@ -184,7 +185,7 @@ class ApiController extends Controller
                         case Response::KEY_INVALID:
                             $isError    = false;
                             if( isset($objValidate['min']) || isset($objValidate['max']) ){
-                                $value_length = is_array($value) ? count($value) : strlen($value);
+                                $value_length = is_array($value) ? count($value) : (is_numeric($value) ? $value : strlen($value));
                                 if( isset($objValidate['min']) && isset($objValidate['max']) ){
                                     if( $value_length < $objValidate['min'] || $value_length > $objValidate['max'] ){
                                         $isError = true;
@@ -2057,7 +2058,6 @@ class ApiController extends Controller
             return Response::returnResponse(Response::RESPONSE_CODE_SUCC, []);
 
         } catch (\Exception $e) {
-            throw $e;
             $action = Yii::$app->controller->action->id;
             $this->writeLogFile("$action-error", [
                 'message' => $e->getMessage(),
@@ -2141,6 +2141,83 @@ class ApiController extends Controller
             $dataRes            = ProductReview::getListReviewOfUser($this->userId, $type_review, $limit, $offset);
             
             return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+        } catch (\Exception $e) {
+            throw $e;
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
+    }
+
+    /**
+     * API thông tin gửi yêu cầu hoàn trả hàng/hoàn tiền
+     */
+    public function actionRefundOrderInfo(){
+        try {
+            $params = self::getParamsRequest([
+                'order_id' => [
+                    'type' => self::TYPE_INT,
+                    'validate' => Response::KEY_REQUIRED
+                ]
+            ]);
+            
+            if( !empty($params['listError']) || !$this->userId ){
+                $listErr = !empty($params['listError']) ? $params['listError'] : [Response::getErrorMessage('info', Response::KEY_FORBIDDEN)];
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+            }
+
+            $id         = $params['order_id'];
+            $dataRes    = OrderRefund::getInfoOrder($id, $this->userId);
+            if( !$dataRes['status'] ){
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [$dataRes['message']]);
+            }
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes['data']);
+        } catch (\Exception $e) {
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
+    }
+
+
+    /**
+     * API gửi yêu cầu hoàn trả hàng/hoàn tiền
+     */
+    public function actionRequestRefundOrder(){
+        try {
+            $params = self::getParamsRequest([
+                'order_id' => [
+                    'type' => self::TYPE_INT,
+                    'validate' => Response::KEY_REQUIRED
+                ],
+                'type_situation' => [
+                    'type' => self::TYPE_INT,
+                    'validate' => [Response::KEY_REQUIRED, Response::KEY_INVALID => ['min' => 1, 'max' => 2]]
+                ],
+                'reason_refund' => [
+                    'type' => self::TYPE_STRING,
+                    'validate' => Response::KEY_REQUIRED
+                ],
+                'note_refund' => [
+                    'type' => self::TYPE_STRING,
+                ]
+            ]);
+            
+            if( !empty($params['listError']) || !$this->userId ){
+                $listErr = !empty($params['listError']) ? $params['listError'] : [Response::getErrorMessage('info', Response::KEY_FORBIDDEN)];
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+            }
+
+            $dataRes            = OrderRefund::createRefundOrder($this->userId, $params);
+            if( !$dataRes['status'] ){
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [$dataRes['message']]);
+            }
+
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, []);
         } catch (\Exception $e) {
             throw $e;
             $action = Yii::$app->controller->action->id;
