@@ -39,9 +39,10 @@ class OrderProduct extends \yii\db\ActiveRecord
     
     public static function getProductByOrderId($order_id){
         $query = self::find()
-        ->select('B.id, B.name, B.image, A.price_origin, A.price, A.total_price, A.quantity')
+        ->select('B.id, B.name, B.image, A.price_origin, A.price, A.total_price, A.quantity, C.fullname as agent_name')
         ->from(self::tableName() . ' A')
         ->innerJoin(Product::tableName() . ' B', 'A.product_id = B.id')
+        ->leftJoin(Agent::tableName() . ' C', 'B.agent_id = C.id')
         ->where(['A.order_id' => $order_id]);
 
         $result = $query->asArray()->one();

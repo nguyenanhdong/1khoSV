@@ -356,6 +356,18 @@ class Order extends \yii\db\ActiveRecord
             'total_price' => $model->total_price
         ];
 
+        $product_data = [
+            'order_id' => (int)$model['id'],
+            'product_id' => (int)$product['id'],
+            'product_name' => $product['name'],
+            'product_img' => $imageShow,
+            'quantity'    => (int)$product['quantity'],
+            'agent_name'  => $product['agent_name'] ? $product['agent_name'] : '1KHO',
+            'price'=> $price,
+            'price_old' => $price_old,
+            'percent_discount' => $percent_discount
+        ];
+
         $data = [
             'id' => $model->id,
             'status_id' => $model->status,
@@ -365,6 +377,7 @@ class Order extends \yii\db\ActiveRecord
             'can_review' => $can_review,
             'date_refund_expire' => $date_refund_expire,
             'product_info' => $productInfo,
+            'product_obj' => $product_data,
             'shipping_info' => $shippingInformation,
             'type_payment' => $typePayment,
             'type_payment_name' => $typePaymentName,

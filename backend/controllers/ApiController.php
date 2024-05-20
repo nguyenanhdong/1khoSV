@@ -2142,7 +2142,6 @@ class ApiController extends Controller
             
             return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
         } catch (\Exception $e) {
-            throw $e;
             $action = Yii::$app->controller->action->id;
             $this->writeLogFile("$action-error", [
                 'message' => $e->getMessage(),
