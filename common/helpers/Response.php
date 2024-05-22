@@ -60,7 +60,8 @@ class Response
             'content_review' => 'Nội dung đánh giá quá dài',
             'image_upload'   => 'Định dạng hình ảnh không hợp lệ. Chỉ chấp nhận hình ảnh có phần mở rộng là: .png, .jpg, .gif',
             'video_upload'   => 'Định dạng video không hợp lệ. Chỉ chấp nhận video có phần mở rộng là: .mp4, .flv, .m4a, .mov',
-            'type_situation' => 'Tình huống đang gặp không hợp lệ'
+            'type_situation' => 'Tình huống đang gặp không hợp lệ',
+            'order_expire_refund' => 'Lỗi! Đã quá thời gian gửi yêu cầu Trả hàng/Hoàn tiền'
         ],
         self::KEY_FORBIDDEN   => [
             'banned'         => 'Tài khoản đang bị khoá',

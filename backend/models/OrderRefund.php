@@ -51,6 +51,15 @@ class OrderRefund extends \yii\db\ActiveRecord
             ];
         }
 
+        if( !isset($dataOrder['date_refund_expire']) ){
+            return ['status' => false, 'message' => Response::getErrorMessage('order', Response::KEY_NOT_FOUND)];
+        }else{
+            $time_refund_expire = strtotime($dataOrder['date_refund_expire']);
+            if( time() > $time_refund_expire && date('d-m-Y') != $dataOrder['date_refund_expire'] ){
+                return ['status' => false, 'message' => Response::getErrorMessage('order_expire_refund', Response::KEY_INVALID)];
+            }
+        }
+
         $model = self::findOne(['order_id' => $order_id, 'user_id' => $user_id]);
         if( $model ){
             $key = "";
