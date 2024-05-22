@@ -15,6 +15,7 @@ class Order extends \yii\db\ActiveRecord
     const STATUS_DELIVERING = 2;
     const STATUS_PURCHASED = 3;
     const STATUS_REFUND = 4;
+    const STATUS_CANCEL = 5;
     /**
      * @inheritdoc
      */
@@ -321,6 +322,9 @@ class Order extends \yii\db\ActiveRecord
             case self::STATUS_REFUND:
                 $status_name= "Đơn hàng đã trả hàng/hoàn tiền";
                 break;
+            case self::STATUS_CANCEL:
+                $status_name= "Đơn hàng đã huỷ";
+                break;
         }
         
         $domain     = Yii::$app->params['urlDomain'];
@@ -387,5 +391,59 @@ class Order extends \yii\db\ActiveRecord
 
 
         return $data;
+    }
+
+    public static function cancelOrder($id, $user_id, $type_cancel = 1){
+        $model = self::findOne(['id' => $id, 'user_id' => $user_id]);
+        if( !$model || $model->status != self::STATUS_PENDING ){
+            $msg = !$model ? Response::getErrorMessage('order', Response::KEY_NOT_FOUND) : '';
+            if( $model && $model->status != self::STATUS_PENDING ){
+                switch($model->status){
+                    case self::STATUS_CONFIRM:
+                        $msg= "Đơn hàng đã xác nhận";
+                    case self::STATUS_DELIVERING:
+                        $msg= "Đơn hàng đang giao";
+                        break;
+                    case self::STATUS_PURCHASED:
+                        $msg= "Đơn hàng đã mua";
+                        break;
+                    case self::STATUS_REFUND:
+                        $msg= "Đơn hàng đã trả hàng/hoàn tiền";
+                        break;
+                    case self::STATUS_CANCEL:
+                        $msg= "Đơn hàng đã huỷ";
+                        break;
+                }
+                if( $msg != "" )
+                    $msg .= '. Không thể huỷ';
+            }
+            return [
+                'status' => false,
+                'message'=> $msg
+            ];
+        }
+
+        $reason_cancel = "";
+        switch($type_cancel){
+            case 1:
+                $msg= "Khách hàng tự huỷ";
+            case 2:
+                $msg= "Đại lý huỷ";
+                break;
+            case 3:
+                $msg= "1KHO huỷ";
+                break;
+        }
+
+        $model->status = self::STATUS_CANCEL;
+        $model->type_cancel = $type_cancel;
+        $model->reason_cancel = $reason_cancel;
+        $model->time_cancel   = date('Y-m-d H:i:s');
+        $model->save(false);
+
+        return [
+            'status' => true,
+            'message'=> 'Thành công'
+        ];
     }
 }

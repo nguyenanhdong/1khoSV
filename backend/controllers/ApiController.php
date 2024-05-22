@@ -2195,7 +2195,7 @@ class ApiController extends Controller
                 ],
                 'type_situation' => [
                     'type' => self::TYPE_INT,
-                    'validate' => [Response::KEY_REQUIRED, Response::KEY_INVALID => ['min' => 1, 'max' => 2]]
+                    'default' => 1
                 ],
                 'reason_refund' => [
                     'type' => self::TYPE_STRING,
@@ -2212,6 +2212,41 @@ class ApiController extends Controller
             }
 
             $dataRes            = OrderRefund::createRefundOrder($this->userId, $params);
+            if( !$dataRes['status'] ){
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [$dataRes['message']]);
+            }
+
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, []);
+        } catch (\Exception $e) {
+            throw $e;
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
+    }
+
+    /**
+     * API huỷ đơn hàng
+     */
+    public function actionCancelOrder(){
+        try {
+            $params = self::getParamsRequest([
+                'order_id' => [
+                    'type' => self::TYPE_INT,
+                    'validate' => Response::KEY_REQUIRED
+                ]
+            ]);
+            
+            if( !empty($params['listError']) || !$this->userId ){
+                $listErr = !empty($params['listError']) ? $params['listError'] : [Response::getErrorMessage('info', Response::KEY_FORBIDDEN)];
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+            }
+
+            $id = $params['order_id'];
+
+            $dataRes            = Order::cancelOrder($id, $this->userId);
             if( !$dataRes['status'] ){
                 return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [$dataRes['message']]);
             }
