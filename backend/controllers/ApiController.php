@@ -45,6 +45,7 @@ class ApiController extends Controller
 
     const TYPE_STRING = 'string';
     const TYPE_INT = 'int';
+    const TYPE_FLOAT = 'float';
     const TYPE_ARRAY = 'array';
 
     const PLATFORM_GG= 'google';
@@ -144,9 +145,14 @@ class ApiController extends Controller
                         $paramsReturn[$name] = [];
                     } else if ($type == self::TYPE_STRING) {
                         $paramsReturn[$name] = $params[$name] ? trim(strip_tags($params[$name])) : '';
+                    }else if ($type == self::TYPE_FLOAT) {
+                        $paramsReturn[$name] = (float)$params[$name];
                     }
                 } else {
                     $paramsReturn[$name] = $type == self::TYPE_INT ? ( isset($objParams['default']) ? $objParams['default'] : 0 ) : ($type == self::TYPE_ARRAY ? [] : ( isset($objParams['default']) ? $objParams['default'] : "" ));
+                    if ($type == self::TYPE_FLOAT) {
+                        $paramsReturn[$name] = 0;
+                    }
                 }
             }
         } else {
@@ -173,7 +179,7 @@ class ApiController extends Controller
                             if( $typeOfValue == self::TYPE_STRING && (!$value || empty(trim($value)))  ){
                                 $isError= true;
                             }
-                            else if( $typeOfValue == self::TYPE_INT && (!$value || $value <= 0) ){
+                            else if( in_array($typeOfValue, [self::TYPE_INT, self::TYPE_FLOAT]) && (!$value || $value <= 0) ){
                                 $isError= true;
                             }
                             else if( $typeOfValue == self::TYPE_ARRAY && empty($value) ){
@@ -185,7 +191,16 @@ class ApiController extends Controller
                         case Response::KEY_INVALID:
                             $isError    = false;
                             if( isset($objValidate['min']) || isset($objValidate['max']) ){
-                                $value_length = is_array($value) ? count($value) : (is_numeric($value) ? $value : strlen($value));
+                                $value_length = 0;
+                                if( $typeOfValue == self::TYPE_STRING  ){
+                                    $value_length = strlen($value);
+                                }
+                                else if( in_array($typeOfValue, [self::TYPE_INT, self::TYPE_FLOAT]) ){
+                                    $value_length = $value;
+                                }
+                                else if( $typeOfValue == self::TYPE_ARRAY ){
+                                    $value_length = count($value);
+                                }
                                 if( isset($objValidate['min']) && isset($objValidate['max']) ){
                                     if( $value_length < $objValidate['min'] || $value_length > $objValidate['max'] ){
                                         $isError = true;
@@ -2073,6 +2088,7 @@ class ApiController extends Controller
         try {
             $dataUpload = Helper::uploadFile('image');
             if ($dataUpload['status']) {
+                $dataUpload['data']['media_token'] = $this->encryptTokenWithJWT(['path' => $dataUpload['data']['path'], 'user_id' => $this->userId]);
                 return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataUpload['data']);
             }else{
                 return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [$dataUpload['message']]);
@@ -2094,12 +2110,52 @@ class ApiController extends Controller
         try {
             $dataUpload = Helper::uploadFile('video');
             if ($dataUpload['status']) {
+                $dataUpload['data']['media_token'] = $this->encryptTokenWithJWT(['path' => $dataUpload['data']['path'], 'user_id' => $this->userId]);
                 return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataUpload['data']);
             }else{
                 return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [$dataUpload['message']]);
             }
 
         } catch (\Exception $e) {
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
+    }
+
+
+    /**
+     * API delete video/image
+     */
+    public function actionDeleteMediaUpload(){
+        try {
+            $params = self::getParamsRequest([
+                'media_token' => [
+                    'type' => self::TYPE_STRING,
+                    'validate' => Response::KEY_REQUIRED
+                ]
+            ]);
+            
+            if( !empty($params['listError']) || !$this->userId ){
+                $listErr = !empty($params['listError']) ? $params['listError'] : [Response::getErrorMessage('info', Response::KEY_FORBIDDEN)];
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+            }
+
+            $dataToken   = $this->decryptTokenWithJWT($params['media_token']);
+            if( !isset($dataToken['path']) || !isset($dataToken['user_id']) || $dataToken['user_id'] != $this->userId){
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('media_token', Response::KEY_INVALID)]);
+            }
+
+            $path        = $dataToken['path'];
+
+            Helper::removeFile($path);
+
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, []);
+
+        } catch (\Exception $e) {
+            throw $e;
             $action = Yii::$app->controller->action->id;
             $this->writeLogFile("$action-error", [
                 'message' => $e->getMessage(),
@@ -2195,7 +2251,7 @@ class ApiController extends Controller
                 ],
                 'type_situation' => [
                     'type' => self::TYPE_INT,
-                    'validate' => [Response::KEY_REQUIRED, Response::KEY_INVALID => ['min' => 1, 'max' => 2]]
+                    'default' => 1
                 ],
                 'reason_refund' => [
                     'type' => self::TYPE_STRING,
@@ -2217,6 +2273,158 @@ class ApiController extends Controller
             }
 
             return Response::returnResponse(Response::RESPONSE_CODE_SUCC, []);
+        } catch (\Exception $e) {
+            throw $e;
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
+    }
+
+    /**
+     * API huỷ đơn hàng
+     */
+    public function actionCancelOrder(){
+        try {
+            $params = self::getParamsRequest([
+                'order_id' => [
+                    'type' => self::TYPE_INT,
+                    'validate' => Response::KEY_REQUIRED
+                ]
+            ]);
+            
+            if( !empty($params['listError']) || !$this->userId ){
+                $listErr = !empty($params['listError']) ? $params['listError'] : [Response::getErrorMessage('info', Response::KEY_FORBIDDEN)];
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+            }
+
+            $id = $params['order_id'];
+
+            $dataRes            = Order::cancelOrder($id, $this->userId);
+            if( !$dataRes['status'] ){
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [$dataRes['message']]);
+            }
+
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, []);
+        } catch (\Exception $e) {
+            throw $e;
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
+    }
+
+    /**
+     * API lấy thông tin form rao vặt
+     */
+    public function actionAdvertisementFormInfo(){
+        try {
+            $dataRes            = Advertisement::getFormInfo();
+            
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
+        } catch (\Exception $e) {
+            throw $e;
+            $action = Yii::$app->controller->action->id;
+            $this->writeLogFile("$action-error", [
+                'message' => $e->getMessage(),
+            ]);
+            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('sys', Response::KEY_SYS_ERR)]);
+        }
+    }
+
+    /**
+     * API đăng tin rao vặt
+     */
+    public function actionCreateAdvertisement(){
+        try {
+            $params = self::getParamsRequest([
+                'type_adv' => [
+                    'type' => self::TYPE_INT,
+                    'validate' => [Response::KEY_REQUIRED, Response::KEY_INVALID => ['min' => 1, 'max' => 2]]
+                ],
+                'phone' => [
+                    'type' => self::TYPE_STRING,
+                    'validate' => [Response::KEY_REQUIRED, Response::KEY_INVALID => ['min' => Response::PHONE_MIN_LENGTH, 'max' => Response::PHONE_MAX_LENGTH]]
+                ],
+                'title_adv' => [
+                    'type' => self::TYPE_STRING,
+                    'validate' => Response::KEY_REQUIRED
+                ],
+                'category_adv' => [
+                    'type' => self::TYPE_INT,
+                    'validate' => Response::KEY_REQUIRED
+                ],
+                'video_adv' => [
+                    'type' => self::TYPE_ARRAY,
+                ],
+                'image_adv' => [
+                    'type' => self::TYPE_ARRAY,
+                    'validate' => Response::KEY_REQUIRED
+                ],
+                'type_strain' => [
+                    'type' => self::TYPE_STRING,
+                    'validate' => Response::KEY_REQUIRED
+                ],
+                'load_capacity' => [
+                    'type' => self::TYPE_STRING,
+                    'validate' => Response::KEY_REQUIRED
+                ],
+                'state_adv' => [
+                    'type' => self::TYPE_INT,
+                    'validate' => [Response::KEY_REQUIRED, Response::KEY_INVALID => ['min' => 1, 'max' => 2]]
+                ],
+                'brand_name' => [
+                    'type' => self::TYPE_STRING,
+                    'validate' => Response::KEY_REQUIRED
+                ],
+                'origin_adv' => [
+                    'type' => self::TYPE_STRING,
+                    'validate' => Response::KEY_REQUIRED
+                ],
+                'description_adv' => [
+                    'type' => self::TYPE_STRING,
+                    'validate' => Response::KEY_REQUIRED
+                ],
+                'kilometer_used' => [
+                    'type' => self::TYPE_FLOAT,
+                    'validate' => Response::KEY_REQUIRED
+                ],
+                'hours_of_use' => [
+                    'type' => self::TYPE_FLOAT,
+                    'validate' => Response::KEY_REQUIRED
+                ],
+                'production_year' => [
+                    'type' => self::TYPE_STRING,
+                    'validate' => [Response::KEY_REQUIRED, Response::KEY_INVALID => ['min' => 4, 'max' => 4]]
+                ],
+                'fuel_adv' => [
+                    'type' => self::TYPE_INT,
+                    'validate' => Response::KEY_REQUIRED
+                ],
+                'price_adv' => [
+                    'type' => self::TYPE_FLOAT,
+                    'validate' => Response::KEY_REQUIRED
+                ]
+            ]);
+            
+            if( !empty($params['listError']) || !$this->userId ){
+                $listErr = !empty($params['listError']) ? $params['listError'] : [Response::getErrorMessage('info', Response::KEY_FORBIDDEN)];
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], $listErr);
+            }
+
+            $result     = Advertisement::createNewAdvertisement($params, $this->userId);
+            
+            if( !$result['status'] ){
+                return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [$result['msg']]);
+            }
+
+            $dataRes            = [];
+            
+            return Response::returnResponse(Response::RESPONSE_CODE_SUCC, $dataRes);
         } catch (\Exception $e) {
             throw $e;
             $action = Yii::$app->controller->action->id;

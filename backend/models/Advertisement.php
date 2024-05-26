@@ -3,7 +3,7 @@
 namespace backend\models;
 
 use Yii;
-
+use common\helpers\Response;
 class Advertisement extends \yii\db\ActiveRecord
 {
     const TYPE_BUY = 1;
@@ -87,5 +87,82 @@ class Advertisement extends \yii\db\ActiveRecord
         }
         
         return $data;
+    }
+
+    public static function getFormInfo(){
+        $data = [
+            'list_category' => AdvertisementCategory::getListItemGroup(AdvertisementCategory::GROUP_TYPE_PRODUCT),
+            'list_fuel'     => AdvertisementCategory::getListItemGroup(AdvertisementCategory::GROUP_TYPE_FUEL),
+        ];
+
+        return $data;
+    }
+
+    public static function createNewAdvertisement($params, $user_id){
+        
+        $listCategory   = AdvertisementCategory::getListItemGroup(AdvertisementCategory::GROUP_TYPE_PRODUCT);
+        $listFuel       = AdvertisementCategory::getListItemGroup(AdvertisementCategory::GROUP_TYPE_FUEL);
+
+        $type_adv       = $params['type_adv'];
+        $phone          = $params['phone'];
+        $title_adv      = $params['title_adv'];
+        $category_adv   = $params['category_adv'];
+        $video_adv      = $params['video_adv'];
+        $image_adv      = $params['image_adv'];
+        $type_strain    = $params['type_strain'];
+        $load_capacity  = $params['load_capacity'];
+        $state_adv      = $params['state_adv'];
+        $brand_name     = $params['brand_name'];
+        $origin_adv     = $params['origin_adv'];
+        $description_adv= $params['description_adv'];
+        $kilometer_used = $params['kilometer_used'];
+        $hours_of_use   = $params['hours_of_use'];
+        $production_year= $params['production_year'];
+        $fuel_adv       = $params['fuel_adv'];
+        $price_adv      = $params['price_adv'];
+
+        if( !isset($listCategory[$category_adv]) ){
+            return [
+                'status' => false,
+                'msg'    => Response::getErrorMessage('category_adv', Response::KEY_INVALID)
+            ];
+        }
+
+        if( !isset($listFuel[$fuel_adv]) ){
+            return [
+                'status' => false,
+                'msg'    => Response::getErrorMessage('fuel_adv', Response::KEY_INVALID)
+            ];
+        }
+
+        if( !empty($video_adv) ){
+            
+        }
+
+        $model = new Advertisement;
+        $model->type = $type_adv;
+        $model->user_id = $user_id;
+        $model->phone = $phone;
+        $model->category_id = $category_adv;
+        $model->video = !empty($video_adv) ? json_encode($video_adv) : null;
+        $model->image = !empty($image_adv) ? json_encode($image_adv) : null;
+        $model->type_strain = $type_strain;
+        $model->load_capacity = $load_capacity;
+        $model->state = $state_adv;
+        $model->brand_name = $brand_name;
+        $model->origin = $origin_adv;
+        $model->title = $title_adv;
+        $model->description = $description_adv;
+        $model->kilometer_used = $kilometer_used;
+        $model->hours_of_use = $hours_of_use;
+        $model->production_year = $production_year;
+        $model->fuel_id = $fuel_adv;
+        $model->price = $price_adv;
+        $model->save(false);
+
+        return [
+            'status' => true,
+            'msg'    => 'Đăng tin thành công'
+        ];
     }
 }

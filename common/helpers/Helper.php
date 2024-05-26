@@ -30,10 +30,13 @@ class Helper
         $params = $_POST;
         $file = $_FILES;
         if( !isset($file[$name]) || empty($file[$name]) ){
-            return Response::returnResponse(Response::RESPONSE_CODE_ERR, [], [Response::getErrorMessage('image_upload', Response::KEY_REQUIRED)]);
+            return [
+                'status' => false,
+                'message'=> Response::getErrorMessage($name . "_upload", Response::KEY_REQUIRED)
+            ];
         }
         $fileUpload = $file[$name];
-        $file_name  = time() . '_' . preg_replace('/[^a-zA-Z0-9]+/', '_', $fileUpload['name']);
+        $file_name  = time() . '_' . preg_replace('/[^a-zA-Z0-9-.]+/', '_', $fileUpload['name']);
         $file_type  = $fileUpload['type'];
         $file_size  = $fileUpload['size'];
         $maxSizeImage = 1048576;//1MB
@@ -92,5 +95,13 @@ class Helper
             'status' => false,
             'message'=> 'Có lỗi xảy ra! Vui lòng thử lại sau'
         ];
+    }
+
+    public static function removeFile($path){
+        $target_dir = $_SERVER['DOCUMENT_ROOT'];
+        $full_path  = $target_dir . $path;
+        if( file_exists($full_path) ){
+            unlink($full_path);
+        }
     }
 }
