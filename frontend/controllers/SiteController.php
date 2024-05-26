@@ -138,6 +138,25 @@ class SiteController extends Controller
          
         ]);
     }
+    //chính sách đổi trả
+    public function actionReturnPolicy(){
+        $this->view->title = 'Chính sách đổi trả hàng hoá';
+        return $this->render('return');
+    }
+    //chính sách bảo mật
+    public function actionPrivacyPolicy(){
+        $this->view->title = 'Chính sách bảo mật';
+        return $this->render('privacy');
+    }
+    //chính sách bảo hành
+    public function actionGuarantee(){
+        $this->view->title = 'Chính sách bảo hành';
+        return $this->render('guarantee');
+    }
+
+
+
+
 
 
     public function actionAbout(){
@@ -562,9 +581,7 @@ class SiteController extends Controller
         ]);
     }
 
-    public function actionPrivacyPolicy(){
-        return $this->render('privacy_policy');
-    }
+
     public function actionRefund(){
         return $this->render('refund');
     }

@@ -12,7 +12,7 @@ use yii\widgets\Breadcrumbs;
         'homeLink' => ['label' => '', 'url' => '/'],
         'links' => [
             ['label' => 'Máy cày', 'url' => ['product/delivery']],
-            'Máy cày Kubota sử dụng công nghệ mới 2024',
+            'Máy cày công nghệ mới 2024',
         ],
     ]);
 
@@ -203,7 +203,7 @@ use yii\widgets\Breadcrumbs;
         <div class="product_list">
             <?php for($i = 0; $i < 5; $i++) { ?>
                 <div class="product_item">
-                    <a href="">
+                    <a href="<?= Url::to(['/product/detail']) ?>">
                         <span class="prod_sale">56% <br> OFF</span>
                         <img class="prod_avatar" src="/images/page/product-maycay.png" alt="">
                         <div class="prod_price_star">

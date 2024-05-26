@@ -26,7 +26,7 @@ use yii\widgets\Breadcrumbs;
             </a>
         </div>
         <div class="item_type">
-            <a class="flex-center" href="">
+            <a class="flex-center" href="<?= Url::to(['/product/post-delivery']) ?>">
                 <div class="flex-center">
                     <img src="/images/icon/pen.svg" alt="">
                 </div>

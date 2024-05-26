@@ -117,7 +117,22 @@ if ($(window).width() <= 768) {
   });
 }
 
+function openTab(tabName) {
+  $('.tablinks').removeClass('active');
+  $('.tab_content').removeClass('active');
+  $('#' + tabName).addClass('active');
 
+  $('[data-tab="' + tabName + '"]').addClass('active');
+}
+
+$('.tablinks').click(function() {
+  var tabName = $(this).data('tab');
+  openTab(tabName);
+});
+
+$(document).on('click','.toggle_noti', function(){
+  $('.notification-ui_dd').toggleClass('show');
+});
 
 
 

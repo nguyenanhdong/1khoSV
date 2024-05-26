@@ -140,7 +140,7 @@ use backend\controllers\CommonController;
             </div>
             <div class="list_product_cat">
                 <?php for($i = 0;$i < 6; $i++) { ?>
-                    <a href="">
+                    <a href="<?= Url::to(['/category/index']) ?>">
                         <img src="/images/page/may-cay.png" alt="">
                         <p>Danh mục con</p>
                     </a>
@@ -149,7 +149,7 @@ use backend\controllers\CommonController;
             <div class="product_list product_slide slick_global">
                 <?php for ($i = 0; $i < 10; $i++) { ?> 
                     <div class="product_item">
-                            <a href="">
+                            <a href="<?= Url::to(['/product/detail']) ?>">
                                 <span class="prod_sale">56% <br> OFF</span>
                                 <img class="prod_avatar" src="/images/page/product-maycay.png" alt="">
                                 <div class="prod_price_star">

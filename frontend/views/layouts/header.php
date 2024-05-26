@@ -11,7 +11,8 @@ $not_show_search = [
     'category/index',
     'product/index',
     'product/shop',
-    'cart/index'
+    'cart/index',
+    'info/profile'
 ];
 $not_show_menu = [
     'voucher/index',
@@ -45,10 +46,31 @@ if (in_array($controller.'/'.$action, $not_show_search)) {
                         <img src="/images/icon/gv-icon.svg" alt="">
                         <p>Rao vặt</p>
                     </a>
-                    <a href="">
-                        <img src="/images/icon/noti-icon.svg" alt="">
-                        <p>Thông báo</p>
-                    </a>
+                    <div class="noti_gr position-relative">
+                        <a class="toggle_noti" href="javascript:;">
+                            <img src="/images/icon/noti-icon.svg" alt="">
+                            <p>Thông báo</p>
+                        </a>
+                        <div class="dropdown-menu notification-ui_dd" aria-labelledby="navbarDropdown">
+                            <div class="notification-ui_dd-content">
+                                <?php for($i = 0; $i < 10; $i++) { ?>
+                                    <div class="notification-list notification-list--unread">
+                                        <div class="notification-list_img">
+                                            <img src="/images/icon/noti.svg" alt="user">
+                                        </div>
+                                        <div class="notification-list_detail">
+                                            <p class="title_noti"><b>Thông báo 1</b></p>
+                                            <p>Reference site about Lorem Ipsum Ipsum Ipsum  </p>
+                                            <span>14:00 - 20/08/2023</span>
+                                        </div>
+                                        <div class="notification-list_feature-img flex-item-center">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </div>
+                                    </div>
+                                <?php } ?>
+                            </div>
+                        </div>
+                    </div>
                     <a href="<?= Url::to(['/voucher/index']) ?>">
                         <img src="/images/icon/vi-icon.svg" alt="">
                         <p>Ví</p>
@@ -77,9 +99,30 @@ if (in_array($controller.'/'.$action, $not_show_search)) {
                 <a href="<?= Url::to(['/voucher/index']) ?>">
                     <img src="/images/icon/vi-icon.svg" alt="">
                 </a>
-                <a href="">
-                    <img src="/images/icon/noti-icon.svg" alt="">
-                </a>
+                <div class="noti_gr position-relative">
+                        <a class="toggle_noti" href="javascript:;">
+                            <img src="/images/icon/noti-icon.svg" alt="">
+                        </a>
+                        <div class="dropdown-menu notification-ui_dd" aria-labelledby="navbarDropdown">
+                            <div class="notification-ui_dd-content">
+                                <?php for($i = 0; $i < 10; $i++) { ?>
+                                    <div class="notification-list notification-list--unread">
+                                        <div class="notification-list_img">
+                                            <img src="/images/icon/noti.svg" alt="user">
+                                        </div>
+                                        <div class="notification-list_detail">
+                                            <p class="title_noti"><b>Thông báo 1</b></p>
+                                            <p>Reference site about Lorem Ipsum Ipsum Ipsum  </p>
+                                            <span>14:00 - 20/08/2023</span>
+                                        </div>
+                                        <div class="notification-list_feature-img flex-item-center">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </div>
+                                    </div>
+                                <?php } ?>
+                            </div>
+                        </div>
+                    </div>
             </div>
         </div>
         <div class="header_toggle_mobi">
@@ -89,28 +132,28 @@ if (in_array($controller.'/'.$action, $not_show_search)) {
             </a>
             <ul class="menu_list_mobi">
                 <li>
-                    <a href="">Máy nổ, động cơ</a>
+                    <a href="<?= Url::to(['/category/index']) ?>">Máy nổ, động cơ</a>
                 </li>
                 <li>
-                    <a href="">Máy cày</a>
+                    <a href="<?= Url::to(['/category/index']) ?>">Máy cày</a>
                 </li>
                 <li>
-                    <a href="">Máy phát điện</a>
+                    <a href="<?= Url::to(['/category/index']) ?>">Máy phát điện</a>
                 </li>
                 <li>
-                    <a href="">Ô tô tải</a>
+                    <a href="<?= Url::to(['/category/index']) ?>">Ô tô tải</a>
                 </li>
                 <li>
-                    <a href="">Công nông, ba bánh </a>
+                    <a href="<?= Url::to(['/category/index']) ?>">Công nông, ba bánh </a>
                 </li>
                 <li>
-                    <a href="">Vòng bi, bạn đạn</a>
+                    <a href="<?= Url::to(['/category/index']) ?>">Vòng bi, bạn đạn</a>
                 </li>
                 <li>
-                    <a href="">Dầu</a>
+                    <a href="<?= Url::to(['/category/index']) ?>">Dầu</a>
                 </li>
                 <li>
-                    <a href="">Mỡ công nghiệp</a>
+                    <a href="<?= Url::to(['/category/index']) ?>">Mỡ công nghiệp</a>
                 </li>
             </ul>
             <div class="hotline">
@@ -155,4 +198,28 @@ if (in_array($controller.'/'.$action, $not_show_search)) {
             </div>
         </div>
     <?php } ?>
+</div>
+<div class="sidebar_bot d-block d-lg-none">
+    <div class="list_item_bot">
+        <div class="item_bot">
+            <a class="text_bot home_item <?= $controller == 'site' && $action == 'index' ? 'active' : '' ?>" href="<?= Url::to(['/site/index']) ?>">
+                Trang chủ
+            </a>
+        </div>
+        <div class="item_bot">
+            <a class="text_bot product_item <?= $controller .'/'. $action == 'category/index' ? 'active' : '' ?>" href="<?= Url::to(['/category/index']) ?>">
+                Sản phẩm
+            </a>
+        </div>
+        <div class="item_bot">
+            <a class="text_bot cart_item <?= $controller .'/'. $action == 'product/delivery' ? 'active' : '' ?>" href="<?= Url::to(['/product/delivery']) ?>">
+                Rao vặt
+            </a>
+        </div>
+        <div class="item_bot">
+            <a class="text_bot profile_item <?= $controller .'/'. $action == 'info/profile' ? 'active' : '' ?>" href="<?= Url::to(['/info/profile']) ?>">
+                Tài khoản
+            </a>
+        </div>
+    </div>
 </div>

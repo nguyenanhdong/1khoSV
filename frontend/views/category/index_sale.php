@@ -23,7 +23,7 @@ use yii\widgets\Breadcrumbs;
     <div class="sale_list sale_list_grid">
         <?php for($i = 0; $i < 12; $i++) { ?>
             <div class="sale_list_item">
-                <a href="">
+                <a href="<?= Url::to(['/product/detail']) ?>">
                     <span class="num_sale">-36%</span>
                     <div class="flex-center flex-column">
                         <img class="sale_prod_avatar" src="/images/page/may-cay.png" alt="">
