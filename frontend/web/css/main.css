@@ -2847,6 +2847,7 @@ input:checked[type=checkbox] {
     display: flex;
     gap: 10px;
     justify-content: flex-end;
+    align-items: end;
   }
   .header_top_mobi .header_gr_mobi .header_mobi_icon img {
     width: 23px;
