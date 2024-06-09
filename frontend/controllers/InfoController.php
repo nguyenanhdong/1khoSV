@@ -19,10 +19,20 @@ class InfoController extends Controller
         return $this->render('account-info');
     }
 
+    //Lịch sử mua hàng Chờ xác nhận
+    public function actionAwaitConfirmed(){
+        $this->view->title = 'Chờ xác nhận';
+        return $this->render('await-confirmed');
+    } 
     //Lịch sử mua hàng Đã xác nhận
     public function actionConfirmed(){
         $this->view->title = 'Đã xác nhận';
         return $this->render('confirmed');
+    } 
+    //Lịch sử mua hàng Đang giao
+    public function actionDelivering(){
+        $this->view->title = 'Đang giao';
+        return $this->render('delivering');
     } 
     //Lịch sử mua hàng Đã mua
     public function actionPurchaseHistory(){

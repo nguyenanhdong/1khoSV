@@ -12,16 +12,27 @@ $not_show_search = [
     'product/index',
     'product/shop',
     'cart/index',
-    'info/profile'
+    'info/profile',
+    'info/purchase-history',
+    'info/confirmed',
+    'info/await-confirmed',
+    'info/delivering',
+    'info/review',
+    'info/favourite',
+    'info/return',
+    'info/acc-points',
+    'site/return-policy',
+    'site/guarantee',
+    'site/privacy-policy',
 ];
 $not_show_menu = [
     'voucher/index',
     'category/index',
 ];
-if (in_array($controller.'/'.$action, $not_show_menu)) {
+if (in_array($controller . '/' . $action, $not_show_menu)) {
     $show_menu = false;
 }
-if (in_array($controller.'/'.$action, $not_show_search)) {
+if (in_array($controller . '/' . $action, $not_show_search)) {
     $show_search = false;
 }
 ?>
@@ -53,18 +64,31 @@ if (in_array($controller.'/'.$action, $not_show_search)) {
                         </a>
                         <div class="dropdown-menu notification-ui_dd" aria-labelledby="navbarDropdown">
                             <div class="notification-ui_dd-content">
-                                <?php for($i = 0; $i < 10; $i++) { ?>
-                                    <div class="notification-list notification-list--unread">
+                                <?php for ($i = 0; $i < 10; $i++) { ?>
+                                    <div class="notification-list notification-list--unread" data-detail="<?= $i ?>">
                                         <div class="notification-list_img">
                                             <img src="/images/icon/noti.svg" alt="user">
                                         </div>
                                         <div class="notification-list_detail">
                                             <p class="title_noti"><b>Thông báo 1</b></p>
-                                            <p>Reference site about Lorem Ipsum Ipsum Ipsum  </p>
+                                            <p>Reference site about Lorem Ipsum Ipsum Ipsum </p>
                                             <span>14:00 - 20/08/2023</span>
                                         </div>
                                         <div class="notification-list_feature-img flex-item-center">
                                             <i class="fas fa-chevron-right"></i>
+                                        </div>
+                                    </div>
+                                    <div class="notification_detail" id="noti_detail_<?= $i ?>">
+                                        <div class="btn_action_noti_detail d-flex justify-content-between">
+                                            <i class="far fa-arrow-left hide_noti_detail"></i>
+                                            <i class="fal fa-trash-alt remove_noti"></i>
+                                        </div>
+                                        <div class="content_noti_detail">
+                                            <h4>What is Lorem Ipsum?</h4>
+                                            <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting Remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset.</p>
+                                            <p>Remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.</p>
+                                            <p>Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting
+                                            </p>
                                         </div>
                                     </div>
                                 <?php } ?>
@@ -100,29 +124,42 @@ if (in_array($controller.'/'.$action, $not_show_search)) {
                     <img src="/images/icon/vi-icon.svg" alt="">
                 </a>
                 <div class="noti_gr position-relative">
-                        <a class="toggle_noti" href="javascript:;">
-                            <img src="/images/icon/noti-icon.svg" alt="">
-                        </a>
-                        <div class="dropdown-menu notification-ui_dd" aria-labelledby="navbarDropdown">
-                            <div class="notification-ui_dd-content">
-                                <?php for($i = 0; $i < 10; $i++) { ?>
-                                    <div class="notification-list notification-list--unread">
-                                        <div class="notification-list_img">
-                                            <img src="/images/icon/noti.svg" alt="user">
-                                        </div>
-                                        <div class="notification-list_detail">
-                                            <p class="title_noti"><b>Thông báo 1</b></p>
-                                            <p>Reference site about Lorem Ipsum Ipsum Ipsum  </p>
-                                            <span>14:00 - 20/08/2023</span>
-                                        </div>
-                                        <div class="notification-list_feature-img flex-item-center">
-                                            <i class="fas fa-chevron-right"></i>
-                                        </div>
+                    <a class="toggle_noti" href="javascript:;">
+                        <img src="/images/icon/noti-icon.svg" alt="">
+                    </a>
+                    <div class="dropdown-menu notification-ui_dd" aria-labelledby="navbarDropdown">
+                        <div class="notification-ui_dd-content">
+                            <?php for ($i = 0; $i < 10; $i++) { ?>
+                                <div class="notification-list notification-list--unread" data-detail="<?= $i ?>">
+                                    <div class="notification-list_img">
+                                        <img src="/images/icon/noti.svg" alt="user">
                                     </div>
-                                <?php } ?>
-                            </div>
+                                    <div class="notification-list_detail">
+                                        <p class="title_noti"><b>Thông báo 1</b></p>
+                                        <p>Reference site about Lorem Ipsum Ipsum Ipsum </p>
+                                        <span>14:00 - 20/08/2023</span>
+                                    </div>
+                                    <div class="notification-list_feature-img flex-item-center">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </div>
+                                </div>
+                                <div class="notification_detail" id="noti_detail_mb_<?= $i ?>">
+                                    <div class="btn_action_noti_detail d-flex justify-content-between">
+                                        <i class="far fa-arrow-left hide_noti_detail"></i>
+                                        <i class="fal fa-trash-alt remove_noti"></i>
+                                    </div>
+                                    <div class="content_noti_detail">
+                                        <h4>What is Lorem Ipsum?</h4>
+                                        <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting Remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset.</p>
+                                        <p>Remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.</p>
+                                        <p>Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting
+                                        </p>
+                                    </div>
+                                </div>
+                            <?php } ?>
                         </div>
                     </div>
+                </div>
             </div>
         </div>
         <div class="header_toggle_mobi">
@@ -186,13 +223,13 @@ if (in_array($controller.'/'.$action, $not_show_search)) {
         <div class="container d-none d-lg-block">
             <div class="header_menu">
                 <ul>
-                    <?php for($i = 0; $i < 7; $i++) { ?>
-                    <li>
-                        <a href="<?= Url::to(['category/index']) ?>">
-                            Máy nổ, động cơ
-                            <i class="far fa-angle-down"></i>
-                        </a>
-                    </li>
+                    <?php for ($i = 0; $i < 7; $i++) { ?>
+                        <li>
+                            <a href="<?= Url::to(['category/index']) ?>">
+                                Máy nổ, động cơ
+                                <i class="far fa-angle-down"></i>
+                            </a>
+                        </li>
                     <?php } ?>
                 </ul>
             </div>
@@ -207,17 +244,17 @@ if (in_array($controller.'/'.$action, $not_show_search)) {
             </a>
         </div>
         <div class="item_bot">
-            <a class="text_bot product_item <?= $controller .'/'. $action == 'category/index' ? 'active' : '' ?>" href="<?= Url::to(['/category/index']) ?>">
+            <a class="text_bot product_item <?= $controller . '/' . $action == 'category/index' ? 'active' : '' ?>" href="<?= Url::to(['/category/index']) ?>">
                 Sản phẩm
             </a>
         </div>
         <div class="item_bot">
-            <a class="text_bot cart_item <?= $controller .'/'. $action == 'product/delivery' ? 'active' : '' ?>" href="<?= Url::to(['/product/delivery']) ?>">
+            <a class="text_bot cart_item <?= $controller . '/' . $action == 'product/delivery' ? 'active' : '' ?>" href="<?= Url::to(['/product/delivery']) ?>">
                 Rao vặt
             </a>
         </div>
         <div class="item_bot">
-            <a class="text_bot profile_item <?= $controller .'/'. $action == 'info/profile' ? 'active' : '' ?>" href="<?= Url::to(['/info/profile']) ?>">
+            <a class="text_bot profile_item <?= $controller . '/' . $action == 'info/profile' ? 'active' : '' ?>" href="<?= Url::to(['/info/profile']) ?>">
                 Tài khoản
             </a>
         </div>

@@ -130,9 +130,43 @@ $('.tablinks').click(function() {
   openTab(tabName);
 });
 
+$('.btn_voucher').click(function() {
+  let dt_tab = $(this).attr('dt-tab');
+  $('.voucher_list').removeClass('active');
+  $('#'+dt_tab).addClass('active');
+  $('.btn_voucher').removeClass('active');
+  $(this).addClass('active');
+});
+
+
+//js notification
 $(document).on('click','.toggle_noti', function(){
   $('.notification-ui_dd').toggleClass('show');
 });
+$(document).on('click','.notification-list', function(){
+  let noti_id = $(this).attr('data-detail');
+  $(`#noti_detail_${noti_id}, #noti_detail_mb_${noti_id}`).addClass('show');
+  $('.notification-ui_dd-content').animate({ scrollTop: 0 }, 1);
+  $('.notification-ui_dd-content, body').addClass('block_scroll');
+});
+$(document).on('click','.hide_noti_detail', function(){
+  $(this).parent().parent().removeClass('show');
+  $('.notification-ui_dd-content, body').removeClass('block_scroll');
+});
+$(document).click(function(event) {
+  var $target = $(event.target);
+  if(!$target.closest('.notification-ui_dd, .toggle_noti').length && $('.notification-ui_dd, .toggle_noti').is(":visible")) {
+      $('.notification-ui_dd').removeClass('show');
+  }
+  if(!$target.closest('.content_tooltips, .show_detail_voucher').length && $('.content_tooltips, .show_detail_voucher').is(":visible")) {
+      $('.content_tooltips').addClass('hide');
+  }
+});
+
+$(document).on('click', '.show_detail_voucher', function(){
+  $(this).parent().find('.content_tooltips').toggleClass('hide');
+});
+
 
 
 

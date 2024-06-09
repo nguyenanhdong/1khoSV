@@ -5,7 +5,7 @@ use yii\web\View;
 use backend\models\Config;
 use yii\widgets\Breadcrumbs;
 use backend\controllers\CommonController;
-$current_page = '/info/purchase-history';
+
 ?>
 <div class="container">
     <?php
@@ -13,7 +13,7 @@ $current_page = '/info/purchase-history';
         'homeLink' => ['label' => '', 'url' => '/'],
         'links' => [
             ['label' => 'Lịch sử mua hàng', 'url' => ['']],
-            'Đã mua',
+            'Đang giao',
         ],
     ]);
 
@@ -26,7 +26,7 @@ $current_page = '/info/purchase-history';
                 <div class="group_item_shop d-flex flex-column">
                     <div class="title_shop d-flex justify-content-between">
                         <p>Shop Máy Cày</p>
-                        <span>Đã mua</span>
+                        <span>Đang giao</span>
                     </div>
                     <div class="item_shop">
                         <div class="item_shop_left d-flex flex-column">
@@ -57,7 +57,7 @@ $current_page = '/info/purchase-history';
                             <div class="btn_item">
                                 <div class="action_form">
                                     <button class="btn_action btn-blue flex-center">Xem chi  tiết</button>
-                                    <button class="btn_action btn-orange flex-center">Mua lại</button>
+                                    <button class="btn_action btn-orange flex-center">Mua hàng</button>
                                 </div>
                             </div>
                         </div>

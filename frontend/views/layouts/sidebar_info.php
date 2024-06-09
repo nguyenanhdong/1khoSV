@@ -31,13 +31,13 @@ $action = Yii::$app->controller->action->id;
                         </div>
                         <span>Đã xác nhận</span>
                     </a>
-                    <a href="">
+                    <a class="<?= $action == 'await-confirmed' ? 'active' : '' ?>" href="<?= Url::to(['/info/await-confirmed']) ?>">
                         <div class="flex-center">
                             <img src="/images/icon/bag-search.svg" alt="">
                         </div>
                         <span>Chờ xác nhận</span>
                     </a>
-                    <a href="">
+                    <a class="<?= $action == 'delivering' ? 'active' : '' ?>" href="<?= Url::to(['/info/delivering']) ?>">
                         <div class="flex-center">
                             <img src="/images/icon/car.svg" alt="">
                         </div>

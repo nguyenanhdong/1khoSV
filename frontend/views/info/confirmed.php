@@ -18,7 +18,7 @@ use backend\controllers\CommonController;
     ]);
 
     ?>
-
+    <?= $this->render('/layouts/tab_history') ?>
     <section class="voucher">
         <?= $this->render('/layouts/sidebar_info') ?>
         <div class="history_right">
