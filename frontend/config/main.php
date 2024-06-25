@@ -1,4 +1,5 @@
 <?php
+$db     = require __DIR__ . '/../../common/config/db.php';
 $params = array_merge(
     require __DIR__ . '/../../common/config/params.php',
     require __DIR__ . '/params.php',
@@ -43,6 +44,7 @@ return [
                 'application/json' => 'yii\web\JsonParser',
             ]
         ],
+        'db' => $db,
         'user' => [
             'identityClass' => 'common\models\Users',
             'enableAutoLogin' => true,

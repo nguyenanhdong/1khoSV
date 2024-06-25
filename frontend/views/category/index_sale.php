@@ -3,6 +3,7 @@
 use yii\helpers\Url;
 use yii\web\View;
 use backend\models\Config;
+use frontend\controllers\HelperController;
 use yii\widgets\Breadcrumbs;
 
 ?>
@@ -18,29 +19,41 @@ use yii\widgets\Breadcrumbs;
 
     ?>
 
-<section class="sale_index">
-    <h2>Săn sale cùng 1KHO</h2>
-    <div class="sale_list sale_list_grid">
-        <?php for($i = 0; $i < 12; $i++) { ?>
-            <div class="sale_list_item">
-                <a href="<?= Url::to(['/product/detail']) ?>">
-                    <span class="num_sale">-36%</span>
-                    <div class="flex-center flex-column">
-                        <img class="sale_prod_avatar" src="/images/page/may-cay.png" alt="">
-                        <p class="title_prod">Máy cày Kubota sử dụng công nghệ mới</p>
+    <section class="sale_index bg_sale d-inline-block">
+        <h2>Săn sale cùng 1KHO</h2>
+        <div class="sale_list sale_list_grid">
+            <?php
+            if (!empty($productSale)) {
+                foreach ($productSale as $row) {
+            ?>
+                    <div class="sale_list_item">
+                        <a href="<?= Url::to(['/product/detail', 'id' => $row['id']]) ?>">
+                            <span class="num_sale">-<?= $row['percent_discount'] ?>%</span>
+                            <div class="flex-center flex-column">
+                                <img class="sale_prod_avatar" src="<?= $row['image'] ?>" alt="Product sale">
+                                <p class="title_prod line_2" title="<?= $row['name'] ?>"><?= $row['name'] ?></p>
+                            </div>
+                            <div class="sale_text">
+                                <div>
+                                    <p><?= HelperController::formatPrice($row['price']) ?></p>
+                                    <span><?= HelperController::formatPrice($row['price_old']) ?></span>
+                                </div>
+                                <p>Kết thúc sau <strong><?= $row['date_sale_remain'] ?> ngày</strong></p>
+                                <p>Chỉ còn <strong><?= $row['quantity_in_stock'] ?> sản phẩm</strong></p>
+                            </div>
+                        </a>
                     </div>
-                    <div class="sale_text">
-                        <div>
-                            <p>200.000</p>
-                            <span>699.000</span>
-                        </div>
-                        <p>Kết thúc sau <strong>4 ngày</strong></p>
-                        <p>Chỉ còn <strong>15 sản phẩm</strong></p>
-                    </div>
-                </a>
+            <?php }
+            } ?>
+        </div>
+        <?php if (!empty($checkLoadMore)) { ?>
+            <div class="sale_see_more flex-center">
+                <button class="load_more_product_sale" type="button">Xem thêm</button>
             </div>
         <?php } ?>
+    </section>
+    <div class="noti_prod flex-center mb-5 hide">
+        <p>Bạn đã xem hết sản phẩm</p>
     </div>
-</section>
-    
+
 </div>

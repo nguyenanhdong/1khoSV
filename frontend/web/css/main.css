@@ -32,6 +32,10 @@ button:focus {
   outline: unset;
 }
 
+a p:hover {
+  color: #08469B !important;
+}
+
 p,
 input,
 span,
@@ -339,6 +343,10 @@ h6 {
 }
 .banner img {
   width: 100%;
+  height: 316px;
+  -o-object-fit: cover;
+     object-fit: cover;
+  border-radius: 16px;
 }
 
 .cat_list_index {
@@ -368,6 +376,12 @@ h6 {
 }
 .cat_list_index .cat_list_group a p {
   height: 42px;
+}
+.cat_list_index .cat_list_group a img {
+  max-width: 80%;
+  height: 90%;
+  -o-object-fit: contain;
+     object-fit: contain;
 }
 
 section {
@@ -500,11 +514,12 @@ section h2 {
   position: absolute;
   top: 0;
   right: 0;
-  background-color: #0091ff;
+  background-color: #08469B;
   border-radius: 0 10px 0 10px;
   padding: 7px 10px;
   font-weight: 600;
   color: #fff;
+  font-size: 12px;
 }
 .product_list .product_item a .prod_avatar {
   width: 100%;
@@ -517,21 +532,24 @@ section h2 {
   padding: 20px 15px;
 }
 .product_list .product_item a .prod_price_star p {
-  font-size: 15px;
+  font-size: 14px;
 }
 .product_list .product_item a .prod_price_star .des_prod {
   display: flex;
   align-items: center;
 }
 .product_list .product_item a .prod_price_star .des_prod span {
-  font-size: 18px;
+  font-size: 13px;
   font-weight: 700;
-  color: #0091ff;
+  color: #08469B;
   margin-right: 10px;
 }
 .product_list .product_item a .prod_price_star .des_prod p {
-  font-size: 14px;
+  font-size: 12px;
   color: #777777;
+}
+.product_list .product_item a .prod_price_star .des_prod img {
+  width: 16px;
 }
 
 .sale_index {
@@ -624,11 +642,12 @@ section h2 {
   margin-bottom: 7px;
 }
 .sale_list .sale_list_item .sale_text div p {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: bold;
 }
 .sale_list .sale_list_item .sale_text div span {
   text-decoration: line-through;
+  font-size: 13px;
 }
 
 .sale_see_more {
@@ -644,6 +663,14 @@ section h2 {
   color: #fff;
 }
 
+.spinner-border {
+  width: 20px;
+  height: 20px;
+  border: 0.18em solid currentColor;
+  border-right-color: transparent;
+  margin-left: 5px;
+}
+
 .list_product {
   border-radius: 10px;
   padding: 25px 20px;
@@ -656,12 +683,15 @@ section h2 {
   margin-top: 10px;
 }
 .list_product .list_product_cat a {
-  padding: 18px 23px;
+  padding: 18px 5px;
   border: 1px solid #DADADA;
   border-radius: 16px;
 }
 .list_product .list_product_cat a img {
   width: 100%;
+  height: 93px;
+  -o-object-fit: contain;
+     object-fit: contain;
 }
 .list_product .list_product_cat a p {
   font-size: 15px;
@@ -2217,6 +2247,19 @@ input:checked[type=checkbox] {
   cursor: pointer;
 }
 
+.category_child.active, .tab_cat_child.active {
+  background-color: #F5F5FA;
+  border: 1px solid #08469B !important;
+}
+
+.noti_prod p {
+  color: #777777;
+}
+
+.bg_sale {
+  background: #FCBE11;
+}
+
 @media (min-width: 900px) {
   .notification-ui_icon .unread-notification {
     left: 20px;
@@ -2841,6 +2884,7 @@ input:checked[type=checkbox] {
     background-image: unset;
     background-color: #FCBE11;
     padding: 26px 15px 40px 15px;
+    margin-bottom: 30px;
   }
   .sale_list .sale_list_item .num_sale {
     font-size: 13px;
@@ -2860,8 +2904,10 @@ input:checked[type=checkbox] {
     font-size: 10px;
   }
   .sale_list .sale_list_item .sale_text div {
-    gap: 5px;
+    gap: 0;
     margin-bottom: 0;
+    flex-direction: column;
+    align-items: baseline;
   }
   .sale_list .sale_list_item .sale_text p {
     font-size: 9px;

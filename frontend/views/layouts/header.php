@@ -1,5 +1,6 @@
 <?php
 
+use backend\controllers\ApiNewController;
 use yii\helpers\Url;
 
 $controller = Yii::$app->controller->id;
@@ -24,6 +25,7 @@ $not_show_search = [
     'site/return-policy',
     'site/guarantee',
     'site/privacy-policy',
+    'category/index-sale',
 ];
 $not_show_menu = [
     'voucher/index',
@@ -35,6 +37,8 @@ if (in_array($controller . '/' . $action, $not_show_menu)) {
 if (in_array($controller . '/' . $action, $not_show_search)) {
     $show_search = false;
 }
+
+$allCategory = ApiNewController::AllCategory();
 ?>
 
 <div id="header">
@@ -168,30 +172,14 @@ if (in_array($controller . '/' . $action, $not_show_search)) {
                 <img class="logo" src="/images/icon/logo-menu-mobi.svg" alt="">
             </a>
             <ul class="menu_list_mobi">
+                <?php 
+                    if(!empty($allCategory['data'])){
+                        foreach($allCategory['data'] as $cat){
+                ?>
                 <li>
-                    <a href="<?= Url::to(['/category/index']) ?>">Máy nổ, động cơ</a>
+                    <a href="<?= Url::to(['/category/index', 'cate_parent_id' => $cat['id']]) ?>"><?= $cat['name'] ?></a>
                 </li>
-                <li>
-                    <a href="<?= Url::to(['/category/index']) ?>">Máy cày</a>
-                </li>
-                <li>
-                    <a href="<?= Url::to(['/category/index']) ?>">Máy phát điện</a>
-                </li>
-                <li>
-                    <a href="<?= Url::to(['/category/index']) ?>">Ô tô tải</a>
-                </li>
-                <li>
-                    <a href="<?= Url::to(['/category/index']) ?>">Công nông, ba bánh </a>
-                </li>
-                <li>
-                    <a href="<?= Url::to(['/category/index']) ?>">Vòng bi, bạn đạn</a>
-                </li>
-                <li>
-                    <a href="<?= Url::to(['/category/index']) ?>">Dầu</a>
-                </li>
-                <li>
-                    <a href="<?= Url::to(['/category/index']) ?>">Mỡ công nghiệp</a>
-                </li>
+                <?php }} ?>
             </ul>
             <div class="hotline">
                 <a href="">
@@ -223,14 +211,17 @@ if (in_array($controller . '/' . $action, $not_show_search)) {
         <div class="container d-none d-lg-block">
             <div class="header_menu">
                 <ul>
-                    <?php for ($i = 0; $i < 7; $i++) { ?>
-                        <li>
-                            <a href="<?= Url::to(['category/index']) ?>">
-                                Máy nổ, động cơ
-                                <i class="far fa-angle-down"></i>
-                            </a>
-                        </li>
-                    <?php } ?>
+                <?php 
+                    if(!empty($allCategory['data'])){
+                        foreach($allCategory['data'] as $cat){
+                ?>
+                <li>
+                    <a href="<?= Url::to(['category/index', 'cate_parent_id' => $cat['id']]) ?>">
+                        <?= $cat['name'] ?>
+                        <i class="far fa-angle-down"></i>
+                    </a>
+                </li>
+                <?php }} ?>
                 </ul>
             </div>
         </div>

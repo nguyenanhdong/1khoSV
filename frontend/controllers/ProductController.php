@@ -1,5 +1,8 @@
 <?php
 namespace frontend\controllers;
+
+use backend\controllers\ApiNewController;
+use backend\models\Product;
 use yii\web\Controller;
 
 /**
@@ -8,9 +11,12 @@ use yii\web\Controller;
 class ProductController extends Controller
 {
     //Chi tiết sản phẩm
-    public function actionDetail(){
+    public function actionDetail($id){
+        $product = Product::getProductDetail($id);
         $this->view->title = 'Chi tiết sản phẩm';
-        return $this->render('detail-product');
+        return $this->render('detail-product',[
+            'product' => $product
+        ]);
     }
 
     //Thông tin shop

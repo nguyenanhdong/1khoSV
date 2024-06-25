@@ -4,28 +4,23 @@ use yii\helpers\Url;
 use yii\web\View;
 use backend\models\Config;
 use backend\controllers\CommonController;
-
+use frontend\controllers\HelperController;
 
 ?>
 
 <div class="container">
     <section class="banner">
         <div class="banner_index">
+            <?php 
+                if(!empty($dataHome['banner'])){
+                    foreach($dataHome['banner'] as $row){
+            ?>
             <div class="banner_item">
-                <a href="">
-                    <img src="/images/banner/banner.png" alt="">
+                <a href="<?= Url::to(['category/index', 'cate_parent_id' => $row['category_id']]) ?>">
+                    <img src="<?= $row['image'] ?>" alt="banner home">
                 </a>
             </div>
-            <div class="banner_item">
-                <a href="">
-                    <img src="/images/banner/banner.png" alt="">
-                </a>
-            </div>
-            <div class="banner_item">
-                <a href="">
-                    <img src="/images/banner/banner.png" alt="">
-                </a>
-            </div>
+            <?php }} ?>
         </div>
     </section>
     <section class="cat_list_index">
@@ -34,14 +29,17 @@ use backend\controllers\CommonController;
             <a href="">Tất cả <i class="fal fa-long-arrow-right"></i></a>
         </div>
         <div class="cat_list_group">
-            <?php for ($i = 0; $i < 8; $i++) { ?>
-                <a href="<?= Url::to(['/category/index']) ?>" class="cat_list_item">
+            <?php 
+                if(!empty($dataHome['category'])){
+                 foreach($dataHome['category'] as $row){
+            ?>
+                <a href="<?= Url::to(['/category/index', 'cate_parent_id' => $row['id']]) ?>" class="cat_list_item">
                     <div class="flex-center">
-                        <img src="/images/page/may-no.png" alt="">
+                        <img src="<?= $row['image'] ?>" alt="">
                     </div>
-                    <p>Máy nổ, <br> Động cơ</p>
+                    <p><?= $row['name'] ?></p>
                 </a>
-            <?php } ?>
+            <?php }} ?>
         </div>
     </section>
 
@@ -107,65 +105,80 @@ use backend\controllers\CommonController;
     <section class="sale_index">
         <h2>Săn sale cùng 1KHO</h2>
         <div class="sale_list slide_sale slick_global">
-            <?php for($i = 0; $i < 10; $i++) { ?>
+            <?php 
+                if(!empty($dataHome['productSale'])){
+                    foreach($dataHome['productSale'] as $row){
+            ?>
                 <div class="sale_list_item">
-                    <a href="<?= Url::to(['/product/detail']) ?>">
-                        <span class="num_sale">-36%</span>
+                    <a href="<?= Url::to(['/product/detail', 'id' => $row['id']]) ?>">
+                        <span class="num_sale">-<?= $row['percent_discount'] ?>%</span>
                         <div class="flex-center flex-column">
-                            <img class="sale_prod_avatar" src="/images/page/may-cay.png" alt="">
-                            <p class="title_prod">Máy cày Kubota sử dụng công nghệ mới</p>
+                            <img class="sale_prod_avatar" src="<?= $row['image'] ?>" alt="Product sale">
+                            <p class="title_prod line_2" title="<?= $row['name'] ?>"><?= $row['name'] ?></p>
                         </div>
                         <div class="sale_text">
                             <div>
-                                <p>200.000</p>
-                                <span>699.000</span>
+                                <p><?= HelperController::formatPrice($row['price']) ?></p>
+                                <span><?= HelperController::formatPrice($row['price_old']) ?></span>
                             </div>
-                            <p>Kết thúc sau <strong>4 ngày</strong></p>
-                            <p>Chỉ còn <strong>15 sản phẩm</strong></p>
+                            <p>Kết thúc sau <strong><?= $row['date_sale_remain'] ?> ngày</strong></p>
+                            <p>Chỉ còn <strong><?= $row['quantity_in_stock'] ?> sản phẩm</strong></p>
                         </div>
                     </a>
                 </div>
-            <?php } ?>
+            <?php }} ?>
         </div>
         <div class="sale_see_more flex-center">
             <a href="<?= Url::to(['/category/index-sale']) ?>">Xem tất cả</a>
         </div>
     </section>
 
-    <?php for($j = 0; $j < 4; $j++) { ?>
+    <?php 
+        if(!empty($dataHome['categoryProduct'])){
+            foreach($dataHome['categoryProduct'] as $row){
+    ?>
         <section class="list_product">
             <div class="product_top_title">
-                <h2>Máy nổ, động cơ</h2>
-                <a href="">Tất cả <i class="far fa-angle-right"></i></a>
+                <h2><?= $row['name'] ?></h2>
+                <a href="<?= Url::to(['category/index', 'cate_parent_id' => $row['id']]) ?>">Tất cả <i class="far fa-angle-right"></i></a>
             </div>
             <div class="list_product_cat">
-                <?php for($i = 0;$i < 6; $i++) { ?>
-                    <a href="<?= Url::to(['/category/index']) ?>">
-                        <img src="/images/page/may-cay.png" alt="">
-                        <p>Danh mục con</p>
+                <?php 
+                    if($row['cate_child']){ 
+                        $i = 0;
+                        foreach($row['cate_child'] as $catChild){
+                            $i++;
+                            if($i <= 6){
+                ?>
+                    <a class="category_child" cat-id="<?= $catChild['id'] ?>" href="javascript:;">
+                        <img src="<?= $catChild['image'] ?>" alt="category child">
+                        <p class="line_2 text-center"><?= $catChild['name'] ?></p>
                     </a>
-                <?php } ?>
+                <?php }}} ?>
             </div>
             <div class="product_list product_slide slick_global">
-                <?php for ($i = 0; $i < 10; $i++) { ?> 
+                <?php 
+                    if(!empty($row['product'])){
+                        foreach($row['product'] as $prod){
+                ?> 
                     <div class="product_item">
-                            <a href="<?= Url::to(['/product/detail']) ?>">
-                                <span class="prod_sale">56% <br> OFF</span>
-                                <img class="prod_avatar" src="/images/page/product-maycay.png" alt="">
+                            <a href="<?= Url::to(['/product/detail', 'id' => $prod['id']]) ?>">
+                                <span class="prod_sale"><?= $prod['percent_discount'] ?> % <br> OFF</span>
+                                <img class="prod_avatar" src="<?= $prod['image'] ?>" alt="">
                                 <div class="prod_price_star">
-                                    <p class="prod_title">Máy cày Kubota sử dụng công nghệ mới</p>
+                                    <p class="prod_title line_2" title="<?= $prod['name'] ?>"><?= $prod['name'] ?></p>
                                     <div class="des_prod mt-2">
-                                        <span>200.000</span>
+                                        <span><?= HelperController::formatPrice($prod['price']) ?></span>
                                         <div class="flex-center">
-                                            <img src="/images/icon/star.svg" alt="">
-                                            <p class="product_star">4.0 (200)</p>
+                                            <img src="/images/icon/star.svg" alt="Star">
+                                            <p class="product_star"><?= $prod['star'] ?> (<?= $prod['total_rate'] ?>)</p>
                                         </div>
                                     </div>
                                 </div>
                             </a>
                     </div>
-                <?php } ?>
+                <?php }} ?>
             </div>
         </section>
-    <?php } ?>
+    <?php }} ?>
 </div>

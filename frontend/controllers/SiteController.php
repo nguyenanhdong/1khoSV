@@ -1,6 +1,7 @@
 <?php
 namespace frontend\controllers;
 
+use backend\controllers\ApiNewController;
 use frontend\models\ResendVerificationEmailForm;
 use frontend\models\VerifyEmailForm;
 use Yii;
@@ -134,8 +135,9 @@ class SiteController extends Controller
      */
     public function actionIndex()
     {
+        $dataHome = ApiNewController::Home();
         return $this->render('index',[
-         
+         'dataHome' => isset($dataHome['data']) ? $dataHome['data'] : []
         ]);
     }
     //chính sách đổi trả

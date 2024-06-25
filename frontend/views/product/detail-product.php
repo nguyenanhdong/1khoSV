@@ -12,7 +12,7 @@ use yii\widgets\Breadcrumbs;
         'homeLink' => ['label' => '', 'url' => '/'],
         'links' => [
             ['label' => 'Máy cày', 'url' => ['product/delivery']],
-            'Máy cày công nghệ mới 2024',
+            $product['product_info']['name'],
         ],
     ]);
 
@@ -25,39 +25,27 @@ use yii\widgets\Breadcrumbs;
                         <div class="product-imgs">
                             <div class="img-display">
                                 <div class="img-showcase">
-                                    <img src="/images/page/product-examp.png" alt="shoe image">
-                                    <img src="/images/page/product-examp.png" alt="shoe image">
-                                    <img src="/images/page/product-examp.png" alt="shoe image">
-                                    <img src="/images/page/product-examp.png" alt="shoe image">
-                                    <img src="/images/page/product-examp.png" alt="shoe image">
+                                    <?php
+                                        if(!empty($product['product_info']['images'])){
+                                            foreach($product['product_info']['images'] as $img){
+                                    ?>
+                                    <img src="<?= $img ?>" alt="shoe image">
+                                    <?php }} ?>
                                 </div>
                             </div>
                             <div class="img-select">
-                                <div class="img-item">
-                                    <a href="#" data-id="1">
-                                        <img src="/images/page/product-examp.png" alt="shoe image">
-                                    </a>
-                                </div>
-                                <div class="img-item">
-                                    <a href="#" data-id="2">
-                                        <img src="/images/page/product-examp.png" alt="shoe image">
-                                    </a>
-                                </div>
-                                <div class="img-item">
-                                    <a href="#" data-id="3">
-                                        <img src="/images/page/product-examp.png" alt="shoe image">
-                                    </a>
-                                </div>
-                                <div class="img-item">
-                                    <a href="#" data-id="4">
-                                        <img src="/images/page/product-examp.png" alt="shoe image">
-                                    </a>
-                                </div>
-                                <div class="img-item">
-                                    <a href="#" data-id="3">
-                                        <img src="/images/page/product-examp.png" alt="shoe image">
-                                    </a>
-                                </div>
+                                    <?php
+                                    $i = 0;
+                                    if(!empty($product['product_info']['images'])){
+                                        foreach($product['product_info']['images'] as $img){
+                                            $i++;
+                                ?>
+                                    <div class="img-item">
+                                        <a href="#" data-id="<?= $i ?>">
+                                            <img src="<?= $img ?>" alt="product image">
+                                        </a>
+                                    </div>
+                                <?php }} ?>
                             </div>
                         </div>
                     </div>
@@ -65,14 +53,14 @@ use yii\widgets\Breadcrumbs;
             </div>
             <div class="product_info_right">
                 <div class="product_description">
-                    <h1>Máy cày Kubota sử dụng công nghệ mới 2024</h1>
+                    <h1><?= $product['product_info']['name'] ?></h1>
                     <div class="product_rating flex-item-center">
                         <div class="rating_list flex-item-center">
-                            <img src="/images/icon/star-product.svg" alt="">
-                            <img src="/images/icon/star-product.svg" alt="">
-                            <img src="/images/icon/star-product.svg" alt="">
-                            <img src="/images/icon/star-product.svg" alt="">
-                            <img src="/images/icon/star-product.svg" alt="">
+                            <img src="/images/icon/star-product.svg" alt="star">
+                            <img src="/images/icon/star-product.svg" alt="star">
+                            <img src="/images/icon/star-product.svg" alt="star">
+                            <img src="/images/icon/star-product.svg" alt="star">
+                            <img src="/images/icon/star-product.svg" alt="star">
                         </div>
                         <div class="rating_num flex-center">
                             <p>4.0 (200)</p>
