@@ -195,8 +195,8 @@ class Product extends \yii\db\ActiveRecord
                 'star' => $model->star,
                 'total_rating' => $model->total_rate,
                 'quantity_sold' => $model->quantity_sold,
-                'classification_group' => $productClassification['group'],
-                'classification_data' => $productClassification['data'],
+                'classification_group' => $productClassification['group'] ?? '',
+                'classification_data' => $productClassification['data'] ?? '',
                 'is_favourites' => $user_id_current ? UserFavouriteProduct::checkStatusUserFavourites($user_id_current, $model->id) : false
             ],
             'review_info' => $dataReview,

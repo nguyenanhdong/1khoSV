@@ -3,6 +3,7 @@
 use yii\helpers\Url;
 use yii\web\View;
 use backend\models\Config;
+use frontend\controllers\HelperController;
 use yii\widgets\Breadcrumbs;
 
 ?>
@@ -11,7 +12,7 @@ use yii\widgets\Breadcrumbs;
     echo Breadcrumbs::widget([
         'homeLink' => ['label' => '', 'url' => '/'],
         'links' => [
-            ['label' => 'Máy cày', 'url' => ['product/delivery']],
+            ['label' => $product['agent_info']['name'], 'url' => ['category/index', 'cate_parent_id' => $product['agent_info']['id']]],
             $product['product_info']['name'],
         ],
     ]);
@@ -63,14 +64,14 @@ use yii\widgets\Breadcrumbs;
                             <img src="/images/icon/star-product.svg" alt="star">
                         </div>
                         <div class="rating_num flex-center">
-                            <p>4.0 (200)</p>
+                            <p><?= $product['product_info']['star'] ?> (<?= $product['product_info']['total_rating'] ?>)</p>
                             <p>•</p>
-                            <p>500 Đã bán</p>
+                            <p><?= $product['product_info']['quantity_sold'] ?> Đã bán</p>
                         </div>
                     </div>
                     <div class="product_price flex-item-center">
-                        <span>200.000</span>
-                        <p>-36%</p>
+                        <span><?= HelperController::formatPrice($product['product_info']['price']) ?></span>
+                        <p>-<?= $product['product_info']['percent_discount'] ?>%</p>
                     </div>
                 </div>
                 <div class="product_choose">

@@ -13,6 +13,9 @@ class ProductController extends Controller
     //Chi tiết sản phẩm
     public function actionDetail($id){
         $product = Product::getProductDetail($id);
+        // echo '<pre>';
+        // print_r($product);
+        // echo '</pre>';die;
         $this->view->title = 'Chi tiết sản phẩm';
         return $this->render('detail-product',[
             'product' => $product

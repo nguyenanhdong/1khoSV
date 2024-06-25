@@ -188,7 +188,7 @@ $(document).on('click','.category_child', function(){
 });
 
 var page_sale = 0;
-let checkSendAjaxSale = true;
+var checkSendAjaxSale = true;
 $(document).on('click','.load_more_product_sale', function(){
   page_sale ++;
   let _this = $(this);
@@ -222,6 +222,7 @@ $(document).on('click','.sort_product_wap', function(){
     $(this).attr('sort', 'price_desc');
 });
 
+//find product page category
 var page_product_cat = 0;
 var checkSendAjaxProduct = true;
 $(document).on('click','.see_more_btn', function(){
@@ -284,8 +285,17 @@ function getProductCategory(sort = null, page = null, cate_parent_id = null, cat
     }
   });
 }
+//end find product page category
 
+$(document).on('click','.tab_advertis', function(){
+  let tab = $(this).attr('dt-tab');
+  $('.tab_advertis').removeClass('active');
+  $(this).addClass('active');
 
+  $('.tab_adver_content').addClass('hide');
+  $('#'+tab).removeClass('hide');
+  $('.product_slide').slick('setPosition');
+});
 
 
 

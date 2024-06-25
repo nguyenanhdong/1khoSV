@@ -136,6 +136,9 @@ class SiteController extends Controller
     public function actionIndex()
     {
         $dataHome = ApiNewController::Home();
+        // echo '<pre>';
+        // print_r($dataHome);
+        // echo '</pre>';die;
         return $this->render('index',[
          'dataHome' => isset($dataHome['data']) ? $dataHome['data'] : []
         ]);
