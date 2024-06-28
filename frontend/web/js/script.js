@@ -97,7 +97,8 @@ window.addEventListener('resize', slideImage);
 //end js image product
 
 $(document).on('click','.choose_btn_code',function(){
-  $('.choose_btn_code').removeClass('active');
+  let classCurrent = $(this).attr('dt-class');
+  $('.'+classCurrent).removeClass('active');
   $(this).addClass('active');
 });
 $(document).on('click','.choose_btn_color',function(){
@@ -297,8 +298,62 @@ $(document).on('click','.tab_advertis', function(){
   $('.product_slide').slick('setPosition');
 });
 
+$(document).on('click','.update_qty', function(){
+  let type = $(this).attr('dt-type');
+  let _inputQty = $('.quantity_product');
+  let qtyCurrent = parseInt(_inputQty.val());
+  
+  if (type == 'decrease') {
+    if (qtyCurrent > 1)
+      _inputQty.val(qtyCurrent - 1);
+  } else {
+    _inputQty.val(qtyCurrent + 1);
+  }
+});
+$(document).on('click','.btn_buy_now', function(){
+  let _inputQty = $('.quantity_product');
+  let qtyCurrent = parseInt(_inputQty.val());
+  console.log(qtyCurrent);
+});
 
+$('.slider-comment-nav').slick({
+  slidesToShow: 6,
+  slidesToScroll: 1,
+  asNavFor: '.slider-comment-for',
+  dots: false,
+  focusOnSelect: true
+});
+$('.slider-comment-for').slick({
+ slidesToShow: 1,
+ slidesToScroll: 1,
+ arrows: false,
+ fade: true,
+ asNavFor: '.slider-comment-nav'
+});
 
+// Track clicks
+let clickCount = 0;
+let lastClickedSlide = null;
+$(document).on('click', '.slide_nav', function () {
+  $('.slider-comment-for').addClass('hide');
+  $(this).parent().parent().parent().parent().find('.slider-comment-for').removeClass('hide');
+  $('.slider-comment-for').slick('setPosition').css("visibility","visible");
+
+  //check hide slide
+  const currentSlide = $(this);
+  if (lastClickedSlide && lastClickedSlide.is(currentSlide)) {
+      clickCount++;
+  } else {
+      clickCount = 1;
+      lastClickedSlide = currentSlide;
+  }
+
+  if (clickCount === 2) {
+    $('.slider-comment-for').addClass('hide');
+    console.log('Second click detected on the current slide');
+    clickCount = 0;
+  }
+});
 
 
 

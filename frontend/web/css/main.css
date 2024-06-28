@@ -1085,7 +1085,7 @@ section h2 {
   display: grid;
   gap: 0;
   margin-bottom: 20px;
-  grid-template-columns: 75px auto;
+  grid-template-columns: 100px auto;
   align-items: center;
 }
 .product_info .product_info_right .product_choose .list_code_product {
@@ -1111,7 +1111,7 @@ section h2 {
 }
 .product_info .product_info_right .product_add_cart .buy_now {
   display: grid;
-  grid-template-columns: 124px auto;
+  grid-template-columns: max-content auto;
   gap: 15px;
   border-top: 1px solid #E6E6E6;
   padding-top: 30px;
@@ -1121,12 +1121,19 @@ section h2 {
   gap: 15px;
   border: 1px solid #E6E6E6;
   border-radius: 30px;
+  padding: 0 10px;
 }
 .product_info .product_info_right .product_add_cart .buy_now .choose_number button {
   background: #F2F2F2;
   height: 34px;
   width: 34px;
   border-radius: 50%;
+}
+.product_info .product_info_right .product_add_cart .buy_now .choose_number input {
+  width: -moz-max-content;
+  width: max-content;
+  max-width: 30px;
+  text-align: center;
 }
 .product_info .product_info_right .product_add_cart .add_cart {
   display: grid;
@@ -1231,6 +1238,40 @@ section h2 {
   margin-bottom: 10px;
 }
 
+.video_image_comment {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  width: 300px;
+}
+.video_image_comment .img_slide_nav {
+  width: 70px;
+  height: 70px;
+  -o-object-fit: contain;
+     object-fit: contain;
+  border: 1px solid rgba(204, 204, 204, 0.8);
+}
+.video_image_comment .item_for img, .video_image_comment .item_for video {
+  height: 100%;
+  width: 100%;
+  -o-object-fit: contain;
+     object-fit: contain;
+}
+.video_image_comment .slick-list {
+  padding: 0 !important;
+}
+.video_image_comment .slick-slide {
+  margin: 0 5px;
+  min-width: 70px;
+}
+
+.slider-comment-nav .slick-track {
+  transform: unset !important;
+  margin: 0 !important;
+  width: -moz-max-content !important;
+  width: max-content !important;
+}
+
 .comment {
   border-radius: 10px;
   padding: 20px;
@@ -1256,6 +1297,7 @@ section h2 {
 .comment .comment_list .comment_item .comment_avatar {
   width: 100%;
   border-radius: 50%;
+  background-color: rgba(204, 204, 204, 0.8);
 }
 .comment .comment_list .comment_item .comment_group_right {
   display: flex;
@@ -2264,11 +2306,6 @@ input:checked[type=checkbox] {
   background: #FCBE11;
 }
 
-@media (min-width: 900px) {
-  .notification-ui_icon .unread-notification {
-    left: 20px;
-  }
-}
 .notification-ui_dd {
   padding: 0;
   border-radius: 10px;
@@ -2277,14 +2314,6 @@ input:checked[type=checkbox] {
   max-width: 400px;
 }
 
-@media (min-width: 900px) {
-  .notification-ui_dd {
-    min-width: 400px;
-    position: absolute;
-    left: -167px;
-    top: 50px;
-  }
-}
 .notification-ui_dd:after {
   content: "";
   position: absolute;
@@ -2409,7 +2438,62 @@ input:checked[type=checkbox] {
   gap: 5px;
 }
 
+.video-container video {
+  width: 100%;
+  height: 100%;
+  -o-object-fit: cover;
+     object-fit: cover;
+}
+
+.controls {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  padding: 10px;
+  opacity: 0; /* Initially hide controls */
+  transition: opacity 0.3s ease;
+}
+
+.controls.show {
+  opacity: 1; /* Show controls on hover */
+}
+
+.controls button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: white;
+  font-size: 18px;
+  margin: 0 10px;
+}
+
+.slider-comment-for {
+  width: 500px;
+}
+.slider-comment-for img, .slider-comment-for video {
+  height: 300px !important;
+}
+
+.icon_play {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.5019607843);
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+}
+
 @media screen and (max-width: 768px) {
+  .slider-comment-for {
+    width: 300px;
+  }
   .history_right .group_item_shop {
     padding: 20px 0;
   }
@@ -3176,5 +3260,18 @@ input:checked[type=checkbox] {
   }
   .voucher .voucher_content {
     padding: 0 10px;
+  }
+}
+@media (min-width: 900px) {
+  .notification-ui_icon .unread-notification {
+    left: 20px;
+  }
+}
+@media (min-width: 900px) {
+  .notification-ui_dd {
+    min-width: 400px;
+    position: absolute;
+    left: -167px;
+    top: 50px;
   }
 }/*# sourceMappingURL=main.css.map */

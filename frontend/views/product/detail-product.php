@@ -74,30 +74,25 @@ use yii\widgets\Breadcrumbs;
                         <p>-<?= $product['product_info']['percent_discount'] ?>%</p>
                     </div>
                 </div>
-                <div class="product_choose">
-                    <span>Mã hàng</span>
-                    <div class="list_code_product">
-                        <button class="choose_btn_code">Mã hàng 1</button>
-                        <button class="choose_btn_code">Mã hàng 2</button>
-                        <button class="choose_btn_code">Mã hàng 3</button>
-                        <button class="choose_btn_code">Mã hàng 4</button>
-                        <button class="choose_btn_code">Mã hàng 5</button>
-                    </div>
-                </div>
-                <div class="product_choose">
-                    <span>Màu sắc</span>
-                    <div class="list_code_product">
-                        <button class="choose_btn_color">Màu đen</button>
-                        <button class="choose_btn_color">Màu đỏ</button>
-                        <button class="choose_btn_color">Màu xanh</button>
-                    </div>
-                </div>
+                <?php 
+                    if(!empty($product['product_info']['classification_group'])){
+                        foreach($product['product_info']['classification_group'] as $row){
+                ?>
+                            <div class="product_choose">
+                                <span><?= $row['name'] ?></span>
+                                <div class="list_code_product">
+                                    <?php foreach($row['childs'] as $child){ ?>
+                                        <button dt-class="option_<?= $row['id'] ?>" dt-id="<?= $child['id'] ?>" class="choose_btn_code option_<?= $row['id'] ?>"><?= $child['name'] ?></button>
+                                    <?php } ?>
+                                </div>
+                            </div>
+                <?php }} ?>
                 <div class="product_add_cart">
                     <div class="buy_now">
                         <div class="choose_number flex-center">
-                            <button>-</button>
-                            <span>2</span>
-                            <button>+</button>
+                            <button class="update_qty" dt-type="decrease">-</button>
+                            <input type="text" class="quantity_product" value="1">
+                            <button class="update_qty" dt-type="increase">+</button>
                         </div>
                         <button class="btn_action flex-center btn_buy_now"><img src="/images/icon/cart-icon.svg" alt="">Mua ngay</button>
                     </div>
@@ -128,10 +123,10 @@ use yii\widgets\Breadcrumbs;
         <div class="product_share">
             <span>Chia sẻ</span>
             <div>
-                <a href=""><img src="/images/icon/fb.svg" alt=""></a>
-                <a href=""><img src="/images/icon/zalo.svg" alt=""></a>
-                <a href=""><img src="/images/icon/mess.svg" alt=""></a>
-                <a href=""><img src="/images/icon/social.svg" alt=""></a>
+                <a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=<?= HelperController::getCurrentUrl() ?>"><img src="/images/icon/fb.svg" alt=""></a>
+                <a target="_blank" href="https://zalo.me/share?url=<?= HelperController::getCurrentUrl() ?>"><img src="/images/icon/zalo.svg" alt=""></a>
+                <!-- <a target="_blank" href=""><img src="/images/icon/mess.svg" alt=""></a> -->
+                <!-- <a target="_blank" href=""><img src="/images/icon/social.svg" alt=""></a> -->
             </div>
         </div>
     </section>
@@ -141,9 +136,9 @@ use yii\widgets\Breadcrumbs;
             <div class="info_desc flex-item-center">
                 <img src="/images/icon/shop.png" alt="">
                 <div class="text_rating">
-                    <a href="">Shop Máy Cày</a>
+                    <a href=""><?= $product['agent_info']['name'] ?></a>
                     <div class="rating_box flex-item-center">
-                        <div>
+                        <!-- <div>
                             <img src="/images/icon/star.svg" alt="">
                             <img src="/images/icon/star.svg" alt="">
                             <img src="/images/icon/star.svg" alt="">
@@ -151,8 +146,8 @@ use yii\widgets\Breadcrumbs;
                             <img src="/images/icon/star.svg" alt="">
                         </div>
                         <span>4.5/5.0 (200)</span>
-                        <span>•</span>
-                        <span>1245 Người theo dõi</span>
+                        <span>•</span> -->
+                        <span><?= $product['agent_info']['total_follow'] ?> Người theo dõi</span>
                     </div>
                 </div>
             </div>
@@ -163,29 +158,79 @@ use yii\widgets\Breadcrumbs;
     <section class="product_description">
         <h2>Mô tả sản phẩm</h2>
         <div class="product_desc_content">
-            <p>Đầu kéo máy cày Kubota M9540 là dòng máy nông nghiệp có công suất mạnh nhất trong thế giới máy cày Kubota hiện tại. Kubota M9540 không chỉ mạnh mẽ mà còn đa dụng, hiệu suất cao và hầu như đáp ứng hoàn hảo mọi yêu cầu canh tác vụ mùa mới. </p>
-            <p>Đầu kéo máy cày Kubota M9540 là dòng máy nông nghiệp có công suất mạnh nhất trong thế giới máy cày Kubota hiện tại. Kubota M9540 không chỉ mạnh mẽ mà còn đa dụng, hiệu suất cao và hầu như đáp ứng hoàn hảo mọi yêu cầu canh tác vụ mùa mới. </p>
+            <?= $product['product_info']['description'] ?>
         </div>
     </section>
-
-    <section class="comment">
-        <h2>Đánh giá</h2>
-        <div class="comment_list">
-            <?php for ($i = 0; $i < 10; $i++) { ?>
-                <div class="comment_item">
-                    <img class="comment_avatar" src="/images/icon/avatar.png" alt="">
-                    <div class="comment_group_right">
-                        <div class="user_name flex-item-center">
-                            <p>Bùi Thúy Hằng</p>
-                            <span>•</span>
-                            <span>20-10-2024</span>
+    <?php if(!empty($product['review_info'])){ ?>
+        <section class="comment">
+            <h2>Đánh giá</h2>
+            <div class="comment_list">
+                <?php foreach($product['review_info'] as $row) { ?>
+                    <div class="comment_item">
+                        <img class="comment_avatar" src="<?= !empty($row['avatar']) ? $row['avatar'] : '/images/icon/user-icon.svg' ?>" alt="">
+                        <div class="comment_group_right">
+                            <div class="user_name flex-item-center">
+                                <p><?= $row['fullname'] ?></p>
+                                <span>•</span>
+                                <span><?= $row['date_review'] ?></span>
+                            </div>
+                            <p><?= $row['content'] ?></p>
+                            <?php if(!empty($row['video_image'])){  ?>
+                                <div class="video_image_comment slider-comment-nav">
+                                    <?php 
+                                        foreach($row['video_image'] as $link){ 
+                                            $is_video = false;
+                                            $element = '<div class="item_slide slide_nav"><img class="img_slide_nav" src="'. $link .'"></div>';
+                                            if(strpos($link, 'mp4') !== false)
+                                                $element = '<div class="item_slide slide_nav position-relative">
+                                                                <video class="img_slide_nav" width="640" height="360">
+                                                                    <source src="'. $link .'" type="video/mp4">
+                                                                    Your browser does not support the video tag.
+                                                                </video>
+                                                                <div class="icon_play flex-center"><img src="/images/icon/play.svg"></div>
+                                                            </div>';
+                                    ?>
+                                        <?= $element ?>
+                                    <?php } ?>
+                                    <?php 
+                                        foreach($row['video_image'] as $link){ 
+                                            $is_video = false;
+                                            $element = '<div class="item_slide slide_nav"><img class="img_slide_nav" src="'. $link .'"></div>';
+                                            if(strpos($link, 'mp4') !== false)
+                                                $element = '<div class="item_slide slide_nav position-relative">
+                                                                <video class="img_slide_nav" width="640" height="360">
+                                                                    <source src="'. $link .'" type="video/mp4">
+                                                                    Your browser does not support the video tag.
+                                                                </video>
+                                                                <div class="icon_play flex-center"><img src="/images/icon/play.svg"></div>
+                                                            </div>';
+                                    ?>
+                                        <?= $element ?>
+                                    <?php } ?>
+                                </div>
+                                 <div class="video_image_comment slider-comment-for hide">
+                                    <?php 
+                                        foreach($row['video_image'] as $link){ 
+                                            $is_video = false;
+                                            $element = '<div class="item_slide item_for"><img class="" src="'. $link .'"></div>';
+                                            if(strpos($link, 'mp4') !== false)
+                                                $element = '<div class="item_slide item_for">
+                                                                <video class="" width="640" height="360" controls>
+                                                                    <source src="'. $link .'" type="video/mp4">
+                                                                    Your browser does not support the video tag.
+                                                                </video>
+                                                            </div>';
+                                    ?>
+                                        <?= $element ?>
+                                    <?php } ?>
+                                </div>
+                            <?php } ?>
                         </div>
-                        <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book</p>
                     </div>
-                </div>
-            <?php } ?>
-        </div>
-    </section>
+                <?php } ?>
+            </div>
+        </section>
+    <?php } ?>
 
     <section class="product_relate">
         <h2>Sản phẩm gợi ý</h2>
