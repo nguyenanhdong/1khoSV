@@ -10,7 +10,10 @@
   font-family: timenewroman;
   src: url("../fonts/Times-New-Roman-400.ttf");
 }
-
+input::placeholder {
+  color: #8F959E;
+  opacity: 1; /* Đảm bảo rằng màu sắc không bị làm mờ */
+}
 $brand: #0091ff;
 $orange: #E45625;
 $black: #000;
@@ -174,12 +177,19 @@ h6 {
           justify-content: center;
           flex-direction: column;
           gap: 2px;
+          &:hover{
+            p {
+              transition: .3s;
+              color: #08469B;
+            }
+          }
 
           img {
             height: 24px;
           }
 
           p {
+            transition: .3s;
             color: $white;
           }
 
@@ -598,10 +608,12 @@ section {
         right: 0;
         background-color: #08469B;
         border-radius: 0 10px 0 10px;
-        padding: 7px 10px;
+        padding: 7px 0;
         font-weight: 600;
         color: $white;
         font-size: 12px;
+        width: 45px;
+        text-align: center;
       }
 
       .prod_avatar {
@@ -1125,7 +1137,7 @@ section {
   justify-content: center;
   margin-top: 20px;
 
-  .see_more_btn {
+  .see_more_btn,.see_more_shop {
     border-radius: 30px;
     background-color: $brand;
     padding: 9px 22px;
@@ -1218,7 +1230,7 @@ section {
     min-width: 100%;
     max-width: 100%;
     height: 500px;
-    object-fit: cover;
+    object-fit: contain;
   }
 
   .img-select {
@@ -1407,6 +1419,7 @@ section {
 
       img {
         width: 60px;
+        height: 60px;
         border-radius: 50%;
       }
 
@@ -1490,14 +1503,20 @@ section {
     }
     .slick-slide{
       margin: 0 5px;
-      min-width: 70px;
+      min-width: 70px !important;
     }
 }
 .slider-comment-nav{
     .slick-track{
-      transform: unset !important;
+      // transform: unset !important;
       margin: 0 !important;
-      width: max-content !important;
+      width: 600px !important;
+    }
+    .slick-list{
+      width: 600px;
+    }
+    .slick-slide{
+      width: 70px !important;
     }
   }
 .comment {
@@ -1514,7 +1533,7 @@ section {
     display: flex;
     flex-direction: column;
     margin-top: 30px;
-
+    
     .comment_item {
       display: grid;
       grid-template-columns: 40px auto;
@@ -1523,6 +1542,9 @@ section {
       padding-bottom: 24px;
       border-bottom: 1px solid #E6E6E6;
 
+      &:last-child{
+        border-bottom: 0;
+      }
       .comment_avatar {
         width: 100%;
         border-radius: 50%;
@@ -1576,6 +1598,7 @@ section {
     text-indent: 20px;
     width: 100%;
     border-radius: 10px;
+    text-indent: 45px !important;
   }
 }
 
@@ -2921,7 +2944,40 @@ input:checked[type="checkbox"] {
     height: 25px;
     border-radius: 50%;
 }
+.see_more_comment{
+  height: 40px;
+  border-radius: 43px;
+  border: 1px solid #08469B;  
+  color: #08469B;
+  width: 133px;
+  background-color: #fff;
+  
+}
+.see_more_comment .spinner-border{
+  border-right-color: #08469B;
+}
+.banner_shop{
+  border-radius: 10px 0 0 10px;
+}
+.icon_search_shop{
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 25px;
+  height: 25px;
+  background: #8F959E;
+  border-radius: 50%;
+}
+
 @media screen and (max-width: 768px) {
+  .slider-comment-nav .slick-track{
+    width: 100% !important;
+  }
+  .slider-comment-nav .slick-list {
+    width: 320px;
+    overflow-x: scroll;
+}
   .slider-comment-for {
       width: 300px;
   }

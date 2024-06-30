@@ -139,7 +139,7 @@ use frontend\controllers\HelperController;
             <?php }} ?>
         </div>
         <div class="sale_see_more flex-center">
-            <a href="<?= Url::to(['/category/index-sale']) ?>">Xem tất cả</a>
+            <a target="_blank" href="<?= Url::to(['/category/index-sale']) ?>">Xem tất cả</a>
         </div>
     </section>
 

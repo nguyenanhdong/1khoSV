@@ -134,9 +134,9 @@ use yii\widgets\Breadcrumbs;
     <section class="shop_info">
         <div class="shop_info_group">
             <div class="info_desc flex-item-center">
-                <img src="/images/icon/shop.png" alt="">
+                <img src="<?= $product['agent_info']['avatar'] ?>" alt="">
                 <div class="text_rating">
-                    <a href=""><?= $product['agent_info']['name'] ?></a>
+                    <a href="<?= Url::to(['/product/shop', 'id' => $product['agent_info']['id']]) ?>"><?= $product['agent_info']['name'] ?></a>
                     <div class="rating_box flex-item-center">
                         <!-- <div>
                             <img src="/images/icon/star.svg" alt="">
@@ -192,21 +192,6 @@ use yii\widgets\Breadcrumbs;
                                     ?>
                                         <?= $element ?>
                                     <?php } ?>
-                                    <?php 
-                                        foreach($row['video_image'] as $link){ 
-                                            $is_video = false;
-                                            $element = '<div class="item_slide slide_nav"><img class="img_slide_nav" src="'. $link .'"></div>';
-                                            if(strpos($link, 'mp4') !== false)
-                                                $element = '<div class="item_slide slide_nav position-relative">
-                                                                <video class="img_slide_nav" width="640" height="360">
-                                                                    <source src="'. $link .'" type="video/mp4">
-                                                                    Your browser does not support the video tag.
-                                                                </video>
-                                                                <div class="icon_play flex-center"><img src="/images/icon/play.svg"></div>
-                                                            </div>';
-                                    ?>
-                                        <?= $element ?>
-                                    <?php } ?>
                                 </div>
                                  <div class="video_image_comment slider-comment-for hide">
                                     <?php 
@@ -229,30 +214,34 @@ use yii\widgets\Breadcrumbs;
                     </div>
                 <?php } ?>
             </div>
+            <div class="more_comment">
+                <button product-id="<?= $_GET['id'] ?>" class="see_more_comment">Xem thêm</button>
+            </div>
         </section>
     <?php } ?>
-
-    <section class="product_relate">
-        <h2>Sản phẩm gợi ý</h2>
-        <div class="product_list">
-            <?php for($i = 0; $i < 5; $i++) { ?>
-                <div class="product_item">
-                    <a href="<?= Url::to(['/product/detail']) ?>">
-                        <span class="prod_sale">56% <br> OFF</span>
-                        <img class="prod_avatar" src="/images/page/product-maycay.png" alt="">
-                        <div class="prod_price_star">
-                            <p class="prod_title">Máy cày Kubota sử dụng công nghệ mới</p>
-                            <div class="des_prod mt-2">
-                                <span>200.000</span>
-                                <div class="flex-center">
-                                    <img src="/images/icon/star.svg" alt="">
-                                    <p class="product_star">4.0 (200)</p>
+    <?php if(!empty($product['product_suggest'])){ ?>
+        <section class="product_relate">
+            <h2>Sản phẩm gợi ý</h2>
+            <div class="product_list">
+                <?php foreach($product['product_suggest'] as $row) { ?>
+                    <div class="product_item">
+                        <a href="<?= Url::to(['/product/detail', 'id' => $row['id']]) ?>">
+                            <span class="prod_sale"><?= $row['percent_discount'] ?>% <br> OFF</span>
+                            <img class="prod_avatar" src="<?= $row['image'] ?>" alt="">
+                            <div class="prod_price_star">
+                                <p class="prod_title line_2" title="<?= $row['name'] ?>"><?= $row['name'] ?></p>
+                                <div class="des_prod mt-2">
+                                    <span><?= HelperController::formatPrice($row['price']) ?></span>
+                                    <div class="flex-center">
+                                        <img src="/images/icon/star.svg" alt="Star">
+                                        <p class="product_star"><?= $row['star'] ?> (<?= $row['total_rate'] ?>)</p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </a>
-                </div>
-            <?php } ?>
-        </div>
-    </section>
+                        </a>
+                    </div>
+                <?php } ?>
+            </div>
+        </section>
+    <?php } ?>
 </div>

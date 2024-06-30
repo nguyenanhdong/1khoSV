@@ -355,6 +355,101 @@ $(document).on('click', '.slide_nav', function () {
   }
 });
 
+//xem them comment
+var options_for = {
+  slidesToShow: 1,
+  slidesToScroll: 1,
+  arrows: false,
+  fade: true,
+  asNavFor: '.slider-comment-nav'
+}
+var options_nav = {
+  slidesToShow: 6,
+  slidesToScroll: 1,
+  asNavFor: '.slider-comment-for',
+  dots: false,
+  focusOnSelect: true
+}
+var page_comment = 1;
+var checkSendAjaxComment = true;
+$(document).on('click','.see_more_comment', function(){
+  page_comment ++;
+  let _this = $(this);
+  let product_id = _this.attr('product-id');
+  _this.append('<i class="spinner-border text-light"></i>')
+  if(checkSendAjaxComment){
+    checkSendAjaxComment = false;
+    $.ajax({
+      url: '/product/view-more-review',
+      type: 'POST',
+      data: {product_id:product_id, page:page_comment},
+      success: function (res) {
+        _this.find('.spinner-border').remove();
+        checkSendAjaxComment = true;
+        if(res['data']){
+            $('.comment_list').append(res['data']);
+            setTimeout(function () {
+              $(".slider-comment-for").not('.slick-initialized').slick(options_for)
+              $(".slider-comment-nav").not('.slick-initialized').slick(options_nav)
+            }, 100);
+        }
+        if(!res['checkLoadMore']){
+          $('.more_comment').remove();
+        }
+      }
+    });
+  }
+});
+
+
+//get product shop
+var page_product_shop = 0;
+var checkSendAjaxProductShop = true;
+$(document).on('click','.btn_sort_shop', function(){
+  page_product_cat = 0;
+  $('.btn_sort_shop').removeClass('active');
+  let _this = $(this);
+  _this.addClass('active');
+  let sort = _this.attr('sort');
+  let shop_id = $('.see_more_shop').attr('shop-id');
+  if(checkSendAjaxProductShop){
+    checkSendAjaxProductShop = false;
+    getProductShop(sort, null, shop_id)
+  }
+});
+
+$(document).on('click','.see_more_shop', function(){
+  page_product_shop ++;
+  let _this = $(this);
+  _this.append('<i class="spinner-border text-light"></i>')
+  let sort = $('.btn_sort_shop.active').attr('sort');
+  let shop_id = $('.see_more_shop').attr('shop-id');
+  if(checkSendAjaxProductShop){
+    checkSendAjaxProductShop = false;
+    getProductShop(sort, page_product_shop, shop_id )
+  }
+});
+
+function getProductShop(sort = null, page = null, shop_id = null){
+  $.ajax({
+    url: '/product/get-product-shop',
+    type: 'POST',
+    data: {sort:sort, page:page, shop_id:shop_id},
+    success: function (res) {
+      $('.see_more_shop').find('.spinner-border').remove();
+      checkSendAjaxProductShop = true;
+      if(res['data']){
+        if(res['append'])
+          $('.product_list').append(res['data']);
+        else
+          $('.product_list').html(res['data']);
+      }
+      if(!res['checkLoadMore']){
+        $('.see_more_product').remove();
+      }
+    }
+  });
+}
 
 
 

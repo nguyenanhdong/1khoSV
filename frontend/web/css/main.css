@@ -1,3 +1,4 @@
+@charset "UTF-8";
 @import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@200;300;400;500;600;700&family=Lato:wght@300;400;700&family=Merriweather:wght@300;400&display=swap");
 @font-face {
   font-family: fontAaron;
@@ -7,6 +8,15 @@
   font-family: timenewroman;
   src: url("../fonts/Times-New-Roman-400.ttf");
 }
+input::-moz-placeholder {
+  color: #8F959E;
+  opacity: 1; /* Đảm bảo rằng màu sắc không bị làm mờ */
+}
+input::placeholder {
+  color: #8F959E;
+  opacity: 1; /* Đảm bảo rằng màu sắc không bị làm mờ */
+}
+
 body {
   font-family: "Be Vietnam Pro", sans-serif !important;
 }
@@ -158,10 +168,15 @@ h6 {
   flex-direction: column;
   gap: 2px;
 }
+#header .header_top .header_top_group .header_action a:hover p {
+  transition: 0.3s;
+  color: #08469B;
+}
 #header .header_top .header_top_group .header_action a img {
   height: 24px;
 }
 #header .header_top .header_top_group .header_action a p {
+  transition: 0.3s;
   color: #fff;
 }
 #header .header_top .header_top_group .header_action a:last-child {
@@ -520,10 +535,12 @@ section h2 {
   right: 0;
   background-color: #08469B;
   border-radius: 0 10px 0 10px;
-  padding: 7px 10px;
+  padding: 7px 0;
   font-weight: 600;
   color: #fff;
   font-size: 12px;
+  width: 45px;
+  text-align: center;
 }
 .product_list .product_item a .prod_avatar {
   width: 100%;
@@ -949,7 +966,7 @@ section h2 {
   justify-content: center;
   margin-top: 20px;
 }
-.see_more_product .see_more_btn {
+.see_more_product .see_more_btn, .see_more_product .see_more_shop {
   border-radius: 30px;
   background-color: #0091ff;
   padding: 9px 22px;
@@ -1030,8 +1047,8 @@ section h2 {
   min-width: 100%;
   max-width: 100%;
   height: 500px;
-  -o-object-fit: cover;
-     object-fit: cover;
+  -o-object-fit: contain;
+     object-fit: contain;
 }
 .product_info .img-select {
   display: grid;
@@ -1191,6 +1208,7 @@ section h2 {
 }
 .shop_info .shop_info_group .info_desc img {
   width: 60px;
+  height: 60px;
   border-radius: 50%;
 }
 .shop_info .shop_info_group .info_desc .text_rating {
@@ -1262,14 +1280,18 @@ section h2 {
 }
 .video_image_comment .slick-slide {
   margin: 0 5px;
-  min-width: 70px;
+  min-width: 70px !important;
 }
 
 .slider-comment-nav .slick-track {
-  transform: unset !important;
   margin: 0 !important;
-  width: -moz-max-content !important;
-  width: max-content !important;
+  width: 600px !important;
+}
+.slider-comment-nav .slick-list {
+  width: 600px;
+}
+.slider-comment-nav .slick-slide {
+  width: 70px !important;
 }
 
 .comment {
@@ -1293,6 +1315,9 @@ section h2 {
   margin-bottom: 24px;
   padding-bottom: 24px;
   border-bottom: 1px solid #E6E6E6;
+}
+.comment .comment_list .comment_item:last-child {
+  border-bottom: 0;
 }
 .comment .comment_list .comment_item .comment_avatar {
   width: 100%;
@@ -1338,6 +1363,7 @@ section h2 {
   text-indent: 20px;
   width: 100%;
   border-radius: 10px;
+  text-indent: 45px !important;
 }
 
 .bg_cat_unset {
@@ -2490,7 +2516,42 @@ input:checked[type=checkbox] {
   border-radius: 50%;
 }
 
+.see_more_comment {
+  height: 40px;
+  border-radius: 43px;
+  border: 1px solid #08469B;
+  color: #08469B;
+  width: 133px;
+  background-color: #fff;
+}
+
+.see_more_comment .spinner-border {
+  border-right-color: #08469B;
+}
+
+.banner_shop {
+  border-radius: 10px 0 0 10px;
+}
+
+.icon_search_shop {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 25px;
+  height: 25px;
+  background: #8F959E;
+  border-radius: 50%;
+}
+
 @media screen and (max-width: 768px) {
+  .slider-comment-nav .slick-track {
+    width: 100% !important;
+  }
+  .slider-comment-nav .slick-list {
+    width: 320px;
+    overflow-x: scroll;
+  }
   .slider-comment-for {
     width: 300px;
   }
