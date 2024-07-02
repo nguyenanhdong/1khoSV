@@ -21,8 +21,11 @@ use backend\models\News;
 
 use backend\models\UserLogin;
 use backend\models\Config;
+use backend\models\Customer;
 use backend\models\EmailPromotion;
-
+use common\helpers\Helper;
+use common\helpers\Response;
+use common\models\AccountLoginFirebaseForm;
 
 /**
  * Site controller
@@ -158,6 +161,236 @@ class SiteController extends Controller
         $this->view->title = 'Chính sách bảo hành';
         return $this->render('guarantee');
     }
+    public function actionLogin()
+    {   
+        $model = new LoginForm();
+        if ($model->load(Yii::$app->request->post())) {
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            if (!$model->validate()) {
+                foreach($model->getErrors() as $row){
+                    return [
+                        'status' => 0,
+                        'message' => $row['0']
+                    ];
+                    break;
+                }
+            }
+            $user = Users::findOne(['email' => $model->username]);
+            if($user['date_banned'] != null){
+                $date_curren = strtotime(date("Y/m/d H:i:s"));
+                $time_banner = strtotime($user['date_banned']);
+                if($time_banner > $date_curren)
+                    return [
+                        'status' => 0,
+                        'message' => 'Tài khoản của bạn đang bị khóa'
+                    ];
+
+            }
+
+            if( $model->login() ){
+           
+            }
+            else
+                return [
+                    'status' => 0,
+                    'message' => 'Thông tin đăng nhập không chính xác'
+                ];
+        } else {
+            $model->password = '';
+
+            return $this->render('login', [
+                'model' => $model,
+            ]);
+        }
+    }
+    public function actionLoginFirebase(){
+        if( Yii::$app->request->isPost ){
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            $postData = Yii::$app->request->post();
+            if( isset($postData['type']) && !empty($postData['type']) && isset($postData['token']) && !empty($postData['token']) ){
+                $type = $postData['type'];
+                $token= $postData['token'];
+                
+                if( $type == "idToken" ){
+                    $data = $this->_validateIdTokenFireBase($token);
+                }else{
+                    $data = $this->_validateAccessTokenFireBase($token);
+                }
+
+                if( $data['status'] ){
+                    /*
+                    * Viết code tạo tài khoản, login tại đây
+                    */
+                    $dataUser       = $data['data'];
+                    $modelAccount   = null;
+                    $firstName      = $dataUser['firstName'];
+                    $lastName       = $dataUser['lastName'];
+                    $email          = '';
+                    $phone          = '';
+                    $userName       = '';
+                    if( isset($dataUser['email']) && !empty($dataUser['email']) ){
+                        $email      = $dataUser['email'];
+                        $userName   = $email;
+                        $modelAccount = Customer::findByEmail($email);
+                    }else if( isset($dataUser['phone']) && !empty($dataUser['phone']) ){
+                        $phone      = $dataUser['phone'];
+                        $userName   = preg_replace("/[^0-9]+/", "", $phone);
+                        $modelAccount = Customer::findByPhone($phone);
+                    }
+                    
+                    //Create account if not exits
+                    if( !$modelAccount ){
+                        $modelAccount = new Customer;
+                        $modelAccount->username = $userName;
+                        $modelAccount->first_name = $firstName;
+                        $modelAccount->last_name = $lastName;
+                        $modelAccount->email = $email;
+                        $modelAccount->phone = $phone;
+                        $modelAccount->status = 1;
+                        $modelAccount->lang = Yii::$app->language;
+                        $modelAccount->ip   = $_SERVER['REMOTE_ADDR'];
+                        $modelAccount->create_date = date('Y-m-d H:i:s');
+                        $modelAccount->save(false);
+                    }
+
+                    //Login
+                    $modelLogin = new AccountLoginFirebaseForm();
+                    $modelLogin->username = $userName;
+                    $modelLogin->email = $email;
+                    $modelLogin->phone = $phone;
+                    if( $modelLogin->login() ){
+                        return [
+                            'status' => true,
+                            'message'=> 'Login successful',
+                        ];
+                    }else{
+                        return [
+                            'status' => false,
+                            'message'=> 'Login failed',
+                        ];
+                    }
+                }
+            }else{
+                return [
+                    'status' => false,
+                    'message'=> 'Invalid information'
+                ];
+            }
+        }
+        return $this->render('login');
+    }
+    public static function _validateIdTokenFireBase($idToken)
+    {
+        $apiKey     = Yii::$app->params['fireBase']['login']['apiKey'];
+        $url        = 'https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=' . $apiKey;
+        $ch         = curl_init ();
+        $fields     = json_encode ( ['idToken' => $idToken] );
+        $headers    = array (
+            "Content-Type: application/json"
+        );
+        curl_setopt ( $ch, CURLOPT_URL, $url );
+        curl_setopt ( $ch, CURLOPT_POST, true );
+        curl_setopt ( $ch, CURLOPT_HTTPHEADER, $headers );
+        curl_setopt ( $ch, CURLOPT_RETURNTRANSFER, true );
+        curl_setopt ( $ch, CURLOPT_POSTFIELDS, $fields );
+
+        $result     = curl_exec ( $ch );
+        $http_status= curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close ( $ch );
+        if( $http_status == 200 ){
+            $data       = json_decode($result, true);
+            if( is_array($data) && isset($data['users']) && isset($data['users'][0])){
+                $info = $data['users'][0];
+                if( isset($info['phoneNumber']) ){
+                    $phone      = str_replace(' ', '', $info['phoneNumber']);//preg_replace("/[^0-9]+/", "", $info['phoneNumber']);
+                    // $arrPhone   = str_split($phone);
+                    // if ($arrPhone[0] != '0') {
+                    //     $phone  = '0' . substr($phone, 2);
+                    // }
+                    return [
+                        'status' => true,
+                        'data'   => [
+                            'phone'     => $phone,
+                            'email'     => '',
+                            'firstName' => '',
+                            'lastName'  => ''
+                        ]
+                    ];
+                }else if( isset($info['email']) ){
+                    $displayName = explode(' ', $info['displayName']);
+                    $firstName   = $displayName[0];
+                    array_shift($displayName);
+                    $lastName    = implode(' ', $displayName);
+                    return [
+                        'status' => true,
+                        'data'   => [
+                            'email'     => $info['email'],
+                            'phone'     => '',
+                            'firstName' => $firstName,
+                            'lastName'  => $lastName,
+                        ]
+                    ];
+                }
+            }
+        }else{
+            return [
+                'status' => false,
+                'message'=> 'Error! Authentication failed'
+            ];
+        }
+        return [
+            'status' => false,
+            'message'=> 'Error! Authentication failed'
+        ];
+    }
+    public static function _validateAccessTokenFireBase($idToken)
+    {
+        $url        = 'https://www.googleapis.com/oauth2/v1/userinfo?access_token=' . $idToken;
+        $ch         = curl_init ();
+        curl_setopt ( $ch, CURLOPT_URL, $url );
+        curl_setopt ( $ch, CURLOPT_RETURNTRANSFER, true );
+
+        $result     = curl_exec ( $ch );
+        $http_status= curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close ( $ch );
+        if( $http_status == 200 ){
+            $data       = json_decode($result, true);
+            if( is_array($data) && isset($data['id']) && isset($data['email'])){
+                return [
+                    'status' => true,
+                    'data'   => [
+                        'email'     => $data['email'],
+                        'phone'     => '',
+                        'firstName' => $data['given_name'],
+                        'lastName'  => $data['family_name'],
+                    ]
+                ];   
+            }else{
+                return [
+                    'status' => false,
+                    'message'=> 'Error! Authentication failed'
+                ];
+            } 
+        }else{
+            return [
+                'status' => false,
+                'message'=> 'Error! Authentication failed'
+            ];
+        }
+        return [
+            'status' => false,
+            'message'=> 'Error! Authentication failed',
+        ];
+    }
+
+
+
+
+
+
+
+    
+
 
 
 
@@ -251,48 +484,7 @@ class SiteController extends Controller
     }
 
     
-    public function actionLogin()
-    {
-        $model = new LoginForm();
-        if ($model->load(Yii::$app->request->post())) {
-            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-            if (!$model->validate()) {
-                foreach($model->getErrors() as $row){
-                    return [
-                        'status' => 0,
-                        'message' => $row['0']
-                    ];
-                    break;
-                }
-            }
-            $user = Users::findOne(['email' => $model->username]);
-            if($user['date_banned'] != null){
-                $date_curren = strtotime(date("Y/m/d H:i:s"));
-                $time_banner = strtotime($user['date_banned']);
-                if($time_banner > $date_curren)
-                    return [
-                        'status' => 0,
-                        'message' => 'Tài khoản của bạn đang bị khóa'
-                    ];
 
-            }
-
-            if( $model->login() ){
-           
-            }
-            else
-                return [
-                    'status' => 0,
-                    'message' => 'Thông tin đăng nhập không chính xác'
-                ];
-        } else {
-            $model->password = '';
-
-            return $this->render('login', [
-                'model' => $model,
-            ]);
-        }
-    }
 
     private function checkLogin(){
         if (!Yii::$app->user->isGuest) {

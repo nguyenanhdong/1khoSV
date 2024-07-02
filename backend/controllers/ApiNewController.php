@@ -245,7 +245,7 @@ class ApiNewController extends Controller
         return true;
     }
     
-    private function _validateTokenPhoneLogin($idToken, $phoneCheck)
+    public static function _validateTokenPhoneLogin($idToken, $phoneCheck)
     {
         $apiKey     = Yii::$app->params['fireBase']['customer']['webAPIKey'];
         $url        = 'https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=' . $apiKey;
