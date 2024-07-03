@@ -42,8 +42,18 @@ button:focus {
   outline: unset;
 }
 
+button:hover {
+  opacity: 0.85;
+  transition: 0.3s;
+}
+
 a p:hover {
   color: #08469B !important;
+}
+
+.help-block {
+  color: red;
+  font-size: 14px;
 }
 
 p,
@@ -721,6 +731,7 @@ section h2 {
 #login {
   background-color: #fff;
   padding: 97px 0 160px;
+  min-height: 695px;
 }
 #login .login_group {
   width: 680px;
@@ -789,6 +800,50 @@ section h2 {
 }
 #login .login_group .social_login .login_gg {
   background-color: #EA4335;
+}
+#login .verify_otp {
+  display: none;
+  width: 680px;
+  margin: 0 auto;
+  text-align: center;
+}
+#login .verify_otp h2 {
+  font-size: 36px;
+  line-height: 43px;
+  text-align: center;
+  font-weight: 400;
+  margin-bottom: 20px;
+}
+#login .verify_otp p {
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 23.38px;
+}
+#login .verify_otp p strong {
+  color: #08469B;
+}
+#login .verify_otp .otp-container {
+  margin-top: 15px;
+  margin-bottom: 60px;
+  gap: 8px;
+}
+#login .verify_otp .otp-container input {
+  width: 47px;
+  height: 50px;
+  font-size: 20px;
+  font-weight: bold;
+  border-radius: 10px;
+  border: 1px solid rgba(158, 158, 158, 0.2509803922);
+  text-align: center;
+}
+#login .verify_otp button {
+  height: 50px;
+  border-radius: 10px;
+  background-color: #08469B;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  padding: 0 20px;
 }
 
 .breadcrumb {

@@ -21,7 +21,6 @@ use backend\models\News;
 
 use backend\models\UserLogin;
 use backend\models\Config;
-use backend\models\Customer;
 use backend\models\EmailPromotion;
 use common\helpers\Helper;
 use common\helpers\Response;
@@ -138,6 +137,26 @@ class SiteController extends Controller
      */
     public function actionIndex()
     {
+        // $modelLogin = new AccountLoginFirebaseForm();
+        // $modelLogin->phone = '+84983182596';
+        // if( $modelLogin->login() ){
+        //     return [
+        //         'status' => true,
+        //         'message'=> 'Login successful',
+        //     ];
+        // }else{
+        //     return [
+        //         'status' => false,
+        //         'message'=> 'Login failed',
+        //     ];
+        // }
+        // die;
+
+        // var_dump(Yii::$app->user->isGuest);die;
+        // $user = Yii::$app->user->identity;
+        // echo '<pre>';
+        // print_r($user);
+        // echo '</pre>';die;
         $dataHome = ApiNewController::Home();
         // echo '<pre>';
         // print_r($dataHome);
@@ -161,49 +180,49 @@ class SiteController extends Controller
         $this->view->title = 'Chính sách bảo hành';
         return $this->render('guarantee');
     }
-    public function actionLogin()
-    {   
-        $model = new LoginForm();
-        if ($model->load(Yii::$app->request->post())) {
-            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-            if (!$model->validate()) {
-                foreach($model->getErrors() as $row){
-                    return [
-                        'status' => 0,
-                        'message' => $row['0']
-                    ];
-                    break;
-                }
-            }
-            $user = Users::findOne(['email' => $model->username]);
-            if($user['date_banned'] != null){
-                $date_curren = strtotime(date("Y/m/d H:i:s"));
-                $time_banner = strtotime($user['date_banned']);
-                if($time_banner > $date_curren)
-                    return [
-                        'status' => 0,
-                        'message' => 'Tài khoản của bạn đang bị khóa'
-                    ];
+    // public function actionLogin()
+    // {   
+    //     $model = new LoginForm();
+    //     if ($model->load(Yii::$app->request->post())) {
+    //         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+    //         if (!$model->validate()) {
+    //             foreach($model->getErrors() as $row){
+    //                 return [
+    //                     'status' => 0,
+    //                     'message' => $row['0']
+    //                 ];
+    //                 break;
+    //             }
+    //         }
+    //         $user = Users::findOne(['email' => $model->username]);
+    //         if($user['date_banned'] != null){
+    //             $date_curren = strtotime(date("Y/m/d H:i:s"));
+    //             $time_banner = strtotime($user['date_banned']);
+    //             if($time_banner > $date_curren)
+    //                 return [
+    //                     'status' => 0,
+    //                     'message' => 'Tài khoản của bạn đang bị khóa'
+    //                 ];
 
-            }
+    //         }
 
-            if( $model->login() ){
+    //         if( $model->login() ){
            
-            }
-            else
-                return [
-                    'status' => 0,
-                    'message' => 'Thông tin đăng nhập không chính xác'
-                ];
-        } else {
-            $model->password = '';
+    //         }
+    //         else
+    //             return [
+    //                 'status' => 0,
+    //                 'message' => 'Thông tin đăng nhập không chính xác'
+    //             ];
+    //     } else {
+    //         $model->password = '';
 
-            return $this->render('login', [
-                'model' => $model,
-            ]);
-        }
-    }
-    public function actionLoginFirebase(){
+    //         return $this->render('login', [
+    //             'model' => $model,
+    //         ]);
+    //     }
+    // }
+    public function actionLogin(){
         if( Yii::$app->request->isPost ){
             Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
             $postData = Yii::$app->request->post();
@@ -223,40 +242,23 @@ class SiteController extends Controller
                     */
                     $dataUser       = $data['data'];
                     $modelAccount   = null;
-                    $firstName      = $dataUser['firstName'];
-                    $lastName       = $dataUser['lastName'];
-                    $email          = '';
                     $phone          = '';
-                    $userName       = '';
-                    if( isset($dataUser['email']) && !empty($dataUser['email']) ){
-                        $email      = $dataUser['email'];
-                        $userName   = $email;
-                        $modelAccount = Customer::findByEmail($email);
-                    }else if( isset($dataUser['phone']) && !empty($dataUser['phone']) ){
+                    if( isset($dataUser['phone']) && !empty($dataUser['phone']) ){
                         $phone      = $dataUser['phone'];
-                        $userName   = preg_replace("/[^0-9]+/", "", $phone);
-                        $modelAccount = Customer::findByPhone($phone);
+                        $modelAccount = Users::findByPhone($phone);
                     }
                     
                     //Create account if not exits
                     if( !$modelAccount ){
-                        $modelAccount = new Customer;
-                        $modelAccount->username = $userName;
-                        $modelAccount->first_name = $firstName;
-                        $modelAccount->last_name = $lastName;
-                        $modelAccount->email = $email;
+                        $modelAccount = new Users;
                         $modelAccount->phone = $phone;
                         $modelAccount->status = 1;
-                        $modelAccount->lang = Yii::$app->language;
-                        $modelAccount->ip   = $_SERVER['REMOTE_ADDR'];
-                        $modelAccount->create_date = date('Y-m-d H:i:s');
+                        $modelAccount->create_at = date('Y-m-d H:i:s');
                         $modelAccount->save(false);
                     }
 
                     //Login
                     $modelLogin = new AccountLoginFirebaseForm();
-                    $modelLogin->username = $userName;
-                    $modelLogin->email = $email;
                     $modelLogin->phone = $phone;
                     if( $modelLogin->login() ){
                         return [
@@ -381,6 +383,11 @@ class SiteController extends Controller
             'status' => false,
             'message'=> 'Error! Authentication failed',
         ];
+    }
+    public function actionLogout()
+    {
+        Yii::$app->user->logout();
+        return $this->goHome();
     }
 
 
@@ -566,30 +573,7 @@ class SiteController extends Controller
         return true;
     }
 
-    /**
-     * Logs out the current user.
-     *
-     * @return mixed
-     */
-    public function actionLogout()
-    {
-        $user       = Yii::$app->user->identity;
-        $modelUser  = Users::findOne(['id'=>$user->id]);
-        $ip_current = $_SERVER['REMOTE_ADDR']; 
-        // $browser        = get_browser(null, true);
-        $os             = NULL;//$browser['platform'];
-        $browser_name   = NULL;//$browser['browser'];
-        $user_login = UserLogin::find()->where(['user_id'=>$modelUser->id,'status'=>0,'browser' => $browser_name, 'os' => $os])->asArray()->all();
-        if(!empty($user_login)){
-            foreach($user_login as $item){
-                $model = UserLogin::findOne($item['id']);
-                $model->delete();
-            }
-        }
-        Yii::$app->user->logout();
 
-        return $this->goHome();
-    }
 
 
     /*

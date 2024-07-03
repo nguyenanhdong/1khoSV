@@ -1,5 +1,7 @@
 <?php
 namespace frontend\controllers;
+
+use Yii;
 use yii\web\Controller;
 
 /**
@@ -8,7 +10,9 @@ use yii\web\Controller;
 class VoucherController extends Controller
 {
     public function actionIndex(){
-
+        if(Yii::$app->user->isGuest){
+             return $this->redirect(['/site/login']);
+        }
         return $this->render('index');
     }
 }

@@ -2,8 +2,11 @@
 namespace frontend\controllers;
 
 use backend\controllers\ApiNewController;
+use common\models\District;
+use common\models\Province;
+use Yii;
 use yii\web\Controller;
-
+use yii\web\Response;
 
 /**
  * Helper controller
@@ -22,5 +25,14 @@ class HelperController extends Controller
         $requestUri = $_SERVER['REQUEST_URI'];
         
         return $protocol . $host . $requestUri;
+    }
+
+    public function actionGetDistrict(){
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $res = [];
+        if(!empty($_POST['province_name'])){
+            $res = District::getDistrict($_POST['province_name']);
+        }
+        return $res;
     }
 }

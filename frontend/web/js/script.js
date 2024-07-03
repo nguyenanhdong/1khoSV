@@ -452,6 +452,121 @@ function getProductShop(sort = null, page = null, shop_id = null){
 }
 
 
+$(document).on('click','.btn_login', function(){
+  $('.verify_otp').show(500);
+  $('.login_group').remove();
+});
+$(document).on('click','#verify_otp', function(){
+  toastr['success']('Đăng nhập thành công');
+  setTimeout(function(){
+      window.location.href = '/';
+  },200);
+});
+$(document).on('change','#users-province', function(){
+  let province_name = $(this).val();
+  $.ajax({
+    url: '/helper/get-district',
+    type: 'POST',
+    data: {province_name: province_name},
+    success: function (res) {
+      if (res) {
+        let option = '<option value="">Chọn quận huyện</option>';
+        $.each(res, function (key, value) {
+          option += '<option value="'+key+'">'+ value +'</option>';
+        });
+        $('#users-district').html(option);
+      }
+    }
+  });
+});
+
+setTimeout(function() {
+    $('.alert').alert('close');
+}, 5000); 
+
+
+
+// render OPT login 
+document.addEventListener("DOMContentLoaded", function () {
+  var otpInputs = document.querySelectorAll(".otp-input");
+
+  function setupOtpInputListeners(inputs) {
+    inputs.forEach(function (input, index) {
+      input.addEventListener("paste", function (ev) {
+        var clip = ev.clipboardData.getData("text").trim();
+        if (!/^\d{6}$/.test(clip)) {
+          ev.preventDefault();
+          return;
+        }
+
+        var characters = clip.split("");
+        inputs.forEach(function (otpInput, i) {
+          otpInput.value = characters[i] || "";
+        });
+
+        enableNextBox(inputs[0], 0);
+        inputs[5].removeAttribute("disabled");
+        inputs[5].focus();
+        updateOTPValue(inputs);
+      });
+
+      input.addEventListener("input", function () {
+        var currentIndex = Array.from(inputs).indexOf(this);
+        var inputValue = this.value.trim();
+
+        if (!/^\d$/.test(inputValue)) {
+          this.value = "";
+          return;
+        }
+
+        if (inputValue && currentIndex < 5) {
+          inputs[currentIndex + 1].removeAttribute("disabled");
+          inputs[currentIndex + 1].focus();
+        }
+
+        if (currentIndex === 4 && inputValue) {
+          inputs[5].removeAttribute("disabled");
+          inputs[5].focus();
+        }
+        updateOTPValue(inputs);
+      });
+
+      input.addEventListener("keydown", function (ev) {
+        var currentIndex = Array.from(inputs).indexOf(this);
+
+        if (!this.value && ev.key === "Backspace" && currentIndex > 0) {
+          inputs[currentIndex - 1].focus();
+        }
+      });
+    });
+  }
+
+  function updateOTPValue(inputs) {
+    var otpValue = "";
+    inputs.forEach(function (input) {
+      otpValue += input.value;
+    });
+    if (inputs === otpInputs) {
+      document.getElementById("otp").value = otpValue;
+    }
+  }
+
+  // Setup listeners for OTP inputs
+  setupOtpInputListeners(otpInputs);
+
+  // Add event listener for verify button
+  document.getElementById("verifyMobileOTP").addEventListener("click", function () {
+    var otpValue = document.getElementById("otp").value;
+    alert("Submitted OTP: " + otpValue);
+    // Add your submit logic here (e.g., AJAX request or form submission)
+  });
+
+  // Initial focus on first OTP input field
+  otpInputs[0].focus();
+});
+// end render OPT login 
+
+
 
 
 

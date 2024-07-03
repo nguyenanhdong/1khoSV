@@ -44,11 +44,18 @@ button {
     outline: unset;
   }
 }
+button:hover{
+  opacity: .85;
+  transition: .3s;
+}
 
 a p:hover{
   color: #08469B !important;
 }
-
+.help-block{
+  color: red;
+  font-size: 14px;
+}
 p,
 input,
 span,
@@ -828,6 +835,7 @@ section {
 #login {
   background-color: $white;
   padding: 97px 0 160px;
+  min-height: 695px;
 
   .login_group {
     width: 680px;
@@ -907,6 +915,52 @@ section {
       .login_gg {
         background-color: #EA4335;
       }
+    }
+  }
+  .verify_otp{
+    display: none;
+    width: 680px;
+    margin: 0 auto;
+    text-align: center;
+
+    h2{
+      font-size: 36px;
+      line-height: 43px;
+      text-align: center;
+      font-weight: 400;
+      margin-bottom: 20px;
+    }
+    p{
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 23.38px;
+      strong{
+        color: #08469B;
+      }
+    }
+    .otp-container{
+      margin-top: 15px;
+      margin-bottom: 60px;
+      gap: 8px;
+
+      input{
+        width: 47px;
+        height: 50px; 
+        font-size: 20px;  
+        font-weight: bold;
+        border-radius: 10px;
+        border: 1px solid #9E9E9E40;
+        text-align: center;
+      }
+    }
+    button{
+      height: 50px;
+      border-radius: 10px;
+      background-color: #08469B;
+      font-size: 16px;
+      font-weight: 600;
+      color: #fff;
+      padding: 0 20px;
     }
   }
 }

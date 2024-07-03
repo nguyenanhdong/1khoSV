@@ -12,7 +12,7 @@
         </div>
         <div class="submit_login">
             <div id="recaptcha-container"></div>
-            <button type="button" id="btnPhone">Đăng nhập</button>
+            <button type="button" id="btnPhone" class="btn_login">Đăng nhập</button>
         </div>
         <span class="text-center">- Hoặc tiếp tục với -</span>
         <div class="social_login">
@@ -20,10 +20,27 @@
             <button class="login_gg flex-center"><img src="/images/icon/google.svg" alt=""> Google</button>
         </div>
     </div>
+    <div class="verify_otp">
+        <h2>Mã xác nhận</h2>
+        <p>Vui lòng nhập mã 6 chữ số được gửi đến <strong>số điện thoại</strong> của bạn</p>
+        <div class="otp-container flex-center">
+            <!-- Six input fields for OTP digits -->
+            <input type="text" class="otp-input" pattern="\d" maxlength="1">
+            <input type="text" class="otp-input" pattern="\d" maxlength="1" disabled>
+            <input type="text" class="otp-input" pattern="\d" maxlength="1" disabled>
+            <input type="text" class="otp-input" pattern="\d" maxlength="1" disabled>
+            <input type="text" class="otp-input" pattern="\d" maxlength="1" disabled>
+            <input type="text" class="otp-input" pattern="\d" maxlength="1" disabled>
+        </div>
+        <button type="button" id="verify_otp">Đăng nhập</button>
+        <!-- Field to display entered OTP -->
+        <input type="hidden" id="otp" placeholder="Enter verification code" readonly>
+    </div>
 </div>
 
+
 <script src="https://www.gstatic.com/firebasejs/5.2.0/firebase.js"></script>
-<script type="text/javascript">
+<!-- <script type="text/javascript">
     (function() {
     console.log('Start file login with firebase');
     // Initialize Firebase
@@ -36,6 +53,7 @@
     //Login in variables
     const btnGoogle = document.getElementById('btnGoogle');
     const btnPhone = document.getElementById('btnPhone');
+    const verify_otp = document.getElementById('verify_otp');
 
     //Sing in with Google
     // btnGoogle.addEventListener('click', e => {
@@ -114,10 +132,10 @@
             if( phone_number == '' ){
                 $('#phone_number').focus();
             }else{
-                if( isLoadingSendOTP ){
-                    alert('OTP code is being sent. Pls wait');
-                    return false;
-                }
+                // if( isLoadingSendOTP ){
+                //     alert('OTP code is being sent. Pls wait');
+                //     return false;
+                // }
                 $(".img_loading").show();
                 isLoadingSendOTP = true;
                 // window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container');
@@ -125,59 +143,63 @@
                 .then(function(confirmationResult) {
                 console.log(333);
                     flagShowOtp = true;
-                    $('#phone_number').hide();
-                    $('#otp').show();
+                    // $('#phone_number').hide();772857
+                    // $('#otp').show();
+                    $('.verify_otp').show(500);
+                    $('.login_group').remove();
                     window.confirmationResult = confirmationResult;
                 });
             }
-        }else{
-            var otp = $.trim($('#otp').val());
-            if( otp == '' || otp.length != 6 ){
-                $('#otp').focus();
-            }else{
-                if( isLoadingVerifyOTP ){
-                    alert('OTP has being verify. Pls Wait');
-                    return false;
-                }
-                isLoadingVerifyOTP = true;
-                $(".img_loading").show();
-                window.confirmationResult.confirm(otp).then((result) => {
-                    // User signed in successfully.
-                    $(".img_loading").hide();
-                    isLoadingVerifyOTP = false;
-                    const user = result.user;
-                    console.log('user:',user);
-                    firebase.auth().currentUser.getIdToken(true).then(function(idToken) {
-                        $.ajax({
-                            type: 'POST',
-                            url: window.location.href,
-                            data: {type: 'idToken', token: idToken},
-                            success: function(res){
-                                console.log('res idToken:',res);
-                                if( res.status ){
-                                    alert('Login Success');//Dòng này dùng tạm => Chạy product thì xoá đi
-                                    // window.location.reload();
-                                }else{
-                                    alert(res.message);
-                                }
-                            },
-                            error: function(err){
-                                alert("Có lỗi xảy ra vui lòng thử lại sau");
-                            }
-                        });
-                    }).catch(function(error) {
-                        alert("Có lỗi xảy ra vui lòng thử lại sau");
-                    });
-                }).catch((error) => {
-                    console.log('err verify otp:',error)
-                    isLoadingVerifyOTP = false;
-                    $(".img_loading").hide();
-                    alert(error.message);
-                });
-            }
-            
         }
     }, false)
+    verify_otp.addEventListener('click', e => {
+        var otp = $.trim($('#otp').val());
+        if( otp == '' || otp.length != 6 ){
+            toastr['warning']('Vui lòng nhập mã xác nhận!');
+        }else{
+            if( isLoadingVerifyOTP ){
+                toastr['success']('OTP đang được xác minh. Xin vui lòng đợi');
+                return false;
+            }
+            isLoadingVerifyOTP = true;
+            $(".img_loading").show();
+            window.confirmationResult.confirm(otp).then((result) => {
+                // User signed in successfully.
+                $(".img_loading").hide();
+                isLoadingVerifyOTP = false;
+                const user = result.user;
+                console.log('user:',user);
+                firebase.auth().currentUser.getIdToken(true).then(function(idToken) {
+                    $.ajax({
+                        type: 'POST',
+                        url: window.location.href,
+                        data: {type: 'idToken', token: idToken},
+                        success: function(res){
+                            console.log('res idToken:',res);
+                            if( res.status ){
+                                toastr['success']('Đăng nhập thành công');
+                                setTimeout(function(){
+                                    window.location.href = '/';
+                                },200);
+                            }else{
+                                alert(res.message);
+                            }
+                        },
+                        error: function(err){
+                            toastr['error']('Có lỗi xảy ra vui lòng thử lại sau');
+                        }
+                    });
+                }).catch(function(error) {
+                    toastr['error']('Có lỗi xảy ra vui lòng thử lại sau');
+                });
+            }).catch((error) => {
+                console.log('err verify otp:',error)
+                isLoadingVerifyOTP = false;
+                $(".img_loading").hide();
+                alert(error.message);
+            });
+        }
+    }, false);
 
     $(".type_login").click(function(){
         $('.content_form').hide();
@@ -190,4 +212,4 @@
         $('#otp').hide();
     });
 }())
-</script>
+</script> -->

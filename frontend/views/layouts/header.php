@@ -39,6 +39,8 @@ if (in_array($controller . '/' . $action, $not_show_search)) {
 }
 
 $allCategory = ApiNewController::AllCategory();
+
+$isGuest = Yii::$app->user->isGuest;
 ?>
 
 <div id="header">
@@ -103,10 +105,17 @@ $allCategory = ApiNewController::AllCategory();
                         <img src="/images/icon/vi-icon.svg" alt="">
                         <p>Ví</p>
                     </a>
-                    <a href="<?= Url::to(['/site/login']) ?>">
-                        <img src="/images/icon/user-icon.svg" alt="">
-                        <p>Đăng Nhập</p>
+                    <?php if($isGuest){ ?>
+                        <a href="<?= Url::to(['/site/login']) ?>">
+                            <img src="/images/icon/user-icon.svg" alt="">
+                            <p>Đăng Nhập</p>
+                        </a>
+                    <?php }else{ ?>
+                      <a href="<?= Url::to(['/info/acc-info']) ?>">
+                        <img src="<?= Yii::$app->user->identity->avatar ? Yii::$app->user->identity->avatar : '/images/icon/user-icon.svg' ?>" alt="">
+                        <p><?= Yii::$app->user->identity->fullname ? Yii::$app->user->identity->fullname : 'Tài khoản' ?></p>
                     </a>
+                    <?php } ?>
                     <a href="<?= Url::to(['/cart/index']) ?>">
                         <img src="/images/icon/cart-icon.svg" alt="">
                         <p>Giỏ hàng</p>

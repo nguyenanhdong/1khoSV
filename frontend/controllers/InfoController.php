@@ -1,5 +1,10 @@
 <?php
 namespace frontend\controllers;
+
+use common\models\District;
+use common\models\Province;
+use common\models\Users;
+use Yii;
 use yii\web\Controller;
 
 /**
@@ -7,6 +12,14 @@ use yii\web\Controller;
  */
 class InfoController extends Controller
 {
+    public function beforeAction($action)
+    {
+        if (Yii::$app->user->isGuest) {
+            $this->redirect(['/site/login']);
+            return false; 
+        }
+        return parent::beforeAction($action);
+    }
     //Ví tích điểm
     public function actionAccPoints(){
         $this->view->title = 'Ví tích điểm';
@@ -16,7 +29,26 @@ class InfoController extends Controller
     //thông tin cá nhân
     public function actionAccInfo(){
         $this->view->title = 'Thông tin cá nhân';
-        return $this->render('account-info');
+        $model = Users::findOne(Yii::$app->user->identity->id);
+        if ($model->load(Yii::$app->request->post()) && $model->validate()) {
+            if($model->save()){
+                Yii::$app->session->setFlash('success', 'Cập nhật thành công');
+                return $this->redirect(['acc-info']);
+            }
+        }
+        $province = Province::getProvince();
+        $district = [];
+        if(!empty($model->province))
+            $district = District::getDistrict($model->province);
+
+        // echo '<pre>';
+        // print_r($district);
+        // echo '</pre>';die;
+        return $this->render('account-info', [
+            'model' => $model,
+            'province' => $province,
+            'district' => $district
+        ]);
     }
 
     //Lịch sử mua hàng Chờ xác nhận

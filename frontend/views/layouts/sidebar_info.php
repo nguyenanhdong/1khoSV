@@ -121,6 +121,6 @@ $action = Yii::$app->controller->action->id;
         <div class="sidebar_item">
             <a class="" href="">Xoá tài khoản <i class="far fa-angle-right"></i></a>
         </div>
-        <button class="log_out"><img src="/images/icon/logout.svg" alt="">Đăng Xuất</button>
+        <a href="<?= Url::to(['/site/logout']) ?>" class="log_out"><img src="/images/icon/logout.svg" alt="">Đăng Xuất</a>
     </div>
 </div>

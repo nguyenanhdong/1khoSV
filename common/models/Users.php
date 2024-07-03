@@ -1,48 +1,26 @@
 <?php
 namespace common\models;
-
 use Yii;
-use yii\base\NotSupportedException;
-use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveRecord;
 use yii\web\IdentityInterface;
 
-/**
- * User model
- *
- * @property integer $id
- * @property string $username
- * @property string $password_hash
- * @property string $password_reset_token
- * @property string $email
- * @property string $auth_key
- * @property integer $status
- * @property integer $created_at
- * @property string $password write-only password
- */
+
 class Users extends ActiveRecord implements IdentityInterface
 {
-    const STATUS_DELETED = 0;
+    public $date_start;
+    public $date_end;
+
+    const ACCOUNT_VERIFYED = 1;
+    const ACCOUNT_NOT_VERIFY = 1;
     const STATUS_ACTIVE = 1;
-    public $updated_at;
-    // public $created_at;
+    const STATUS_BANNED = 2;
 
     /**
      * @inheritdoc
      */
     public static function tableName()
     {
-        return 'users';
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function behaviors()
-    {
-        return [
-            TimestampBehavior::className(),
-        ];
+        return 'user';
     }
 
     /**
@@ -51,72 +29,34 @@ class Users extends ActiveRecord implements IdentityInterface
     public function rules()
     {
         return [
-            // ['status', 'default', 'value' => self::STATUS_ACTIVE],
-            // ['status', 'in', 'range' => [self::STATUS_ACTIVE, self::STATUS_DELETED]],
+            [['create_at','fullname','province','district'], 'safe'],
+            [['fullname','province','district','address','phone'], 'required','message'=>'{attribute} không được để trống'],
+            [['fullname'], 'string', 'max' => 255],
         ];
     }
+
+    /**
+     * @inheritdoc
+     */
     public function attributeLabels()
     {
         return [
-            'username' => 'Tài khoản đăng nhập',
-            'password' => 'Mật khẩu',
-            'email' => 'Email',
-            'is_active' => 'Trạng thái tài khoản',
-            'fullname'  => 'Họ tên',
-            'phone'     => 'Điện thoại',
+            'id' => 'ID',
+            'fullname' => 'Họ tên',
+            'create_at' => 'Ngày đăng ký',
+            'phone' => 'Số điện thoại',
+            'fb_id' => 'ID Facebook',
+            'apple_id' => 'ID Apple',
+            'gg_id'    => 'ID Google',
+            'address' => 'Địa chỉ',
+            'district' => 'Quận/Huyện',
+            'province' => 'Thành phố',
         ];
     }
-    /**
-     * @inheritdoc
-     */
-    public static function findIdentity($id)
-    {
-        return static::findOne(['id' => $id]);
-    }
 
+  
     /**
-     * @inheritdoc
-     */
-    public static function findIdentityByAccessToken($token, $type = null)
-    {
-        throw new NotSupportedException('"findIdentityByAccessToken" is not implemented.');
-    }
-
-    /**
-     * Finds user by username
-     *
-     * @param string $username
-     * @return static|null
-     */
-    public static function findByUsername($username)
-    {
-        return static::findOne(['username' => $username]);
-    }
-    
-    /**
-     * Finds user by password reset token
-     *
-     * @param string $token password reset token
-     * @return static|null
-     */
-    public static function findByPasswordResetToken($token)
-    {
-        
-    }
-
-    /**
-     * Finds out if password reset token is valid
-     *
-     * @param string $token password reset token
-     * @return bool
-     */
-    public static function isPasswordResetTokenValid($token)
-    {
-        
-    }
-
-    /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getId()
     {
@@ -124,7 +64,7 @@ class Users extends ActiveRecord implements IdentityInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getAuthKey()
     {
@@ -132,7 +72,7 @@ class Users extends ActiveRecord implements IdentityInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function validateAuthKey($authKey)
     {
@@ -147,11 +87,9 @@ class Users extends ActiveRecord implements IdentityInterface
      */
     public function validatePassword($password)
     {
-        return $this->password === md5(md5($password));
-        // return $this->userpass === md5(md5($password));
-        // return Yii::$app->security->validatePassword($password, $this->password_hash);
+        return md5(md5($password)) == $this->password;
     }
-    
+
     /**
      * Generates password hash from password and sets it to the model
      *
@@ -160,7 +98,6 @@ class Users extends ActiveRecord implements IdentityInterface
     public function setPassword($password)
     {
         $this->password = md5(md5($password));
-        // $this->password_hash = Yii::$app->security->generatePasswordHash($password);
     }
 
     /**
@@ -179,6 +116,11 @@ class Users extends ActiveRecord implements IdentityInterface
         $this->password_reset_token = Yii::$app->security->generateRandomString() . '_' . time();
     }
 
+    public function generateEmailVerificationToken()
+    {
+        $this->verification_token = Yii::$app->security->generateRandomString() . '_' . time();
+    }
+
     /**
      * Removes password reset token
      */
@@ -186,8 +128,16 @@ class Users extends ActiveRecord implements IdentityInterface
     {
         $this->password_reset_token = null;
     }
-    public function generateEmailVerificationToken()
-    {
-        $this->verification_token = substr(str_shuffle(str_repeat($x='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', ceil(30/strlen($x)) )),1,30) . '_' . time();
+
+    public static function findIdentity($id){        
+         return static::findOne(['id'=>$id,'status'=>self::STATUS_ACTIVE]);
     }
+   /* modified */
+    public static function findIdentityByAccessToken($token, $type = null){
+          return static::findOne(['access_token' =>$token]);
+    }
+    public static function findByPhone($phone){
+        return static::findOne(['phone'=>$phone,'status'=>self::STATUS_ACTIVE]);
+    }
+    
 }
