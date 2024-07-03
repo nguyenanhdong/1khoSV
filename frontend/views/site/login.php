@@ -40,7 +40,7 @@
 
 
 <script src="https://www.gstatic.com/firebasejs/5.2.0/firebase.js"></script>
-<!-- <script type="text/javascript">
+<script type="text/javascript">
     (function() {
     console.log('Start file login with firebase');
     // Initialize Firebase
@@ -212,4 +212,4 @@
         $('#otp').hide();
     });
 }())
-</script> -->
+</script>

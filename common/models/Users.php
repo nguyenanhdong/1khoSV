@@ -9,6 +9,7 @@ class Users extends ActiveRecord implements IdentityInterface
 {
     public $date_start;
     public $date_end;
+    public $auth_key;
 
     const ACCOUNT_VERIFYED = 1;
     const ACCOUNT_NOT_VERIFY = 1;
