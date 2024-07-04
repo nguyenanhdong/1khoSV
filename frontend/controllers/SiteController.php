@@ -137,6 +137,12 @@ class SiteController extends Controller
      */
     public function actionIndex()
     {
+        $session = Yii::$app->session;
+        $product_cart = $session->get('list_product');
+        // echo '<pre>';
+        // print_r($product_cart);
+        // echo '</pre>';die;
+        $session->destroy();
         // $modelLogin = new AccountLoginFirebaseForm();
         // $modelLogin->phone = '+84983182596';
         // if( $modelLogin->login() ){

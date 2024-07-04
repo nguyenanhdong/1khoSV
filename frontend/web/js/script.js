@@ -588,9 +588,11 @@ $(document).on('click', '.option_product', function () {
           type: 'POST',
           data: {productId: productId, arrOptionId:arrOptionId},
           success: function (res) {
-            if (res) {
-              $('.price_product').text(res);
-            }
+            console.log(res.classification_id);
+            if (res.price) 
+              $('.price_product').text(res.price);
+            if(res.classification_id)
+              $('#classification_id').val(res.classification_id);
           }
         });
     }
@@ -600,6 +602,7 @@ $(document).on('click', '#add_cart', function () {
   let totalClassification = $('#total_classification').val();
   let productId = $('#product_id').val();
   let productQty = $('.quantity_product').val();
+  let classificationId = $('#classification_id').val();
   let arrOptionId = [];
   $('.option_product.active').each(function(){
     var optionId = $(this).attr('dt-id');
@@ -614,10 +617,10 @@ $(document).on('click', '#add_cart', function () {
   $.ajax({
     url: '/cart/add-cart',
     type: 'POST',
-    data: {productId: productId, arrOptionId:arrOptionId, productQty:productQty},
+    data: {productId: productId, classificationId:classificationId, productQty:productQty},
     success: function (res) {
       if (res == 1) {
-        toastr['success']('Thêm sản phẩm vào giỏ hàng thành công');
+        toastr['success']('Sản phẩm đã được thêm vào Giỏ hàng');
       }
     }
   });
@@ -633,6 +636,9 @@ $(document).on('click','.update_qty_product_cart', function(){
   } else {
     _inputQty.val(qtyCurrent + 1);
   }
+});
+$(document).on('click','#check_all_product', function(){
+  
 });
 //end js product
 

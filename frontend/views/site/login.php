@@ -181,7 +181,7 @@
                                 toastr['success']('Đăng nhập thành công');
                                 setTimeout(function(){
                                     window.location.href = '/';
-                                },300);
+                                },500);
                             }else{
                                 alert(res.message);
                             }

@@ -3036,6 +3036,9 @@ input:checked[type="checkbox"] {
   background: #8F959E;
   border-radius: 50%;
 }
+.text_empty_cart{
+  min-height: 500px;
+}
 
 @media screen and (max-width: 768px) {
   .slider-comment-nav .slick-track{

@@ -2613,6 +2613,10 @@ input:checked[type=checkbox] {
   border-radius: 50%;
 }
 
+.text_empty_cart {
+  min-height: 500px;
+}
+
 @media screen and (max-width: 768px) {
   .slider-comment-nav .slick-track {
     width: 100% !important;

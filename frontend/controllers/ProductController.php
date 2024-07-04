@@ -29,22 +29,25 @@ class ProductController extends Controller
 
     //lấy giá sản phẩm khi chọn phân loại
     public function actionGetPrice(){
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         $productId = Yii::$app->request->post('productId', '');
         $arrOptionId = Yii::$app->request->post('arrOptionId', '');
-        $price = '';
+        $data['classification_id'] = '';
+        $data['price'] = '';
         if(!empty($productId)){
             $product = Product::getProductDetail($productId);
-            $price = HelperController::formatPrice($product['product_info']['price']);
+            $data['price'] = HelperController::formatPrice($product['product_info']['price']);
             $classificationData = $product['product_info']['classification_data'];
             if(!empty($classificationData)){
                 foreach ($classificationData as $row) {
                     if($row['classification_id'] == $arrOptionId){
-                        $price = HelperController::formatPrice($row['price']);
+                        $data['price'] = HelperController::formatPrice($row['price']);
+                        $data['classification_id'] = $row['id'];
                     }
                 }
             }
         }
-        return $price;
+        return $data;
     }
 
     public function actionViewMoreReview(){
