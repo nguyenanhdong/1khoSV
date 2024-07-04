@@ -5,7 +5,9 @@ use yii\web\View;
 use backend\models\Config;
 use frontend\controllers\HelperController;
 use yii\widgets\Breadcrumbs;
-
+// echo '<pre>';
+// print_r($product);
+// echo '</pre>';die;
 ?>
 <div class="container">
     <?php
@@ -57,11 +59,12 @@ use yii\widgets\Breadcrumbs;
                     <h1><?= $product['product_info']['name'] ?></h1>
                     <div class="product_rating flex-item-center">
                         <div class="rating_list flex-item-center">
+                            <?php 
+                                if($product['product_info']['star'] > 0) 
+                                    for($i = 0; $i < $product['product_info']['star'];$i++){
+                            ?>
                             <img src="/images/icon/star-product.svg" alt="star">
-                            <img src="/images/icon/star-product.svg" alt="star">
-                            <img src="/images/icon/star-product.svg" alt="star">
-                            <img src="/images/icon/star-product.svg" alt="star">
-                            <img src="/images/icon/star-product.svg" alt="star">
+                            <?php } ?>
                         </div>
                         <div class="rating_num flex-center">
                             <p><?= $product['product_info']['star'] ?> (<?= $product['product_info']['total_rating'] ?>)</p>
@@ -70,23 +73,24 @@ use yii\widgets\Breadcrumbs;
                         </div>
                     </div>
                     <div class="product_price flex-item-center">
-                        <span><?= HelperController::formatPrice($product['product_info']['price']) ?></span>
+                        <span class="price_product"><?= HelperController::formatPrice($product['product_info']['price']) ?></span>
                         <p>-<?= $product['product_info']['percent_discount'] ?>%</p>
                     </div>
                 </div>
-                <?php 
-                    if(!empty($product['product_info']['classification_group'])){
-                        foreach($product['product_info']['classification_group'] as $row){
-                ?>
+                <?php if(!empty($product['product_info']['classification_group'])){ ?>
+                    <div class="product_classification">
+                        <?php foreach($product['product_info']['classification_group'] as $row){ ?>
                             <div class="product_choose">
                                 <span><?= $row['name'] ?></span>
                                 <div class="list_code_product">
                                     <?php foreach($row['childs'] as $child){ ?>
-                                        <button dt-class="option_<?= $row['id'] ?>" dt-id="<?= $child['id'] ?>" class="choose_btn_code option_<?= $row['id'] ?>"><?= $child['name'] ?></button>
+                                        <button dt-class="option_<?= $row['id'] ?>" dt-id="<?= $child['id'] ?>" class="option_product option_<?= $row['id'] ?>"><?= $child['name'] ?></button>
                                     <?php } ?>
                                 </div>
                             </div>
-                <?php }} ?>
+                        <?php } ?>
+                    </div>
+                <?php } ?>
                 <div class="product_add_cart">
                     <div class="buy_now">
                         <div class="choose_number flex-center">
@@ -94,10 +98,10 @@ use yii\widgets\Breadcrumbs;
                             <input type="text" class="quantity_product" value="1">
                             <button class="update_qty" dt-type="increase">+</button>
                         </div>
-                        <button class="btn_action flex-center btn_buy_now"><img src="/images/icon/cart-icon.svg" alt="">Mua ngay</button>
+                        <button id="buy_now" class="btn_action flex-center btn_buy_now"><img src="/images/icon/cart-icon.svg" alt="">Mua ngay</button>
                     </div>
                     <div class="add_cart">
-                        <button class="btn_action bg_blue flex-center"><img src="/images/icon/cart.svg" alt="">Thêm vào giỏ</button>
+                        <button id="add_cart" class="btn_action bg_blue flex-center"><img src="/images/icon/cart.svg" alt="">Thêm vào giỏ</button>
                         <button class="btn_action bg_blue flex-center">Tư vấn</button>
                     </div>
                 </div>
@@ -161,64 +165,7 @@ use yii\widgets\Breadcrumbs;
             <?= $product['product_info']['description'] ?>
         </div>
     </section>
-    <?php if(!empty($product['review_info'])){ ?>
-        <section class="comment">
-            <h2>Đánh giá</h2>
-            <div class="comment_list">
-                <?php foreach($product['review_info'] as $row) { ?>
-                    <div class="comment_item">
-                        <img class="comment_avatar" src="<?= !empty($row['avatar']) ? $row['avatar'] : '/images/icon/user-icon.svg' ?>" alt="">
-                        <div class="comment_group_right">
-                            <div class="user_name flex-item-center">
-                                <p><?= $row['fullname'] ?></p>
-                                <span>•</span>
-                                <span><?= $row['date_review'] ?></span>
-                            </div>
-                            <p><?= $row['content'] ?></p>
-                            <?php if(!empty($row['video_image'])){  ?>
-                                <div class="video_image_comment slider-comment-nav">
-                                    <?php 
-                                        foreach($row['video_image'] as $link){ 
-                                            $is_video = false;
-                                            $element = '<div class="item_slide slide_nav"><img class="img_slide_nav" src="'. $link .'"></div>';
-                                            if(strpos($link, 'mp4') !== false)
-                                                $element = '<div class="item_slide slide_nav position-relative">
-                                                                <video class="img_slide_nav" width="640" height="360">
-                                                                    <source src="'. $link .'" type="video/mp4">
-                                                                    Your browser does not support the video tag.
-                                                                </video>
-                                                                <div class="icon_play flex-center"><img src="/images/icon/play.svg"></div>
-                                                            </div>';
-                                    ?>
-                                        <?= $element ?>
-                                    <?php } ?>
-                                </div>
-                                 <div class="video_image_comment slider-comment-for hide">
-                                    <?php 
-                                        foreach($row['video_image'] as $link){ 
-                                            $is_video = false;
-                                            $element = '<div class="item_slide item_for"><img class="" src="'. $link .'"></div>';
-                                            if(strpos($link, 'mp4') !== false)
-                                                $element = '<div class="item_slide item_for">
-                                                                <video class="" width="640" height="360" controls>
-                                                                    <source src="'. $link .'" type="video/mp4">
-                                                                    Your browser does not support the video tag.
-                                                                </video>
-                                                            </div>';
-                                    ?>
-                                        <?= $element ?>
-                                    <?php } ?>
-                                </div>
-                            <?php } ?>
-                        </div>
-                    </div>
-                <?php } ?>
-            </div>
-            <div class="more_comment">
-                <button product-id="<?= $_GET['id'] ?>" class="see_more_comment">Xem thêm</button>
-            </div>
-        </section>
-    <?php } ?>
+    <?= $this->render('/product/template-comment', ['product' => $product]) ?>
     <?php if(!empty($product['product_suggest'])){ ?>
         <section class="product_relate">
             <h2>Sản phẩm gợi ý</h2>
@@ -245,3 +192,5 @@ use yii\widgets\Breadcrumbs;
         </section>
     <?php } ?>
 </div>
+<input type="hidden" id="total_classification" value="<?= !empty($product['product_info']['classification_group']) ? count($product['product_info']['classification_group']) : 0 ?>"> 
+<input type="hidden" id="product_id" value="<?= $product['product_info']['id'] ?>">  

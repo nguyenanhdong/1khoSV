@@ -27,6 +27,26 @@ class ProductController extends Controller
         ]);
     }
 
+    //lấy giá sản phẩm khi chọn phân loại
+    public function actionGetPrice(){
+        $productId = Yii::$app->request->post('productId', '');
+        $arrOptionId = Yii::$app->request->post('arrOptionId', '');
+        $price = '';
+        if(!empty($productId)){
+            $product = Product::getProductDetail($productId);
+            $price = HelperController::formatPrice($product['product_info']['price']);
+            $classificationData = $product['product_info']['classification_data'];
+            if(!empty($classificationData)){
+                foreach ($classificationData as $row) {
+                    if($row['classification_id'] == $arrOptionId){
+                        $price = HelperController::formatPrice($row['price']);
+                    }
+                }
+            }
+        }
+        return $price;
+    }
+
     public function actionViewMoreReview(){
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         $product_id     = Yii::$app->request->post('product_id', '');

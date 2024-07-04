@@ -253,6 +253,8 @@ class SiteController extends Controller
                         $modelAccount = new Users;
                         $modelAccount->phone = $phone;
                         $modelAccount->status = 1;
+                        $modelAccount->status = Users::STATUS_ACTIVE;
+                        $modelAccount->is_verify_account = Users::ACCOUNT_VERIFYED;
                         $modelAccount->create_at = date('Y-m-d H:i:s');
                         $modelAccount->save(false);
                     }

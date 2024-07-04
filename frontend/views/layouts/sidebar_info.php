@@ -4,17 +4,17 @@ use yii\helpers\Url;
 
 $controller = Yii::$app->controller->id;
 $action = Yii::$app->controller->action->id;
-
+$user = Yii::$app->user->identity;
 ?>
 
 <div class="voucher_sidebar">
     <div class="shop_info_bar">
         <div class="shop_avatar">
-            <img class="w-100" src="/images/page/lazada.png" alt="">
+            <img class="w-100" src="<?= $user->avatar ? $user->avatar : '/images/icon/user-icon.svg' ?>" alt="">
         </div>
         <div class="shop_des">
-            <p>Shop Máy Cày <img src="/images/icon/badge.svg" alt=""></p>
-            <span>Ví tích điểm <strong>1.000</strong> xu</span>
+            <p><?= $user->fullname ?> <img src="/images/icon/badge.svg" alt=""></p>
+            <span>Ví tích điểm <strong><?= $user->wallet_point ?></strong> xu</span>
         </div>
     </div>
     <div class="list_item_sidebar">

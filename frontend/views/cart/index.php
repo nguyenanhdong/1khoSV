@@ -3,6 +3,7 @@
 use yii\helpers\Url;
 use yii\web\View;
 use backend\models\Config;
+use frontend\controllers\HelperController;
 use yii\widgets\Breadcrumbs;
 
 ?>
@@ -26,32 +27,37 @@ use yii\widgets\Breadcrumbs;
                 <p>Thành tiền</p>
             </div>
             <div class="cart_list_product">
-                <?php for ($i = 0; $i < 4; $i++) { ?>
+                <?php 
+                    $total = 0;
+                    if(!empty($data)){
+                        foreach($data as $row){
+                        $total += $row['price']; 
+                ?>
                     <div class="cart_item_product">
                         <div class="choose_product">
-                            <input type="checkbox" name="" id="">
+                            <input type="checkbox" class="input_choose_product" value="<?= $row['id'] ?>">
                             <div class="img_product flex-center">
-                                <img src="/images/page/may-cay.png" alt="">
+                                <img src="<?= $row['images'] ?>" alt="">
                             </div>
                         </div>
                         <div class="desc_product">
                             <div class="d-flex flex-column">
-                                <a href="">Máy cày Kubota sử dụng công nghệ mới</a>
-                                <span class="discount">-36%</span>
+                                <a href=""><?= $row['name'] ?></a>
+                                <span class="discount">-<?= $row['percent_discount'] ?>%</span>
                             </div>
                             <div>
-                                <p>200.000</p>
+                                <p><?= $row['price_format'] ?></p>
                             </div>
                             <div class="number_product">
-                                <button class="btn-smale flex-center"><img src="/images/icon/arrow-up.svg" alt=""></button>
-                                <span>1</span>
-                                <button class="btn-smale flex-center"><img src="/images/icon/arrow-down.svg" alt=""></button>
+                                <button dt-type="decrease" class="update_qty_product_cart btn-smale flex-center"><img src="/images/icon/arrow-down.svg" alt=""></button>
+                                <input type="text" class="quantity_product" value="<?= $row['qty'] ?>">
+                                <button dt-type="increase" class="update_qty_product_cart btn-smale flex-center"><img src="/images/icon/arrow-up.svg" alt=""></button>
                             </div>
-                            <span class="price_cart">200.000</span>
+                            <span class="price_cart"><?= $row['price_format'] ?></span>
                             <button class="btn-smale flex-center delete_cart"><img src="/images/icon/delete.svg" alt=""></button>
                         </div>
                     </div>
-                <?php } ?>
+                <?php }} ?>
             </div>
         </div>
     </section>
@@ -102,7 +108,7 @@ use yii\widgets\Breadcrumbs;
             <div class="info_payment d-flex flex-column">
                 <div>
                     <p>Giá</p>
-                    <span>200.000</span>
+                    <span class="price_order"><?= HelperController::formatPrice($total) ?></span>
                 </div>
                 <div>
                     <p>Phí ship</p>
@@ -116,7 +122,7 @@ use yii\widgets\Breadcrumbs;
                 </div>
                 <div>
                     <p>Tổng</p>
-                    <span>220.000</span>
+                    <span class="total_price_order">220.000</span>
                 </div>
                 <button class="btn_action btn-orange btn_order flex-center">ĐẶT HÀNG</button>
             </div>

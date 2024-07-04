@@ -96,7 +96,7 @@ function slideImage(){
 window.addEventListener('resize', slideImage);
 //end js image product
 
-$(document).on('click','.choose_btn_code',function(){
+$(document).on('click','.option_product',function(){
   let classCurrent = $(this).attr('dt-class');
   $('.'+classCurrent).removeClass('active');
   $(this).addClass('active');
@@ -421,7 +421,7 @@ $(document).on('click','.btn_sort_shop', function(){
 $(document).on('click','.see_more_shop', function(){
   page_product_shop ++;
   let _this = $(this);
-  _this.append('<i class="spinner-border text-light"></i>')
+  _this.append('<i class="spinner-border text-light"></i>');
   let sort = $('.btn_sort_shop.active').attr('sort');
   let shop_id = $('.see_more_shop').attr('shop-id');
   if(checkSendAjaxProductShop){
@@ -452,16 +452,21 @@ function getProductShop(sort = null, page = null, shop_id = null){
 }
 
 
-$(document).on('click','.btn_login', function(){
-  $('.verify_otp').show(500);
-  $('.login_group').remove();
-});
-$(document).on('click','#verify_otp', function(){
-  toastr['success']('Đăng nhập thành công');
-  setTimeout(function(){
-      window.location.href = '/';
-  },200);
-});
+// $(document).on('click', '.btn_login', function () {
+//   $(this).append('<i class="spinner-border text-light"></i>');
+//   setTimeout(function () {
+//     $('.verify_otp').show(500);
+//     $('.login_group').remove();
+//   }, 2000);
+// });
+// $(document).on('click','#verify_otp', function(){
+//   $(this).append('<i class="spinner-border text-light"></i>');
+//   toastr['success']('Đăng nhập thành công');
+//   setTimeout(function(){
+//     $('#verify_otp').find('.spinner-border').remove();
+//       // window.location.href = '/';
+//   },1000);
+// });
 $(document).on('change','#users-province', function(){
   let province_name = $(this).val();
   $.ajax({
@@ -564,7 +569,72 @@ document.addEventListener("DOMContentLoaded", function () {
   // Initial focus on first OTP input field
   otpInputs[0].focus();
 });
-// end render OPT login 
+// end render OPT login
+
+//js product
+//get price product
+$(document).on('click', '.option_product', function () {
+  let totalClassification = $('#total_classification').val();
+  let productId = $('#product_id').val();
+  let arrOptionId = [];
+  $('.option_product.active').each(function(){
+    var optionId = $(this).attr('dt-id');
+    arrOptionId.push(optionId);
+  });
+  if (totalClassification > 0) {
+    if (totalClassification == arrOptionId.length) {
+        $.ajax({
+          url: '/product/get-price',
+          type: 'POST',
+          data: {productId: productId, arrOptionId:arrOptionId},
+          success: function (res) {
+            if (res) {
+              $('.price_product').text(res);
+            }
+          }
+        });
+    }
+  }
+});
+$(document).on('click', '#add_cart', function () {
+  let totalClassification = $('#total_classification').val();
+  let productId = $('#product_id').val();
+  let productQty = $('.quantity_product').val();
+  let arrOptionId = [];
+  $('.option_product.active').each(function(){
+    var optionId = $(this).attr('dt-id');
+    arrOptionId.push(optionId);
+  });
+  if (totalClassification > 0) {
+    if (totalClassification > arrOptionId.length) {
+      toastr['warning']('Vui lòng chọn Phân loại sản phẩm');
+      return;
+    }
+  }
+  $.ajax({
+    url: '/cart/add-cart',
+    type: 'POST',
+    data: {productId: productId, arrOptionId:arrOptionId, productQty:productQty},
+    success: function (res) {
+      if (res == 1) {
+        toastr['success']('Thêm sản phẩm vào giỏ hàng thành công');
+      }
+    }
+  });
+});
+$(document).on('click','.update_qty_product_cart', function(){
+  let type = $(this).attr('dt-type');
+  let _inputQty = $(this).parent().find('.quantity_product');
+  let qtyCurrent = parseInt(_inputQty.val());
+  
+  if (type == 'decrease') {
+    if (qtyCurrent > 1)
+      _inputQty.val(qtyCurrent - 1);
+  } else {
+    _inputQty.val(qtyCurrent + 1);
+  }
+});
+//end js product
 
 
 

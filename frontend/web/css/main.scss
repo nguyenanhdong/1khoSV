@@ -1018,6 +1018,9 @@ section {
 
       .shop_avatar {
         width: 87px;
+        height: 87px;
+        background: #ebebeb;
+        border-radius: 50%;
       }
 
       .shop_des {
@@ -1319,10 +1322,15 @@ section {
       line-height: 43px;
     }
 
-    .product_description {
+    .product_classification{
       border-bottom: 1px solid #E6E6E6;
+      border-top: 1px solid #E6E6E6;
+      padding-top: 30px;
+      padding-bottom: 10px;
+    }
+
+    .product_description {
       padding-bottom: 23px;
-      margin-bottom: 30px;
 
       .product_rating {
         margin: 14px 0;
@@ -1388,7 +1396,6 @@ section {
         display: grid;
         grid-template-columns: max-content auto;
         gap: 15px;
-        border-top: 1px solid #E6E6E6;
         padding-top: 30px;
         margin-top: 10px;
 
@@ -1419,6 +1426,12 @@ section {
       }
     }
   }
+}
+.quantity_product{
+  width: max-content;
+  max-width: 30px;
+  text-align: center;
+  background-color: unset !important;
 }
 
 .btn_action {

@@ -39,8 +39,12 @@ class District extends \yii\db\ActiveRecord
     }
 
     public static function getDistrict($province_name){
-        $province = Province::findOne(['province_name' =>$province_name]);
-        $district = ArrayHelper::map(District::find()->where(['province_id' => $province->id])->all(), 'district_name', 'district_name');
+        $district = [];
+        if(!empty($province_name)){
+            $province = Province::findOne(['province_name' =>$province_name]);
+            if(!empty($province))
+                $district = ArrayHelper::map(District::find()->where(['province_id' => $province->id])->all(), 'district_name', 'district_name');
+        }
         return $district;
     }
 }

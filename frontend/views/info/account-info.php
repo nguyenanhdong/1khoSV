@@ -34,7 +34,6 @@ use yii\widgets\ActiveForm;
                 <p class="color-gray">Trạng thái tài khoản</p>
                 <span class="active"><?= $model->is_verify_account == 1 ? 'Đã xác thực' : 'Chưa xác thực' ?></span>
             </div>
-            <!-- <form action=""> -->
             <?php $form = ActiveForm::begin(); ?>
                 <?= $form->field($model, 'fullname')->textInput(['maxlength' => true]) ?>
                 <?= $form->field($model, 'phone')->textInput(['maxlength' => true]) ?>
@@ -51,24 +50,11 @@ use yii\widgets\ActiveForm;
                             $model->province => ['Selected' => true]
                         ]
                     ]) ?>
-                    <!-- <div class="form-group">
-                        <label for="">Quận/Huyện</label>
-                        <select id="">
-                            <option value="">Chọn Quận/Huyện</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="">Thành phố</label>
-                        <select id="">
-                            <option value="">Thành phố</option>
-                        </select>
-                    </div> -->
                 </div>
                 <?= $form->field($model, 'address')->textInput(['maxlength' => true]) ?>
                 <div class="form-group">
                     <?= Html::submitButton('Lưu', ['class' => 'btn_action btn-orange flex-center']) ?>
                 </div>
-            <!-- </form> -->
              <?php ActiveForm::end(); ?>
         </div>
     </section>

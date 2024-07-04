@@ -117,7 +117,7 @@
         size: "invisible",
         callback: function(response) {
                 console.log('response:',response, window.confirmationResult);
-                alert("OTP code has been sent")
+                // alert("OTP code has been sent")
                 isLoadingSendOTP = false;
                 $(".img_loading").hide();
             }
@@ -125,6 +125,7 @@
     );
     
     btnPhone.addEventListener('click', e => {
+        $('#btnPhone').append('<i class="spinner-border text-light"></i>');
         console.log(111);
         if( !flagShowOtp ){
             console.log(222);
@@ -143,8 +144,6 @@
                 .then(function(confirmationResult) {
                 console.log(333);
                     flagShowOtp = true;
-                    // $('#phone_number').hide();772857
-                    // $('#otp').show();
                     $('.verify_otp').show(500);
                     $('.login_group').remove();
                     window.confirmationResult = confirmationResult;
@@ -153,6 +152,7 @@
         }
     }, false)
     verify_otp.addEventListener('click', e => {
+        // $('#verify_otp').append('<i class="spinner-border text-light"></i>');
         var otp = $.trim($('#otp').val());
         if( otp == '' || otp.length != 6 ){
             toastr['warning']('Vui lòng nhập mã xác nhận!');
@@ -176,11 +176,12 @@
                         data: {type: 'idToken', token: idToken},
                         success: function(res){
                             console.log('res idToken:',res);
+                            // $('#verify_otp').find('.spinner-border').remove();
                             if( res.status ){
                                 toastr['success']('Đăng nhập thành công');
                                 setTimeout(function(){
                                     window.location.href = '/';
-                                },200);
+                                },300);
                             }else{
                                 alert(res.message);
                             }
@@ -200,16 +201,5 @@
             });
         }
     }, false);
-
-    $(".type_login").click(function(){
-        $('.content_form').hide();
-        $('.content_' + $(this).val()).show();
-
-        flagShowOtp = false;
-        isLoadingSendOTP = false;
-        isLoadingVerifyOTP = false;
-        $('#phone_number').show();
-        $('#otp').hide();
-    });
 }())
 </script>

@@ -893,6 +893,9 @@ section h2 {
 }
 .voucher .voucher_sidebar .shop_info_bar .shop_avatar {
   width: 87px;
+  height: 87px;
+  background: #ebebeb;
+  border-radius: 50%;
 }
 .voucher .voucher_sidebar .shop_info_bar .shop_des {
   display: flex;
@@ -1126,10 +1129,14 @@ section h2 {
   font-size: 36px;
   line-height: 43px;
 }
-.product_info .product_info_right .product_description {
+.product_info .product_info_right .product_classification {
   border-bottom: 1px solid #E6E6E6;
+  border-top: 1px solid #E6E6E6;
+  padding-top: 30px;
+  padding-bottom: 10px;
+}
+.product_info .product_info_right .product_description {
   padding-bottom: 23px;
-  margin-bottom: 30px;
 }
 .product_info .product_info_right .product_description .product_rating {
   margin: 14px 0;
@@ -1185,7 +1192,6 @@ section h2 {
   display: grid;
   grid-template-columns: max-content auto;
   gap: 15px;
-  border-top: 1px solid #E6E6E6;
   padding-top: 30px;
   margin-top: 10px;
 }
@@ -1211,6 +1217,14 @@ section h2 {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 10px;
+}
+
+.quantity_product {
+  width: -moz-max-content;
+  width: max-content;
+  max-width: 30px;
+  text-align: center;
+  background-color: unset !important;
 }
 
 .btn_action {
