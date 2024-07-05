@@ -108,21 +108,21 @@ use yii\widgets\Breadcrumbs;
                 <div class="info_payment d-flex flex-column">
                     <div>
                         <p>Giá</p>
-                        <span class="price_order"><?= HelperController::formatPrice($total) ?></span>
+                        <span class="price_order">0</span>
                     </div>
                     <div>
                         <p>Phí ship</p>
-                        <span>20.000</span>
+                        <span class="fee_ship">0</span>
                     </div>
                     <div>
-                        <p><img src="/images/icon/vi.svg" alt=""> Sử dụng ví: 20.000</p>
+                        <p><img src="/images/icon/vi.svg" alt=""> Sử dụng ví: <span class="wallet_point">0</span></p>
                         <div class="center">
                             <input class="on_off" type="checkbox" />
                         </div>
                     </div>
                     <div>
                         <p>Tổng</p>
-                        <span class="total_price_order">220.000</span>
+                        <span class="total_price_order">0</span>
                     </div>
                     <button class="btn_action btn-orange btn_order flex-center">ĐẶT HÀNG</button>
                 </div>

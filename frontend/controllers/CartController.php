@@ -1,7 +1,10 @@
 <?php
 namespace frontend\controllers;
 
+use backend\models\Config;
 use backend\models\Product;
+use backend\models\UserDeliveryAddress;
+use backend\models\Voucher;
 use Yii;
 use yii\web\Controller;
 
@@ -84,5 +87,57 @@ class CartController extends Controller
         return $resStatus;
         // $product_cart = $session->get('list_product');
         // $session->destroy(); 
+    }
+
+    //lấy thông tin order khi chọn sản phẩm thanh toán
+    public function actionGetInfoOrder(){
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $session = Yii::$app->session;
+        $listProductId = Yii::$app->request->post('arrProductId', '');
+        $voucherId = Yii::$app->request->post('voucherId', 0);
+        $productCombination = [];
+        if(!empty($listProductId)){
+            $listProductCart = $session->get('list_product');
+            if(!empty($listProductCart)){
+                foreach($listProductCart as $product_id => $row){
+                    if(in_array($product_id, $listProductId)){
+                        $productCombination[] = [
+                            'id' => $row['classification_id'],
+                            'quantity' => $row['qty']
+                        ];
+                    }
+                }
+            }
+        }
+        $dataInfoOrder = $this->GetOrder($voucherId, $productCombination);
+        return $dataInfoOrder;
+    }
+    public static function GetOrder($voucherId, $productCombination){
+        $user = Yii::$app->user->identity;
+        $dataVoucher            = $voucherId > 0 ? Voucher::calculatePriceVoucherUse($user->id, $productCombination, $voucherId) : ["price" => "0", "price_org" => 0, "price_type" => 1];
+        
+        $price_order            = Product::getPriceOfOrder($productCombination);
+        $fee_ship               = Product::getFeeShipProduct($productCombination);
+        
+        $delivery_address       = UserDeliveryAddress::getDeliveryAddressOrderDefault($user->id);
+
+        $price_deduct           = $dataVoucher['price_org'] && $dataVoucher['price_type'] == 1 ? $dataVoucher['price_org'] : 0;
+
+        $price_voucher          = $dataVoucher['price'] == "0" ? "" : $dataVoucher['price'];
+
+        $total_price_order      = ($price_order + $fee_ship) - $price_deduct;
+
+        $bank_payment           = Config::getConfigApp("BANK_PAYMENT");
+
+        $dataRes                = [
+            'price_voucher'     => $price_voucher,
+            'fee_ship'          => $fee_ship,
+            'wallet_point'      => $user->wallet_point,
+            'price_order'       => $price_order,
+            'total_price_order' => $total_price_order,
+            'delivery_address'  => $delivery_address,
+            'bank_payment'      => $bank_payment
+        ];
+        return $dataRes;
     }
 }

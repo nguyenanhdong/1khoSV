@@ -638,14 +638,42 @@ $(document).on('click','.update_qty_product_cart', function(){
   }
 });
 $(document).on('click','#check_all_product', function(){
-  
+  let arrProductId = [];
+  if ($(this).prop('checked') == true) {
+    $('.input_choose_product').each(function () {
+      arrProductId.push($(this).val());
+    });
+    $('.input_choose_product').prop('checked', true);
+  } else {
+    $('.input_choose_product').prop('checked', false);
+  }
+  updateCart(arrProductId);
 });
+
+function updateCart(arrProductId) {
+  $.ajax({
+    url: '/cart/get-info-order',
+    type: 'POST',
+    data: {arrProductId:arrProductId},
+    success: function (res) {
+      if (res) {
+        $('.price_order').text(formatNumber(res.price_order));
+        $('.fee_ship').text(formatNumber(res.fee_ship));
+        $('.total_price_order').text(formatNumber(res.total_price_order));
+        $('.wallet_point').text(formatNumber(res.wallet_point));
+      }
+    }
+  });
+}
 //end js product
 
 
-
-
-
+function formatNumber(number) {
+  console.log(number);
+  number = number.toLocaleString('it-IT', {style : 'currency', currency : 'VND'});
+  number = number.replace("VND", "");
+  return number;
+}
 
 
 
