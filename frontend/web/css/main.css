@@ -2843,8 +2843,8 @@ input:checked[type=checkbox] {
     font-size: 13px;
     line-height: 19px;
   }
-  .cart .cart_group_product .cart_list_product .cart_item_product .desc_product .price_cart {
-    display: none;
+  .cart .cart_group_product .th_cart {
+    padding: 12px 40px;
   }
   .grid_50 {
     grid-template-columns: repeat(1, 1fr);

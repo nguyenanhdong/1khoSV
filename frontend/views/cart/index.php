@@ -4,7 +4,9 @@ use yii\helpers\Url;
 use yii\web\View;
 use backend\models\Config;
 use frontend\controllers\HelperController;
+use yii\bootstrap\ActiveForm;
 use yii\widgets\Breadcrumbs;
+use yii\helpers\Html;
 
 ?>
 <div class="container">
@@ -22,10 +24,11 @@ use yii\widgets\Breadcrumbs;
             <div class="cart_group_product">
                 <div class="th_cart">
                     <input type="checkbox" id="check_all_product">
-                    <p>Sản phẩm</p>
-                    <p>Đơn giá</p>
-                    <p>Số lượng</p>
-                    <p>Thành tiền</p>
+                    <label for="check_all_product" class="d-block d-lg-none m-0">Chọn tất cả sản phẩm</label>
+                    <p class="d-none d-lg-block">Sản phẩm</p>
+                    <p class="d-none d-lg-block">Đơn giá</p>
+                    <p class="d-none d-lg-block">Số lượng</p>
+                    <p class="d-none d-lg-block">Thành tiền</p>
                 </div>
                 <div class="cart_list_product">
                     <?php 
@@ -49,11 +52,11 @@ use yii\widgets\Breadcrumbs;
                                     <p><?= $row['price_format'] ?></p>
                                 </div>
                                 <div class="number_product">
-                                    <button dt-type="decrease" class="update_qty_product_cart btn-smale flex-center"><img src="/images/icon/arrow-down.svg" alt=""></button>
+                                    <button dt-type="decrease" prod-id="<?= $row['product_id'] ?>" class="update_qty_product_cart btn-smale flex-center"><img src="/images/icon/arrow-down.svg" alt=""></button>
                                     <input type="text" class="quantity_product" value="<?= $row['qty'] ?>">
-                                    <button dt-type="increase" class="update_qty_product_cart btn-smale flex-center"><img src="/images/icon/arrow-up.svg" alt=""></button>
+                                    <button dt-type="increase" prod-id="<?= $row['product_id'] ?>" class="update_qty_product_cart btn-smale flex-center"><img src="/images/icon/arrow-up.svg" alt=""></button>
                                 </div>
-                                <span class="price_cart"><?= $row['price_format'] ?></span>
+                                <span class="price_cart"><?= HelperController::formatPrice($row['price'] * $row['qty']) ?></span>
                                 <button class="btn-smale flex-center delete_cart"><img src="/images/icon/delete.svg" alt=""></button>
                             </div>
                         </div>
@@ -74,10 +77,12 @@ use yii\widgets\Breadcrumbs;
                             <div class="flex-center">
                                 <img src="/images/icon/map.svg" alt="">
                             </div>
-                            <div>
-                                <p>Số 50 Xuân Thuỷ, Cầu Giấy, Hà Nội</p>
-                                <span>Hà Nội</span>
-                            </div>
+                            <?php if(!empty($deliveryAddress)){ ?>
+                                <div>
+                                    <p><?= $deliveryAddress->address . ',' . $deliveryAddress->district . ', ' .$deliveryAddress->province  ?></p>
+                                    <span><?= $deliveryAddress->province ?></span>
+                                </div>
+                            <?php } ?>
                         </div>
                     </div>
                     <div class="type_text">
@@ -147,37 +152,34 @@ use yii\widgets\Breadcrumbs;
             </div>
             <div class="modal-body">
                 <h2>Địa chỉ giao hàng</h2>
-                <form action="">
-                    <div class="form-group">
-                        <label for="">Tên</label>
-                        <input type="text" placeholder="">
-                    </div>
+                <?php 
+                    $form = ActiveForm::begin([
+                        'id' => 'ajax-form-delivery',
+                        'options' => ['class' => 'form-horizontal'],
+                        'enableAjaxValidation' => true,
+                    ]); 
+                ?>
+                    <?= $form->field($deliveryAddress, 'fullname')->textInput(['maxlength' => true]) ?>
                     <div class="grid_50 g-15">
-                        <div class="form-group">
-                            <label for="">Quận/Huyện</label>
-                            <select id="">
-                                <option value="">Chọn Quận/Huyện</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="">Thành phố</label>
-                            <select id="">
-                                <option value="">Thành phố</option>
-                            </select>
-                        </div>
+                        <?= $form->field($deliveryAddress, 'province')->dropDownList($province, [
+                            'prompt' => 'Chọn tỉnh thành', 
+                            'options' => [
+                                $deliveryAddress->province => ['Selected' => true]
+                            ]
+                        ]) ?>
+                        <?= $form->field($deliveryAddress, 'district')->dropDownList($district, [
+                            'prompt' => 'Chọn quận huyện', 
+                            'options' => [
+                                $deliveryAddress->province => ['Selected' => true]
+                            ]
+                        ]) ?>
                     </div>
-                    <div class="form-group">
-                        <label for="">Số điện thoại</label>
-                        <input type="text" placeholder="">
-                    </div>
-                    <div class="form-group">
-                        <label for="">Địa chỉ</label>
-                        <input type="text" placeholder="">
-                    </div>
+                    <?= $form->field($deliveryAddress, 'phone')->textInput(['maxlength' => true]) ?>
+                    <?= $form->field($deliveryAddress, 'address')->textInput(['maxlength' => true]) ?>
                     <div class="form-group mt-4">
-                        <button class="btn_action btn-orange flex-center">Lưu</button>
+                        <?= Html::submitButton('Lưu', ['class' => 'btn_action btn-orange flex-center', 'id' => 'ajax-submit-delivery']) ?>
                     </div>
-                </form>
+                <?php ActiveForm::end(); ?>
             </div>
         </div>
     </div>

@@ -23,7 +23,8 @@ class UserDeliveryAddress extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            
+            [['user_id'], 'safe'],
+            [['fullname','province','district','address','phone'], 'required','message'=>'{attribute} không được để trống'],
         ];
     }
     
@@ -34,6 +35,11 @@ class UserDeliveryAddress extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
+            'fullname' => 'Họ tên',
+            'phone' => 'Số điện thoại',
+            'address' => 'Địa chỉ',
+            'district' => 'Quận/Huyện',
+            'province' => 'Thành phố',
         ];
     }
     

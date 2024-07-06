@@ -3323,11 +3323,11 @@ input:checked[type="checkbox"] {
   }
 
   .cart .cart_group_product .cart_list_product .cart_item_product .desc_product .price_cart {
-    display: none;
+    // display: none;
   }
 
-  .cart .cart_group_product .th_cart {
-    // display: none;
+  .cart .cart_group_product .th_cart{
+    padding: 12px 40px;
   }
 
   .grid_50 {
@@ -4029,6 +4029,7 @@ input:checked[type="checkbox"] {
 
   }
 }
+
 @media (min-width: 900px) {
   .notification-ui_icon .unread-notification {
     left: 20px;

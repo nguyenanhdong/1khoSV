@@ -5,6 +5,8 @@ use backend\models\Config;
 use backend\models\Product;
 use backend\models\UserDeliveryAddress;
 use backend\models\Voucher;
+use common\models\District;
+use common\models\Province;
 use Yii;
 use yii\web\Controller;
 
@@ -26,9 +28,6 @@ class CartController extends Controller
         $this->view->title = 'Giỏ hàng';
         $session = Yii::$app->session;
         $listProduct = $session->get('list_product');
-        // echo '<pre>';
-        // print_r($listProduct);
-        // echo '</pre>';die;
         $data = [];
         if(!empty($listProduct)){
             foreach ($listProduct as $productId => $row) {
@@ -47,11 +46,29 @@ class CartController extends Controller
                 }
             }
         }
-        // echo '<pre>';
-        // print_r($data);
-        // echo '</pre>';die;
+        $userId = Yii::$app->user->identity->id;
+        $deliveryAddress = UserDeliveryAddress::findOne(['user_id' => $userId, 'is_save_primary_address' => 1]);
+        $province = Province::getProvince();
+        $district = [];
+        if(!empty($deliveryAddress->province))
+            $district = District::getDistrict($deliveryAddress->province);
+        if ($deliveryAddress->load(Yii::$app->request->post())) {
+            if($deliveryAddress->validate()){
+                $deliveryAddress->save(false);
+                return $this->asJson(['success' => true]);
+            }else{
+                return $this->asJson(['success' => false, 'errors' => $deliveryAddress->errors]);
+            }
+            if($deliveryAddress->save()){
+                Yii::$app->session->setFlash('success', 'Cập nhật thành công');
+                return $this->redirect(['index']);
+            }
+        }
         return $this->render('index',[
-            'data' => $data
+            'data' => $data,
+            'deliveryAddress' => $deliveryAddress,
+            'province' => $province,
+            'district' => $district,
         ]);
     }
 
@@ -76,7 +93,7 @@ class CartController extends Controller
     public function actionAddCart(){
         $session = Yii::$app->session;
         $productId = Yii::$app->request->post('productId', '');
-        $classificationId = Yii::$app->request->post('classificationId', 0);
+        $classificationId = Yii::$app->request->post('classificationId', '');
         $productQty = Yii::$app->request->post('productQty', 1);
         $resStatus = 0;
         if(!empty($productId)){
@@ -140,4 +157,33 @@ class CartController extends Controller
         ];
         return $dataRes;
     }
+    public function actionUpdateInfoProduct(){
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $productId = Yii::$app->request->post('productId', '');
+        $qty = Yii::$app->request->post('qty', 1);
+
+        $session = Yii::$app->session;
+        $listProductCart = $session->get('list_product');
+
+        $dataInfoProduct = [];
+        if(!empty($productId) && !empty($listProductCart)){
+            $productCombination = [];
+            foreach($listProductCart as $product_id => $row){
+                $qtyNew = $row['qty'];
+                if($product_id == $productId){
+                    $qtyNew = $qty;
+                    $productCombination[] = [
+                            'id' => $row['classification_id'],
+                            'quantity' => $qtyNew
+                        ];
+                }
+                //update lai so luong san pham trong session
+                $_SESSION['list_product'][$product_id]['classification_id'] = $row['classification_id'];
+                $_SESSION['list_product'][$product_id]['qty'] = $qtyNew;
+            }
+            $dataInfoProduct = $this->GetOrder(0, $productCombination);
+        }
+        return $dataInfoProduct;
+    }
+
 }

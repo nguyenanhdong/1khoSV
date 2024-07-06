@@ -467,7 +467,7 @@ function getProductShop(sort = null, page = null, shop_id = null){
 //       // window.location.href = '/';
 //   },1000);
 // });
-$(document).on('change','#users-province', function(){
+$(document).on('change','#users-province, #userdeliveryaddress-province', function(){
   let province_name = $(this).val();
   $.ajax({
     url: '/helper/get-district',
@@ -479,7 +479,7 @@ $(document).on('change','#users-province', function(){
         $.each(res, function (key, value) {
           option += '<option value="'+key+'">'+ value +'</option>';
         });
-        $('#users-district').html(option);
+        $('#users-district, #userdeliveryaddress-district').html(option);
       }
     }
   });
@@ -625,10 +625,12 @@ $(document).on('click', '#add_cart', function () {
     }
   });
 });
-$(document).on('click','.update_qty_product_cart', function(){
+$(document).on('click', '.update_qty_product_cart', function () {
+  let _this = $(this);
   let type = $(this).attr('dt-type');
   let _inputQty = $(this).parent().find('.quantity_product');
   let qtyCurrent = parseInt(_inputQty.val());
+  let productId = $(this).attr('prod-id');
   
   if (type == 'decrease') {
     if (qtyCurrent > 1)
@@ -636,21 +638,41 @@ $(document).on('click','.update_qty_product_cart', function(){
   } else {
     _inputQty.val(qtyCurrent + 1);
   }
+  $.ajax({
+    url: '/cart/update-info-product',
+    type: 'POST',
+    data: {productId:productId, qty: _inputQty.val()},
+    success: function (res) {
+      if (res) {
+        _this.parent().parent().find('.price_cart').text(formatNumber(res.price_order));
+      }
+    }
+  });
+  setTimeout(function(){
+    updateCart();
+  }, 100);
 });
 $(document).on('click','#check_all_product', function(){
-  let arrProductId = [];
   if ($(this).prop('checked') == true) {
-    $('.input_choose_product').each(function () {
-      arrProductId.push($(this).val());
-    });
     $('.input_choose_product').prop('checked', true);
   } else {
     $('.input_choose_product').prop('checked', false);
   }
-  updateCart(arrProductId);
+  setTimeout(function(){
+    updateCart();
+  }, 100);
+});
+$(document).on('click','.input_choose_product', function(){
+  setTimeout(function(){
+    updateCart();
+  }, 100);
 });
 
-function updateCart(arrProductId) {
+function updateCart() {
+  let arrProductId = [];
+  $('.input_choose_product:checked').each(function () {
+    arrProductId.push($(this).val());
+  });
   $.ajax({
     url: '/cart/get-info-order',
     type: 'POST',
@@ -665,6 +687,31 @@ function updateCart(arrProductId) {
     }
   });
 }
+
+$('#ajax-submit-delivery').on('click', function(e) {
+    e.preventDefault();
+    
+    var form = $('#ajax-form-delivery');
+    
+    $.ajax({
+        url: form.attr('action'),
+        type: 'POST',
+        data: form.serialize(),
+        success: function(response) {
+            // Handle the response from the server
+            if(response.success) {
+              location.reload();
+            } else {
+              $.each(response.errors, function (key, val) {
+                toastr['warning'](val[0]);
+              });
+            }
+        },
+        error: function() {
+            toastr['warning']('Có lỗi vui lòng thử lại sau');
+        }
+    });
+});
 //end js product
 
 

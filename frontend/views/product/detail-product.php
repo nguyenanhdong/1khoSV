@@ -194,4 +194,4 @@ use yii\widgets\Breadcrumbs;
 </div>
 <input type="hidden" id="total_classification" value="<?= !empty($product['product_info']['classification_group']) ? count($product['product_info']['classification_group']) : 0 ?>"> 
 <input type="hidden" id="product_id" value="<?= $product['product_info']['id'] ?>">  
-<input type="hidden" id="classification_id" value="0">  
+<input type="hidden" id="classification_id" value="">  
