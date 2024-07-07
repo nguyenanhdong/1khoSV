@@ -993,6 +993,9 @@ section h2 {
   gap: 30px;
   position: relative;
 }
+.voucher .voucher_content .voucher_list .voucher_item .voucher_avatar img {
+  width: 100%;
+}
 .voucher .voucher_content .voucher_list .voucher_item .voucher_desc {
   display: flex;
   flex-direction: column;
@@ -1013,6 +1016,53 @@ section h2 {
   position: absolute;
   right: 7px;
   top: 7px;
+}
+
+#modalVoucherPayment .modal-content {
+  background: #e1e1e1 !important;
+}
+#modalVoucherPayment .modal-content .voucher_item {
+  background-image: url(/images/page/bg-voucher.png);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  padding: 25px 14px;
+  display: grid;
+  grid-template-columns: 73px auto 17px;
+  gap: 45px;
+  position: relative;
+}
+#modalVoucherPayment .modal-content .voucher_item .voucher_avatar img {
+  width: 100%;
+}
+#modalVoucherPayment .modal-content .voucher_item .use_voucher {
+  width: -moz-max-content;
+  width: max-content;
+}
+#modalVoucherPayment .modal-content .voucher_item .voucher_desc {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+#modalVoucherPayment .modal-content .voucher_item .voucher_desc span {
+  font-size: 16px;
+  font-weight: bold;
+}
+#modalVoucherPayment .modal-content .voucher_item .voucher_desc p {
+  color: #777777;
+  line-height: 15.5px;
+}
+#modalVoucherPayment .modal-content .voucher_item .voucher_desc a {
+  color: #0091ff;
+}
+#modalVoucherPayment .modal-content .voucher_item .tooltips {
+  position: absolute;
+  right: 7px;
+  top: 7px;
+}
+#modalVoucherPayment .modal-content .voucher_list_cart {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
 .voucher .voucher_content .voucher_list.active {
@@ -1585,7 +1635,7 @@ section h2 {
 
 .cart {
   border-radius: 10px;
-  padding-top: 18px;
+  padding: 18px 0;
 }
 .cart .cart_group_product .th_cart {
   background-color: #F6F6F6;
@@ -1759,6 +1809,7 @@ section h2 {
 
 .option-input.radio {
   border-radius: 50%;
+  margin: 0;
 }
 
 .option-input.radio::after {
@@ -2829,7 +2880,7 @@ input:checked[type=checkbox] {
   .cart .cart_group_product .cart_list_product {
     padding: 20px;
   }
-  .delete_cart {
+  .remove_product_cart {
     position: absolute;
     right: 0;
     bottom: 0;

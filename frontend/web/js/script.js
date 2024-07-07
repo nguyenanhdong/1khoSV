@@ -688,7 +688,7 @@ function updateCart() {
   });
 }
 
-$('#ajax-submit-delivery').on('click', function(e) {
+$(document).on('click', '#ajax-submit-delivery', function(e){
     e.preventDefault();
     
     var form = $('#ajax-form-delivery');
@@ -698,7 +698,6 @@ $('#ajax-submit-delivery').on('click', function(e) {
         type: 'POST',
         data: form.serialize(),
         success: function(response) {
-            // Handle the response from the server
             if(response.success) {
               location.reload();
             } else {
@@ -711,6 +710,66 @@ $('#ajax-submit-delivery').on('click', function(e) {
             toastr['warning']('Có lỗi vui lòng thử lại sau');
         }
     });
+});
+$(document).on('click', '.remove_product_cart', function(){
+  let _this = $(this);
+  let productId = $(this).attr('prod-id');
+  if (confirm('Bạn có trắc chắn muốn xoá sản phẩm')) {
+    $.ajax({
+        url: '/cart/remove-product-cart',
+        type: 'POST',
+        data: {productId: productId},
+        success: function(response) {
+          if(response){
+            _this.parent().parent().remove();
+            setTimeout(function(){
+              updateCart();
+            }, 500);
+          }
+        },
+        error: function() {
+            toastr['warning']('Có lỗi vui lòng thử lại sau');
+        }
+    });
+  }
+});
+$(document).on('click', '#submit_order', function(){
+  let delivery_address_id = $('#idDeliveryAddress').val();
+  let type_payment = $('.type_payment:checked').val();
+  let use_wallet_payment = $('#payment_point:checked').val();
+  let voucher_id = $('.input_voucher:checked').val();
+  let arr_product_id = [];
+  $('.input_choose_product:checked').each(function () {
+    arr_product_id.push($(this).val());
+  });
+  if(delivery_address_id == 0){
+    toastr['warning']('Vui lòng cập nhật Địa chỉ giao hàng');
+    return;
+  }
+  if(!type_payment){
+    toastr['warning']('Vui lòng chọn Phương thức thanh toán');
+    return;
+  }
+  if(!use_wallet_payment){
+    use_wallet_payment = 0;
+  }
+  if(!voucher_id){
+    voucher_id = 0;
+  }
+
+  $.ajax({
+      url: '/cart/order',
+      type: 'POST',
+      data: {delivery_address_id: delivery_address_id, type_payment:type_payment, use_wallet_payment:use_wallet_payment, voucher_id:voucher_id, arr_product_id, arr_product_id},
+      success: function(response) {
+        if(response.status){
+          toastr['warning']('Đặt hàng thành công');
+        }
+      },
+      error: function() {
+          toastr['warning']('Có lỗi vui lòng thử lại sau');
+      }
+  });
 });
 //end js product
 

@@ -57,7 +57,7 @@ use yii\helpers\Html;
                                     <button dt-type="increase" prod-id="<?= $row['product_id'] ?>" class="update_qty_product_cart btn-smale flex-center"><img src="/images/icon/arrow-up.svg" alt=""></button>
                                 </div>
                                 <span class="price_cart"><?= HelperController::formatPrice($row['price'] * $row['qty']) ?></span>
-                                <button class="btn-smale flex-center delete_cart"><img src="/images/icon/delete.svg" alt=""></button>
+                                <button prod-id="<?= $row['product_id'] ?>" class="btn-smale flex-center remove_product_cart"><img src="/images/icon/delete.svg" alt=""></button>
                             </div>
                         </div>
                     <?php } ?>
@@ -77,7 +77,7 @@ use yii\helpers\Html;
                             <div class="flex-center">
                                 <img src="/images/icon/map.svg" alt="">
                             </div>
-                            <?php if(!empty($deliveryAddress)){ ?>
+                            <?php if(!empty($deliveryAddress->province)){ ?>
                                 <div>
                                     <p><?= $deliveryAddress->address . ',' . $deliveryAddress->district . ', ' .$deliveryAddress->province  ?></p>
                                     <span><?= $deliveryAddress->province ?></span>
@@ -103,7 +103,7 @@ use yii\helpers\Html;
                     <div class="type_text">
                         <div class="title_type flex-item-center justify-content-between">
                             <p>Chọn voucher</p>
-                            <a href="">Chọn <img src="/images/icon/ar-right.svg" alt=""></a>
+                            <a href="javascript:;" data-toggle="modal" data-target="#modalVoucherPayment">Chọn <img src="/images/icon/ar-right.svg" alt=""></a>
                         </div>
                     </div>
                 </div>
@@ -120,16 +120,16 @@ use yii\helpers\Html;
                         <span class="fee_ship">0</span>
                     </div>
                     <div>
-                        <p><img src="/images/icon/vi.svg" alt=""> Sử dụng ví: <span class="wallet_point">0</span></p>
+                        <p><img src="/images/icon/vi.svg" alt=""> Sử dụng ví: <span class="wallet_point"><?= $user->wallet_point ?></span></p>
                         <div class="center">
-                            <input class="on_off" type="checkbox" />
+                            <input id="payment_point" class="on_off" type="checkbox" value="1" />
                         </div>
                     </div>
                     <div>
                         <p>Tổng</p>
                         <span class="total_price_order">0</span>
                     </div>
-                    <button class="btn_action btn-orange btn_order flex-center">ĐẶT HÀNG</button>
+                    <button id="submit_order" class="btn_action btn-orange btn_order flex-center">ĐẶT HÀNG</button>
                 </div>
             </div>
         </section>
@@ -197,12 +197,12 @@ use yii\helpers\Html;
             <div class="modal-body">
                 <h2>Thanh toán</h2>
                 <div class="type_payment">
-                    <input class="option-input radio" type="radio" name="type-payment">
+                    <input class="option-input radio type_payment" type="radio" name="type-payment" value="1">
                     <img src="/images/icon/bank.svg" alt="">
                     <p>Chuyển khoản qua ngân hàng</p>
                 </div>
                 <div class="type_payment">
-                    <input class="option-input radio" type="radio" name="type-payment">
+                    <input class="option-input radio type_payment" type="radio" name="type-payment" value="2">
                     <img src="/images/icon/car-ship.svg" alt="">
                     <p>Thanh toán khi nhận hàng (COD)</p>
                 </div>
@@ -210,3 +210,38 @@ use yii\helpers\Html;
         </div>
     </div>
 </div>
+
+<!-- Modal voucher payment -->
+<div class="modal fade" id="modalVoucherPayment" tabindex="-1" role="dialog" aria-labelledby="modalVoucherPaymentTitle" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="voucher_list_cart" id="unused">
+                    <?php
+                        if(!empty($dataVoucher)){
+                            foreach($dataVoucher as $row){
+                    ?>
+                        <div class="voucher_item voucher_item_cart">
+                            <div class="voucher_avatar flex-center">
+                                <img src="<?= $row['image'] ?>" alt="">
+                            </div>
+                            <div class="voucher_desc">
+                                <span><?= $row['name'] ?></span>
+                                <p><?= $row['desc'] ?></p>
+                            </div>
+                            <div class="use_voucher flex-center">
+                                <input class="option-input radio input_voucher" type="radio" name="vouche-payment" value="<?= $row['id'] ?>">
+                            </div>
+                        </div>
+                    <?php }} ?>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<input type="hidden" id="idDeliveryAddress" value="<?= isset($deliveryAddress->id) ? $deliveryAddress->id : 0 ?>">

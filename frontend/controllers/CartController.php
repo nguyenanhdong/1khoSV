@@ -2,6 +2,7 @@
 namespace frontend\controllers;
 
 use backend\models\Config;
+use backend\models\Order;
 use backend\models\Product;
 use backend\models\UserDeliveryAddress;
 use backend\models\Voucher;
@@ -26,9 +27,14 @@ class CartController extends Controller
     //Giỏ hàng
     public function actionIndex(){
         $this->view->title = 'Giỏ hàng';
+
+        //lay thong tin san pham co trong gio hang
         $session = Yii::$app->session;
         $listProduct = $session->get('list_product');
+        $userId = Yii::$app->user->identity->id;
         $data = [];
+        $productCombination = [];
+        $dataVoucher = [];
         if(!empty($listProduct)){
             foreach ($listProduct as $productId => $row) {
                 $product = Product::getProductDetail($productId);
@@ -44,14 +50,27 @@ class CartController extends Controller
                         'classification_id' => $row['classification_id']
                     ];
                 }
+                //lay thong tin voucher
+                $productCombination[] = [
+                    'id' => $row['classification_id'],
+                    'quantity' => $row['qty']
+                ];
+                $dataVoucher        = Voucher::getListVoucherCustomerOrder($userId, $productCombination);
             }
         }
-        $userId = Yii::$app->user->identity->id;
+
+        //cap nhat dia chi giao hang
         $deliveryAddress = UserDeliveryAddress::findOne(['user_id' => $userId, 'is_save_primary_address' => 1]);
         $province = Province::getProvince();
         $district = [];
         if(!empty($deliveryAddress->province))
             $district = District::getDistrict($deliveryAddress->province);
+
+        if(empty($deliveryAddress)){
+            $deliveryAddress = new UserDeliveryAddress();
+            $deliveryAddress->user_id = $userId;
+            $deliveryAddress->is_save_primary_address = 1;
+        }
         if ($deliveryAddress->load(Yii::$app->request->post())) {
             if($deliveryAddress->validate()){
                 $deliveryAddress->save(false);
@@ -64,11 +83,14 @@ class CartController extends Controller
                 return $this->redirect(['index']);
             }
         }
+
         return $this->render('index',[
             'data' => $data,
             'deliveryAddress' => $deliveryAddress,
             'province' => $province,
             'district' => $district,
+            'user' => Yii::$app->user->identity,
+            'dataVoucher' => $dataVoucher,
         ]);
     }
 
@@ -184,6 +206,72 @@ class CartController extends Controller
             $dataInfoProduct = $this->GetOrder(0, $productCombination);
         }
         return $dataInfoProduct;
+    }
+    public function actionRemoveProductCart(){
+        $session = Yii::$app->session;
+        $listProductCart = $session->get('list_product');
+        $productId = Yii::$app->request->post('productId', '');
+        $dataRes = false;
+        if(!empty($productId) && !empty($listProductCart)){
+            $session->destroy();
+            foreach($listProductCart as $product_id => $row){
+                if($product_id != $productId){
+                    //update lai so luong san pham trong session
+                    $_SESSION['list_product'][$product_id]['classification_id'] = $row['classification_id'];
+                    $_SESSION['list_product'][$product_id]['qty'] = $row['qty'];
+                }
+            }
+            $dataRes = true;
+        }
+        return $dataRes;
+    }
+
+    //function dat hang
+    public function actionOrder(){
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        $delivery_address_id    = Yii::$app->request->post('delivery_address_id');
+        $type_payment           = Yii::$app->request->post('type_payment');
+        $use_wallet_payment     = Yii::$app->request->post('use_wallet_payment');
+        $voucher_id             = Yii::$app->request->post('voucher_id');
+        $arr_product_order      = Yii::$app->request->post('arr_product_id');
+        $user                   = Yii::$app->user->identity;
+        $session = Yii::$app->session;
+        $listProductCart = $session->get('list_product');
+
+        $product_combination = [];
+        foreach($listProductCart as $product_id => $row){
+            if(in_array($product_id, $arr_product_order)){
+                $product_combination[] = [
+                    'id' => $row['classification_id'],
+                    'quantity' => $row['qty']
+                ];
+            }
+        }
+
+        $params = [
+            'delivery_address_id' => $delivery_address_id,
+            'type_payment' => $type_payment,
+            'use_wallet_payment' => $use_wallet_payment,
+            'voucher_id' => $voucher_id,
+            'product_combination' => $product_combination,
+        ];
+        $result     = Order::createNewOrder($params, $user);
+        // echo '<pre>';
+        // print_r($arr_product_order);
+        // echo '</pre>';die;
+        if($result['status']){ // dat hang thanh cong
+            //update lai danh sach san pham trong gio hang
+            foreach($listProductCart as $product_id => $row){
+                if(!in_array($product_id, $arr_product_order)){
+                    var_dump($product_id);die;
+                    $_SESSION['list_product'][$product_id]['classification_id'] = $row['classification_id'];
+                    $_SESSION['list_product'][$product_id]['qty'] = $row['qty'];
+                }
+            }
+        }
+        
+        return $result;
     }
 
 }
