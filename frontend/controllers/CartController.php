@@ -124,8 +124,6 @@ class CartController extends Controller
             $resStatus = 1;
         }
         return $resStatus;
-        // $product_cart = $session->get('list_product');
-        // $session->destroy(); 
     }
 
     //lấy thông tin order khi chọn sản phẩm thanh toán
@@ -151,6 +149,7 @@ class CartController extends Controller
         $dataInfoOrder = $this->GetOrder($voucherId, $productCombination);
         return $dataInfoOrder;
     }
+
     public static function GetOrder($voucherId, $productCombination){
         $user = Yii::$app->user->identity;
         $dataVoucher            = $voucherId > 0 ? Voucher::calculatePriceVoucherUse($user->id, $productCombination, $voucherId) : ["price" => "0", "price_org" => 0, "price_type" => 1];
@@ -179,6 +178,8 @@ class CartController extends Controller
         ];
         return $dataRes;
     }
+
+    // cap nhat so luong san pham trong gio hang
     public function actionUpdateInfoProduct(){
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         $productId = Yii::$app->request->post('productId', '');
@@ -207,18 +208,16 @@ class CartController extends Controller
         }
         return $dataInfoProduct;
     }
+    //xoa san pham trong gio hang
     public function actionRemoveProductCart(){
         $session = Yii::$app->session;
         $listProductCart = $session->get('list_product');
         $productId = Yii::$app->request->post('productId', '');
         $dataRes = false;
         if(!empty($productId) && !empty($listProductCart)){
-            $session->destroy();
             foreach($listProductCart as $product_id => $row){
-                if($product_id != $productId){
-                    //update lai so luong san pham trong session
-                    $_SESSION['list_product'][$product_id]['classification_id'] = $row['classification_id'];
-                    $_SESSION['list_product'][$product_id]['qty'] = $row['qty'];
+                if($product_id == $productId){
+                    unset($_SESSION['list_product'][$product_id]);
                 }
             }
             $dataRes = true;
@@ -263,10 +262,8 @@ class CartController extends Controller
         if($result['status']){ // dat hang thanh cong
             //update lai danh sach san pham trong gio hang
             foreach($listProductCart as $product_id => $row){
-                if(!in_array($product_id, $arr_product_order)){
-                    var_dump($product_id);die;
-                    $_SESSION['list_product'][$product_id]['classification_id'] = $row['classification_id'];
-                    $_SESSION['list_product'][$product_id]['qty'] = $row['qty'];
+                if(in_array($product_id, $arr_product_order)){
+                    unset($_SESSION['list_product'][$product_id]);
                 }
             }
         }

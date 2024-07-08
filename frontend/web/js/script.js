@@ -763,7 +763,7 @@ $(document).on('click', '#submit_order', function(){
       data: {delivery_address_id: delivery_address_id, type_payment:type_payment, use_wallet_payment:use_wallet_payment, voucher_id:voucher_id, arr_product_id, arr_product_id},
       success: function(response) {
         if(response.status){
-          toastr['warning']('Đặt hàng thành công');
+          toastr['success']('Đặt hàng thành công');
         }
       },
       error: function() {

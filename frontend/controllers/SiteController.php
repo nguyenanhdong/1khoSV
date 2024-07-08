@@ -139,10 +139,20 @@ class SiteController extends Controller
     {
         $session = Yii::$app->session;
         $product_cart = $session->get('list_product');
+   
+        foreach($product_cart as $product_id => $row){
+            if($product_id == 1){
+                unset($_SESSION['list_product'][$product_id]);
+            }
+        }
+
+        echo '<pre>';
+        print_r($product_cart);
+        echo '</pre>';die;
         // echo '<pre>';
         // print_r($product_cart);
         // echo '</pre>';die;
-        $session->destroy();
+        // $session->destroy();
         // $modelLogin = new AccountLoginFirebaseForm();
         // $modelLogin->phone = '+84983182596';
         // if( $modelLogin->login() ){
