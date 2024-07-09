@@ -98,10 +98,10 @@ use yii\widgets\Breadcrumbs;
                             <input type="text" class="quantity_product" value="1">
                             <button class="update_qty" dt-type="increase">+</button>
                         </div>
-                        <button id="buy_now" class="btn_action flex-center btn_buy_now"><img src="/images/icon/cart-icon.svg" alt="">Mua ngay</button>
+                        <button id="buy_now" dt-type="buynow" class="btn_action flex-center btn_buy_now"><img src="/images/icon/cart-icon.svg" alt="">Mua ngay</button>
                     </div>
                     <div class="add_cart">
-                        <button id="add_cart" class="btn_action bg_blue flex-center"><img src="/images/icon/cart.svg" alt="">Thêm vào giỏ</button>
+                        <button id="add_cart" dt-type="add-cart" class="btn_action bg_blue flex-center"><img src="/images/icon/cart.svg" alt="">Thêm vào giỏ</button>
                         <button class="btn_action bg_blue flex-center">Tư vấn</button>
                     </div>
                 </div>
