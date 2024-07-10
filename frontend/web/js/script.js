@@ -622,7 +622,7 @@ $(document).on('click', '#add_cart, #buy_now', function () {
     success: function (res) {
       if (res == 1) {
         if(typeBtn == 'buynow'){
-          window.location.href = '/cart/index'
+          window.location.href = '/cart/index';
         }
         toastr['success']('Sản phẩm đã được thêm vào Giỏ hàng');
       }
@@ -768,6 +768,9 @@ $(document).on('click', '#submit_order', function(){
       success: function(response) {
         if(response.status){
           toastr['success']('Đặt hàng thành công');
+          setTimeout(function(){
+            window.location.href = '/info/await-confirmed';
+          }, 1000);
         }
       },
       error: function() {
