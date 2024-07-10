@@ -1,6 +1,7 @@
 <?php
 namespace frontend\controllers;
 
+use backend\models\Order;
 use common\models\District;
 use common\models\Province;
 use common\models\Users;
@@ -41,9 +42,6 @@ class InfoController extends Controller
         if(!empty($model->province))
             $district = District::getDistrict($model->province);
 
-        // echo '<pre>';
-        // print_r($district);
-        // echo '</pre>';die;
         return $this->render('account-info', [
             'model' => $model,
             'province' => $province,
@@ -53,8 +51,15 @@ class InfoController extends Controller
 
     //Lịch sử mua hàng Chờ xác nhận
     public function actionAwaitConfirmed(){
+        $type = Order::STATUS_PENDING;
+        $userId = Yii::$app->user->identity->id;
+        $limit = 1;
+        $offset = 0;
+        $data = Order::getOrderOfUserByType($type, $userId, $limit, $offset);
         $this->view->title = 'Chờ xác nhận';
-        return $this->render('await-confirmed');
+        return $this->render('await-confirmed',[
+            'data' => $data
+        ]);
     } 
     //Lịch sử mua hàng Đã xác nhận
     public function actionConfirmed(){
@@ -72,9 +77,13 @@ class InfoController extends Controller
     return $this->render('purchase-history');
     } 
     //Lịch sử mua hàng Chi tiết đơn hàng
-    public function actionOrderDetail(){
+    public function actionOrderDetail($id){
+        $userId = Yii::$app->user->identity->id;
+        $data = Order::getOrderDetail($id, $userId);
         $this->view->title = 'Chi tiết đơn hàng';
-        return $this->render('order-detail');
+        return $this->render('order-detail',[
+            'data' => $data
+        ]);
     } 
     //sản phẩm yêu thích 
     public function actionFavourite(){

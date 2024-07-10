@@ -137,18 +137,18 @@ class SiteController extends Controller
      */
     public function actionIndex()
     {
-        $session = Yii::$app->session;
-        $product_cart = $session->get('list_product');
+        // $session = Yii::$app->session;
+        // $product_cart = $session->get('list_product');
    
-        foreach($product_cart as $product_id => $row){
-            if($product_id == 1){
-                unset($_SESSION['list_product'][$product_id]);
-            }
-        }
+        // foreach($product_cart as $product_id => $row){
+        //     if($product_id == 1){
+        //         unset($_SESSION['list_product'][$product_id]);
+        //     }
+        // }
 
-        echo '<pre>';
-        print_r($product_cart);
-        echo '</pre>';die;
+        // echo '<pre>';
+        // print_r($product_cart);
+        // echo '</pre>';die;
         // echo '<pre>';
         // print_r($product_cart);
         // echo '</pre>';die;

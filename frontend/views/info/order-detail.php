@@ -5,6 +5,7 @@ use yii\web\View;
 use backend\models\Config;
 use yii\widgets\Breadcrumbs;
 use backend\controllers\CommonController;
+use frontend\controllers\HelperController;
 
 ?>
 <div class="container">
@@ -23,23 +24,25 @@ use backend\controllers\CommonController;
         <?= $this->render('/layouts/sidebar_info') ?>
         <div class="order_detail_right">
             <div class="status_order">
-                <h2>Đơn hàng đã hoàn thành</h2>
-                <div class="note_order flex-item-center">
-                    <img src="/images/icon/note-order.svg" alt="">
-                    <p>Nếu hàng nhận được có vấn đề, bạn có thể gửi yêu cầu Trả hàng/Hoàn tiền trước 10-10-2023</p>
-                </div>
+                <h2><?= $data['status_name'] ?></h2>
+                <?php if(!empty($data['date_refund_expire'])){ ?>
+                    <div class="note_order flex-item-center">
+                        <img src="/images/icon/note-order.svg" alt="">
+                        <p>Nếu hàng nhận được có vấn đề, bạn có thể gửi yêu cầu Trả hàng/Hoàn tiền trước 10-10-2023</p>
+                    </div>
+                <?php } ?>
                 <div class="desc_item">
                     <div class="flex-center avatar_pro">
-                        <img src="/images/page/may-cay.png" alt="">
+                        <img src="<?= $data['product_info']['image'] ?>" alt="<?= $data['product_info']['name'] ?>">
                     </div>
                     <div class="text_desc d-flex flex-column">
-                        <p>Máy cày Kubota sử dụng công nghệ mới</p>
+                        <p><?= $data['product_info']['name'] ?></p>
                         <div class="flex-item-center">
-                            <strong>200.000</strong>
-                            <span>-36%</span>
+                            <strong><?= HelperController::formatPrice($data['product_info']['price']) ?></strong>
+                            <span>-<?= $data['product_info']['percent_discount'] ?>%</span>
                         </div>
                         <div class="flex-item-center justify-content-between">
-                            <p>Số lượng 1</p>
+                            <p>Số lượng <?= $data['product_info']['quantity'] ?></p>
                         </div>
                     </div>
                 </div>
@@ -55,8 +58,8 @@ use backend\controllers\CommonController;
                                 <img src="/images/icon/map.svg" alt="">
                             </div>
                             <div>
-                                <p>Số 50 Xuân Thuỷ, Cầu Giấy, Hà Nội</p>
-                                <span>Hà Nội</span>
+                                <p><?=  $data['shipping_info']['address'] .', ' . $data['shipping_info']['district'] . ', ' . $data['shipping_info']['province'] ?></p>
+                                <span><?= $data['shipping_info']['province'] ?></span>
                             </div>
                         </div>
                     </div>
@@ -69,8 +72,8 @@ use backend\controllers\CommonController;
                                 <img src="/images/icon/bank.svg" alt="">
                             </div>
                             <div>
-                                <p>MBBank</p>
-                                <span>**** 5647</span>
+                                <p><?= $data['bank_payment_info']['ten_bank'] ?></p>
+                                <span><?= $data['bank_payment_info']['stk'] ?></span>
                             </div>
                         </div>
                     </div>
@@ -79,15 +82,15 @@ use backend\controllers\CommonController;
                     <h2>Thanh toán</h2>
                     <div class="d-flex justify-content-between">
                         <p>Giá</p>
-                        <span>200.000</span>
+                        <span><?= HelperController::formatPrice($data['pay_info']['price']) ?></span>
                     </div>
                     <div class="d-flex justify-content-between">
                         <p>Phí ship</p>
-                        <span>30.000</span>
+                        <span><?= HelperController::formatPrice($data['pay_info']['fee_ship']) ?></span>
                     </div>
                     <div class="d-flex justify-content-between">
                         <p>Tổng</p>
-                        <span class="price_final">230.000</span>
+                        <span class="price_final"><?= HelperController::formatPrice($data['pay_info']['total_price']) ?></span>
                     </div>
                     <div class="action_history">
                         <button class="btn_action btn-blue flex-center">Trả hàng/Hoàn tiền</button>
