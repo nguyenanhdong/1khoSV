@@ -56,9 +56,11 @@ class InfoController extends Controller
         $limit = 1;
         $offset = 0;
         $data = Order::getOrderOfUserByType($type, $userId, $limit, $offset);
+        $dataCheckLoadMore = !empty(Order::getOrderOfUserByType($type, $userId, 1, $limit)) ? true : false;
         $this->view->title = 'Chờ xác nhận';
         return $this->render('await-confirmed',[
-            'data' => $data
+            'data' => $data,
+            'dataCheckLoadMore' => $dataCheckLoadMore
         ]);
     } 
     //Lịch sử mua hàng Đã xác nhận

@@ -780,6 +780,24 @@ $(document).on('click', '#submit_order', function(){
 });
 //end js product
 
+//js history order
+//find product page category
+var page_product_his = 0;
+var checkSendAjaxHis = true;
+$(document).on('click','.see_more_product_history', function(){
+  page_product_his ++;
+  let status = $(this).attr('dt-status');
+  let _this = $(this);
+  let cate_parent_id = _this.attr('cate-parent-id');
+  let cate_child_id = _this.attr('cate-child-id');
+  _this.append('<i class="spinner-border text-light"></i>')
+  let sort = $('.btn_sort.active').attr('sort');
+  if(checkSendAjaxHis){
+    checkSendAjaxHis = false;
+    getProductCategory(sort, page_product_his, cate_parent_id, cate_child_id)
+  }
+});
+
 
 function formatNumber(number) {
   console.log(number);

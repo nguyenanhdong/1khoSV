@@ -5,6 +5,7 @@ use yii\web\View;
 use backend\models\Config;
 use yii\widgets\Breadcrumbs;
 use backend\controllers\CommonController;
+use backend\models\Order;
 use frontend\controllers\HelperController;
 
 ?>
@@ -23,49 +24,56 @@ use frontend\controllers\HelperController;
     <section class="voucher">
         <?= $this->render('/layouts/sidebar_info') ?>
         <div class="history_right">
-            <?php 
-                if(!empty($data)){
-                    foreach($data as $row){
-            ?>
-                <div class="group_item_shop d-flex flex-column">
-                    <div class="title_shop d-flex justify-content-between">
-                        <p><?= $row['agent_name'] ?></p>
-                        <span>Chờ xác nhận</span>
-                    </div>
-                    <div class="item_shop">
-                        <div class="item_shop_left d-flex flex-column">
-                            <div class="desc_item">
-                                <div class="flex-center avatar_pro">
-                                    <img src="<?= $row['product_image'] ?>" alt="<?= $row['product_name'] ?>">
-                                </div>
-                                <div class="text_desc d-flex flex-column">
-                                    <p><?= $row['product_name'] ?></p>
-                                    <div class="flex-item-center">
-                                        <strong><?= HelperController::formatPrice($row['price']) ?></strong>
-                                        <span>-<?= $row['percent_discount'] ?>%</span>
+            <div class="product_info_list">
+                <?php 
+                    if(!empty($data)){
+                        foreach($data as $row){
+                ?>
+                    <div class="group_item_shop d-flex flex-column">
+                        <div class="title_shop d-flex justify-content-between">
+                            <p><?= $row['agent_name'] ?></p>
+                            <span>Chờ xác nhận</span>
+                        </div>
+                        <div class="item_shop">
+                            <div class="item_shop_left d-flex flex-column">
+                                <div class="desc_item">
+                                    <div class="flex-center avatar_pro">
+                                        <img src="<?= $row['product_image'] ?>" alt="<?= $row['product_name'] ?>">
                                     </div>
-                                    <div class="flex-item-center justify-content-between">
-                                        <p>Số lượng <?= $row['quantity'] ?></p>
-                                        <div class="rating_product flex-item-center">
-                                            <?php for($i = 0; $i < $row['star']; $i++){ ?>
-                                                <img src="/images/icon/star-active.svg" alt="">
-                                            <?php } ?>
+                                    <div class="text_desc d-flex flex-column">
+                                        <p><?= $row['product_name'] ?></p>
+                                        <div class="flex-item-center">
+                                            <strong><?= HelperController::formatPrice($row['price']) ?></strong>
+                                            <span>-<?= $row['percent_discount'] ?>%</span>
+                                        </div>
+                                        <div class="flex-item-center justify-content-between">
+                                            <p>Số lượng <?= $row['quantity'] ?></p>
+                                            <div class="rating_product flex-item-center">
+                                                <?php for($i = 0; $i < $row['star']; $i++){ ?>
+                                                    <img src="/images/icon/star-active.svg" alt="">
+                                                <?php } ?>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="item_shop_right d-flex flex-column">
-                            <div class="btn_item">
-                                <div class="action_form">
-                                    <a href="<?= Url::to(['/info/order-detail', 'id' => $row['order_id']]) ?>" class="btn_action btn-blue flex-center">Xem chi tiết</a>
-                                    <!-- <button class="btn_action btn-orange flex-center">Mua hàng</button> -->
+                            <div class="item_shop_right d-flex flex-column">
+                                <div class="btn_item">
+                                    <div class="action_form">
+                                        <a href="<?= Url::to(['/info/order-detail', 'id' => $row['order_id']]) ?>" class="btn_action btn-blue flex-center">Xem chi tiết</a>
+                                        <!-- <button class="btn_action btn-orange flex-center">Mua hàng</button> -->
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+                <?php }} ?>
+            </div>
+            <?php if($dataCheckLoadMore) { ?>
+                <div class="see_more_product">
+                    <button dt-status="<?= Order::STATUS_PENDING ?>" class="see_more_product_history">Xem thêm</button>
                 </div>
-            <?php }} ?>
+            <?php } ?>
         </div>
     </section>
 </div>

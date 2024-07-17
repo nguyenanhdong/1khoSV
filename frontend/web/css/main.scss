@@ -1257,7 +1257,7 @@ section {
   justify-content: center;
   margin-top: 20px;
 
-  .see_more_btn,.see_more_shop {
+  .see_more_btn,.see_more_shop,.see_more_product_history {
     border-radius: 30px;
     background-color: $brand;
     padding: 9px 22px;
@@ -2348,6 +2348,12 @@ input:checked[type="checkbox"] {
   display: flex;
   flex-direction: column;
   gap: 20px;
+
+  .product_info_list{
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
 
   .group_item_shop {
     background-color: $white;

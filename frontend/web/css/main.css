@@ -1074,7 +1074,7 @@ section h2 {
   justify-content: center;
   margin-top: 20px;
 }
-.see_more_product .see_more_btn, .see_more_product .see_more_shop {
+.see_more_product .see_more_btn, .see_more_product .see_more_shop, .see_more_product .see_more_product_history {
   border-radius: 30px;
   background-color: #0091ff;
   padding: 9px 22px;
@@ -2006,6 +2006,11 @@ input:checked[type=checkbox] {
 }
 
 .history_right {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.history_right .product_info_list {
   display: flex;
   flex-direction: column;
   gap: 20px;
