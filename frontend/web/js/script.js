@@ -786,15 +786,27 @@ var page_product_his = 0;
 var checkSendAjaxHis = true;
 $(document).on('click','.see_more_product_history', function(){
   page_product_his ++;
-  let status = $(this).attr('dt-status');
+  let type = $(this).attr('dt-type');
   let _this = $(this);
-  let cate_parent_id = _this.attr('cate-parent-id');
-  let cate_child_id = _this.attr('cate-child-id');
   _this.append('<i class="spinner-border text-light"></i>')
   let sort = $('.btn_sort.active').attr('sort');
   if(checkSendAjaxHis){
     checkSendAjaxHis = false;
-    getProductCategory(sort, page_product_his, cate_parent_id, cate_child_id)
+    $.ajax({
+      url: '/info/get-product-his',
+      type: 'POST',
+      data: {type: type, page: page_product_his},
+      success: function (res) {
+        _this.find('.spinner-border').remove();
+        checkSendAjaxHis = true;
+        if(res['data']){
+          $('.product_info_list').append(res['data']);
+        }
+        if(!res['checkLoadMore']){
+          $('.see_more_product').remove();
+        }
+      }
+    });
   }
 });
 

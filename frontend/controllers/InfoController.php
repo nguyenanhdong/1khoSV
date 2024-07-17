@@ -6,6 +6,7 @@ use common\models\District;
 use common\models\Province;
 use common\models\Users;
 use Yii;
+use yii\helpers\Url;
 use yii\web\Controller;
 
 /**
@@ -49,24 +50,120 @@ class InfoController extends Controller
         ]);
     }
 
+    public function actionGetProductHis(){
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $type = Yii::$app->request->post('type', '');
+        $page = !empty(Yii::$app->request->post('page')) ? Yii::$app->request->post('page') : 0;
+        $userId = Yii::$app->user->identity->id;
+        $response['data'] = '';
+        $response['checkLoadMore'] = false;
+        if($type != ''){
+            $limit = 2;
+            $offset = $page * $limit;
+            $offsetCheck = $limit + $offset + 1;
+            $data = Order::getOrderOfUserByType($type, $userId, $limit, $offset);
+            $dataCheckLoadMore = !empty(Order::getOrderOfUserByType($type, $userId, 1, $offsetCheck)) ? true : false;
+            $item = '';
+            if (!empty($data)) {
+                $title_item = '';
+                switch($type){
+                    case 'pending':
+                        $title_item = 'Chờ xác nhận';
+                        break;
+                    case 'confirm':
+                        $title_item = 'Đã xác nhận';
+                        break;
+                    case 'are_delivering':
+                        $title_item = 'Đang giao';
+                        break;
+                    case 'purchased':
+                        $title_item = 'Đã mua';
+                        break;
+                    case 'refund':
+                        $title_item = 'Trả hàng';
+                        break;
+                    default:
+                        break;
+                }
+                foreach ($data as $row) {
+                    $star = '';
+                    for($i = 0; $i < $row['star']; $i++){
+                        $star .= '<img src="/images/icon/star-active.svg" alt="">';
+                    }
+                    // $url = Url::to(['/product/detail', 'id' => $row['id']]);
+                    $item .= '<div class="group_item_shop d-flex flex-column">
+                                <div class="title_shop d-flex justify-content-between">
+                                    <p>'. $row['agent_name'].'</p>
+                                    <span>'. $title_item .'</span>
+                                </div>
+                                <div class="item_shop">
+                                    <div class="item_shop_left d-flex flex-column">
+                                        <div class="desc_item">
+                                            <div class="flex-center avatar_pro">
+                                                <img src="'. $row['product_image'].'" alt="'. $row['product_name'].'">
+                                            </div>
+                                            <div class="text_desc d-flex flex-column">
+                                                <p>'. $row['product_name'].'</p>
+                                                <div class="flex-item-center">
+                                                    <strong>'. HelperController::formatPrice($row['price']).'</strong>
+                                                    <span>-'. $row['percent_discount'].'%</span>
+                                                </div>
+                                                <div class="flex-item-center justify-content-between">
+                                                    <p>Số lượng '. $row['quantity'].'</p>
+                                                    <div class="rating_product flex-item-center">
+                                                        '. $star .'
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="item_shop_right d-flex flex-column">
+                                        <div class="btn_item">
+                                            <div class="action_form">
+                                                <a href="'. Url::to(['/info/order-detail', 'id' => $row['order_id']]).'" class="btn_action btn-blue flex-center">Xem chi tiết</a>
+                                                <!-- <button class="btn_action btn-orange flex-center">Mua hàng</button> -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>';
+                }
+            }
+            $response['data'] = $item;
+            $response['checkLoadMore'] = $dataCheckLoadMore;
+        }
+        return $response;
+    }
+
     //Lịch sử mua hàng Chờ xác nhận
     public function actionAwaitConfirmed(){
-        $type = Order::STATUS_PENDING;
+        $this->view->title = 'Chờ xác nhận';
+        $type = 'pending';
         $userId = Yii::$app->user->identity->id;
-        $limit = 1;
+        $limit = 2;
         $offset = 0;
         $data = Order::getOrderOfUserByType($type, $userId, $limit, $offset);
         $dataCheckLoadMore = !empty(Order::getOrderOfUserByType($type, $userId, 1, $limit)) ? true : false;
-        $this->view->title = 'Chờ xác nhận';
         return $this->render('await-confirmed',[
             'data' => $data,
-            'dataCheckLoadMore' => $dataCheckLoadMore
+            'dataCheckLoadMore' => $dataCheckLoadMore,
+            'status' => Order::STATUS_PENDING
         ]);
     } 
     //Lịch sử mua hàng Đã xác nhận
     public function actionConfirmed(){
         $this->view->title = 'Đã xác nhận';
-        return $this->render('confirmed');
+        $type = 'confirm';
+        $userId = Yii::$app->user->identity->id;
+        $limit = 2;
+        $offset = 0;
+        $data = Order::getOrderOfUserByType($type, $userId, $limit, $offset);
+        $dataCheckLoadMore = !empty(Order::getOrderOfUserByType($type, $userId, 1, $limit)) ? true : false;
+        return $this->render('confirmed', [
+            'data' => $data,
+            'dataCheckLoadMore' => $dataCheckLoadMore,
+            'status' => $type
+        ]);
     } 
     //Lịch sử mua hàng Đang giao
     public function actionDelivering(){
