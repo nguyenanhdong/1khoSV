@@ -28,7 +28,8 @@ class Advertisement extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            
+            [['category_id'],'required','message'=>'Chọn {attribute}'],
+            [['type_strain', 'brand_name', 'origin', 'title', 'description', 'kilometer_used', 'hours_of_use', 'production_year', 'fuel_id'],'required','message'=>'Nhập {attribute}']
         ];
     }
     
@@ -39,6 +40,29 @@ class Advertisement extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
+            'type' => 'Loại tin giao vặt',
+            'user_id' => 'Mã khách hàng',
+            'phone' => 'Số điện thoại',
+            'category_id' => 'Chuyên mục',
+            'video' => 'Link video sản phẩm',
+            'image' => 'Link ảnh sản phẩm',
+            'type_strain' => 'Chủng loại',
+            'load_capacity' => 'Trọng tải',
+            'state' => 'Tình trạng sản phẩm',
+            'brand_name' => 'Thương hiệu',
+            'origin' => 'Xuất xứ',
+            'title' => 'Tiêu đề',
+            'description' => 'Mô tả',
+            'kilometer_used' => 'Số km sử dụng',
+            'hours_of_use' => 'Số giờ sử dụng',
+            'production_year' => 'Năm sản xuất',
+            'fuel_id' => 'Nhiên liệu',
+            'Status' => 'Trạng thái',
+            'price' => 'Giá mua/bán',
+            'price_discount' => 'Giá khuyến mại',
+            'create_at' => 'Ngày tạo',
+            'date_publish' => 'Ngày được duyệt',
+            'is_hot' => 'Là tin hot',
         ];
     }
 
@@ -165,4 +189,5 @@ class Advertisement extends \yii\db\ActiveRecord
             'msg'    => 'Đăng tin thành công'
         ];
     }
+
 }

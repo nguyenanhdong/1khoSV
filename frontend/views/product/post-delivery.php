@@ -4,6 +4,14 @@ use yii\helpers\Url;
 use yii\web\View;
 use backend\models\Config;
 use yii\widgets\Breadcrumbs;
+use yii\widgets\ActiveForm;
+use yii\helpers\Html;
+
+$arrYear = [];
+$currentYear = date("Y");
+for ($year = $currentYear; $year >= 1900; $year--) {
+    $arrYear[$year] = $year;
+}
 
 ?>
 <div class="container">
@@ -19,79 +27,55 @@ use yii\widgets\Breadcrumbs;
     ?>
 
     <section class="post_delivery">
-        <form action="">
+        <?php if ($model->hasErrors() && !empty($model->getErrors('image'))): ?>
+            <div class="alert alert-danger">
+                <?php foreach ($model->getErrors('image') as $error): ?>
+                    <p><?= Html::encode($error) ?></p>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+        <?php $form = ActiveForm::begin([
+            'id' => 'post_delivery'
+        ]); ?>
             <h2>Đăng tin</h2>
             <div class="form-group">
                 <div class="box-image flex-center flex-column">
-                    <input type="file" class="hide_file">
+                    <!-- <input type="file" id="fileInput" class="hide_file" name="files[]" multiple accept="image/*,video/*"> -->
+                    <?= $form->field($model, 'image[]')->fileInput(['multiple' => true, 'id' => 'fileInput', 'accept' => 'image/*,video/*']) ?>
                     <img src="/images/icon/icon-img.svg" alt="">
                     <label for="">Chọn 3 video ngắn dưới 1 phút + 8 hình ảnh</label>
+                    <i class="error">Dung lượng ảnh tối đa 1MB, dung lượng video tối đa 20MB</i>
                 </div>
+                <div class="preview-box" id="previewBox"></div>
             </div>
-            <div class="form-group">
-                <label for="">Danh mục</label>
-                <select id="">
-                    <option value="">Chọn danh mục</option>
-                    <option value="">Chọn danh mục</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="">Thương hiệu</label>
-                <input type="text" placeholder="VD: Huyendai, Komatsu, Hitachi,...">
-            </div>
-            <div class="form-group">
-                <label for="">Chủng loại</label>
-                <input type="text" placeholder="VD: Pc 200 - 8, Hd500,...">
+            <?= $form->field($model, 'category_id')->dropDownList($formInfo['data']['list_category'], [
+                'prompt' => 'Chọn chuyên mục', 
+                'options' => [
+                    $model->category_id => ['Selected' => true]
+                ]
+            ]) ?>
+            <?= $form->field($model, 'brand_name')->textInput(['maxlength' => true, 'placeholder' => 'Nhập thương hiệu']) ?>
+            <?= $form->field($model, 'type_strain')->textInput(['maxlength' => true, 'placeholder' => 'VD: Pc 200 - 8, Hd500,...']) ?>
+            <div class="grid_50">
+                <?= $form->field($model, 'production_year')->dropDownList($arrYear, [
+                    'prompt' => 'Chọn năm sản xuất'
+                ]) ?>
+                <?= $form->field($model, 'origin')->textInput(['maxlength' => true, 'placeholder' => 'Nhập xuất xứ']) ?>
             </div>
             <div class="grid_50">
-                <div class="form-group">
-                    <label for="">Năm sản xuất</label>
-                    <select id="">
-                        <option value="">Chọn năm sản xuất</option>
-                        <option value="">Chọn năm sản xuất</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="">Xuất xứ</label>
-                    <select id="">
-                        <option value="">Xuất xứ</option>
-                    </select>
-                </div>
+                <?= $form->field($model, 'fuel_id')->textInput(['maxlength' => true, 'placeholder' => 'Nhập nhiên liệu']) ?>
+                <?= $form->field($model, 'kilometer_used')->textInput(['maxlength' => true, 'placeholder' => 'Nhập số km sử dụng']) ?>
             </div>
             <div class="grid_50">
-                <div class="form-group">
-                    <label for="">Nhiên liệu</label>
-                    <input type="text" placeholder="Nhập nhiên liệu">
-                </div>
-                <div class="form-group">
-                    <label for="">Số km sử dụng</label>
-                    <input type="text" placeholder="Số km sử dụng">
-                </div>
+                <?= $form->field($model, 'hours_of_use')->textInput(['maxlength' => true, 'placeholder' => 'Nhập số giờ sử dụng']) ?>
+                <?= $form->field($model, 'price')->textInput(['maxlength' => true, 'placeholder' => 'Nhập giá']) ?>
             </div>
-            <div class="grid_50">
-                <div class="form-group">
-                    <label for="">Số giờ sử dụng</label>
-                    <input type="text" placeholder="Nhập số giờ sử dụng">
-                </div>
-                <div class="form-group">
-                    <label for="">Giá</label>
-                    <input type="text" placeholder="Nhập giá">
-                </div>
-            </div>
-            <div class="grid_50">
-                <div class="form-group">
-                    <label for="">Mô tả chi tiết</label>
-                    <input type="text" placeholder="Mô tả chi tiết">
-                </div>
-                <div class="form-group">
-                    <label for="">Vị trí sản phẩm</label>
-                    <input type="text" placeholder="Vị trí sản phẩm">
-                </div>
-            </div>
+            <?= $form->field($model, 'title')->textInput(['maxlength' => true, 'placeholder' => 'Nhập tiêu đề']) ?>
+            <?= $form->field($model, 'description')->textarea(['maxlength' => true, 'placeholder' => 'Nhập mô tả']) ?>
             <div class="action_form">
                 <button class="btn_action btn-blue flex-center">XEM TRƯỚC</button>
-                <button class="btn_action btn-orange flex-center">ĐĂNG TIN</button>
+                <?= Html::submitButton('ĐĂNG TIN', ['class' => 'btn_action btn-orange flex-center']) ?>
             </div>
-        </form>
+        <?php ActiveForm::end(); ?>
     </section>
 </div>

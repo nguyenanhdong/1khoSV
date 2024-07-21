@@ -153,8 +153,9 @@ class SiteController extends Controller
         // print_r($product_cart);
         // echo '</pre>';die;
         // $session->destroy();
+
         // $modelLogin = new AccountLoginFirebaseForm();
-        // $modelLogin->phone = '+84983182596';
+        // $modelLogin->phone = '0983182596';
         // if( $modelLogin->login() ){
         //     return [
         //         'status' => true,

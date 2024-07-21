@@ -13,7 +13,7 @@ use frontend\controllers\HelperController;
     echo Breadcrumbs::widget([
         'homeLink' => ['label' => '', 'url' => '/'],
         'links' => [
-            ['label' => 'Lịch sử mua hàng', 'url' => ['']],
+            'Lịch sử mua hàng',
             'Chi tiết đơn hàng',
         ],
     ]);
@@ -28,7 +28,7 @@ use frontend\controllers\HelperController;
                 <?php if(!empty($data['date_refund_expire'])){ ?>
                     <div class="note_order flex-item-center">
                         <img src="/images/icon/note-order.svg" alt="">
-                        <p>Nếu hàng nhận được có vấn đề, bạn có thể gửi yêu cầu Trả hàng/Hoàn tiền trước 10-10-2023</p>
+                        <p>Nếu hàng nhận được có vấn đề, bạn có thể gửi yêu cầu Trả hàng/Hoàn tiền trước <?= $data['date_refund_expire'] ?></p>
                     </div>
                 <?php } ?>
                 <div class="desc_item">
@@ -67,6 +67,7 @@ use frontend\controllers\HelperController;
                         <div class="title_type flex-item-center justify-content-between">
                             <p>Phương thức thanh toán</p>
                         </div>
+                        <?php if($data['type_payment'] == 1){ ?>
                         <div class="type_text_item">
                             <div class="flex-center">
                                 <img src="/images/icon/bank.svg" alt="">
@@ -76,6 +77,9 @@ use frontend\controllers\HelperController;
                                 <span><?= $data['bank_payment_info']['stk'] ?></span>
                             </div>
                         </div>
+                        <?php }else{ ?>
+                            <p>Thanh toán khi nhận hàng</p>
+                        <?php } ?>
                     </div>
                 </div>
                 <div class="price_order">
@@ -93,7 +97,9 @@ use frontend\controllers\HelperController;
                         <span class="price_final"><?= HelperController::formatPrice($data['pay_info']['total_price']) ?></span>
                     </div>
                     <div class="action_history">
-                        <button class="btn_action btn-blue flex-center">Trả hàng/Hoàn tiền</button>
+                        <?php if(!empty($data['date_refund_expire'])){ ?>
+                            <button class="btn_action btn-blue flex-center">Trả hàng/Hoàn tiền</button>
+                        <?php } ?>
                         <button class="btn_action btn-orange flex-center">Đánh giá</button>
                     </div>
                 </div>

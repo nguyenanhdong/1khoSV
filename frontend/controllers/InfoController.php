@@ -1,6 +1,7 @@
 <?php
 namespace frontend\controllers;
 
+use backend\controllers\ApiNewController;
 use backend\models\Order;
 use common\models\District;
 use common\models\Province;
@@ -64,6 +65,7 @@ class InfoController extends Controller
             $data = Order::getOrderOfUserByType($type, $userId, $limit, $offset);
             $dataCheckLoadMore = !empty(Order::getOrderOfUserByType($type, $userId, 1, $offsetCheck)) ? true : false;
             $item = '';
+            $btn_action = '';
             if (!empty($data)) {
                 $title_item = '';
                 switch($type){
@@ -86,6 +88,12 @@ class InfoController extends Controller
                         break;
                 }
                 foreach ($data as $row) {
+                    $btn_action = '';
+                    $class_not_purchased = 'not_purchased';
+                    if($row['status'] == 3){
+                        $class_not_purchased = '';
+                        $btn_action = '<a href="'. Url::to(['/product/detail', 'id' => $row['product_id']]) .'" class="btn_action btn-orange flex-center">Mua lại</a>';
+                    }
                     $star = '';
                     for($i = 0; $i < $row['star']; $i++){
                         $star .= '<img src="/images/icon/star-active.svg" alt="">';
@@ -119,9 +127,9 @@ class InfoController extends Controller
                                     </div>
                                     <div class="item_shop_right d-flex flex-column">
                                         <div class="btn_item">
-                                            <div class="action_form">
+                                            <div class="action_form '. $class_not_purchased .'">
                                                 <a href="'. Url::to(['/info/order-detail', 'id' => $row['order_id']]).'" class="btn_action btn-blue flex-center">Xem chi tiết</a>
-                                                <!-- <button class="btn_action btn-orange flex-center">Mua hàng</button> -->
+                                                '. $btn_action .'
                                             </div>
                                         </div>
                                     </div>
@@ -168,12 +176,32 @@ class InfoController extends Controller
     //Lịch sử mua hàng Đang giao
     public function actionDelivering(){
         $this->view->title = 'Đang giao';
-        return $this->render('delivering');
+        $type = 'are_delivering';
+        $userId = Yii::$app->user->identity->id;
+        $limit = 2;
+        $offset = 0;
+        $data = Order::getOrderOfUserByType($type, $userId, $limit, $offset);
+        $dataCheckLoadMore = !empty(Order::getOrderOfUserByType($type, $userId, 1, $limit)) ? true : false;
+        return $this->render('delivering', [
+            'data' => $data,
+            'dataCheckLoadMore' => $dataCheckLoadMore,
+            'status' => $type
+        ]);
     } 
     //Lịch sử mua hàng Đã mua
     public function actionPurchaseHistory(){
         $this->view->title = 'Đã mua';
-    return $this->render('purchase-history');
+        $type = 'purchased';
+        $userId = Yii::$app->user->identity->id;
+        $limit = 2;
+        $offset = 0;
+        $data = Order::getOrderOfUserByType($type, $userId, $limit, $offset);
+        $dataCheckLoadMore = !empty(Order::getOrderOfUserByType($type, $userId, 1, $limit)) ? true : false;
+        return $this->render('purchase-history', [
+            'data' => $data,
+            'dataCheckLoadMore' => $dataCheckLoadMore,
+            'status' => $type
+        ]);
     } 
     //Lịch sử mua hàng Chi tiết đơn hàng
     public function actionOrderDetail($id){

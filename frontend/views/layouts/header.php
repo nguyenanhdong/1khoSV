@@ -1,6 +1,7 @@
 <?php
 
 use backend\controllers\ApiNewController;
+use backend\models\NotifyUser;
 use yii\helpers\Url;
 
 $controller = Yii::$app->controller->id;
@@ -41,6 +42,10 @@ if (in_array($controller . '/' . $action, $not_show_search)) {
 $allCategory = ApiNewController::AllCategory();
 
 $isGuest = Yii::$app->user->isGuest;
+
+if(!$isGuest)
+    $listNotify = NotifyUser::getListNotifyByUser(Yii::$app->user->identity->id);
+
 ?>
 
 <div id="header">
@@ -64,40 +69,49 @@ $isGuest = Yii::$app->user->isGuest;
                         <p>Rao vặt</p>
                     </a>
                     <div class="noti_gr position-relative">
-                        <a class="toggle_noti" href="javascript:;">
+                        <a class="toggle_noti" href="<?= $isGuest ? Url::to(['/site/login']) : 'javascript:;' ?>">
                             <img src="/images/icon/noti-icon.svg" alt="">
                             <p>Thông báo</p>
                         </a>
                         <div class="dropdown-menu notification-ui_dd" aria-labelledby="navbarDropdown">
                             <div class="notification-ui_dd-content">
-                                <?php for ($i = 0; $i < 10; $i++) { ?>
-                                    <div class="notification-list notification-list--unread" data-detail="<?= $i ?>">
+                                <?php
+                                    if(!empty($listNotify)){
+                                        foreach($listNotify as $row){
+                                            $orderDetail = [];
+                                            $href = 'javascript:;';
+                                            if($row['id_order'] != 0){
+                                                $href = Url::to(['/info/order-detail', 'id' => $row['id_order']]);
+                                            }else{
+                                                $orderDetail = NotifyUser::getDetailNotify($row['id'], Yii::$app->user->identity->id);
+                                            }
+                                ?>
+                                    <a href="<?= $href ?>" class="notification-list notification-list--unread" data-detail="<?= $row['id'] ?>">
                                         <div class="notification-list_img">
                                             <img src="/images/icon/noti.svg" alt="user">
                                         </div>
                                         <div class="notification-list_detail">
-                                            <p class="title_noti"><b>Thông báo 1</b></p>
-                                            <p>Reference site about Lorem Ipsum Ipsum Ipsum </p>
-                                            <span>14:00 - 20/08/2023</span>
+                                            <p class="title_noti"><b><?= $row['title'] ?></b></p>
+                                            <p><?= $row['desc'] ?> </p>
+                                            <span><?= $row['date'] ?></span>
                                         </div>
                                         <div class="notification-list_feature-img flex-item-center">
                                             <i class="fas fa-chevron-right"></i>
                                         </div>
-                                    </div>
-                                    <div class="notification_detail" id="noti_detail_<?= $i ?>">
-                                        <div class="btn_action_noti_detail d-flex justify-content-between">
-                                            <i class="far fa-arrow-left hide_noti_detail"></i>
-                                            <i class="fal fa-trash-alt remove_noti"></i>
+                                    </a>
+                                    <?php if(!empty($orderDetail)) { ?>
+                                        <div class="notification_detail" id="noti_detail_<?= $row['id'] ?>">
+                                            <div class="btn_action_noti_detail d-flex justify-content-between">
+                                                <i class="far fa-arrow-left hide_noti_detail"></i>
+                                                <i class="fal fa-trash-alt remove_noti"></i>
+                                            </div>
+                                            <div class="content_noti_detail">
+                                                <h4><?= $orderDetail['title'] ?></h4>
+                                                <?= $orderDetail['content'] ?>
+                                            </div>
                                         </div>
-                                        <div class="content_noti_detail">
-                                            <h4>What is Lorem Ipsum?</h4>
-                                            <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting Remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset.</p>
-                                            <p>Remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.</p>
-                                            <p>Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting
-                                            </p>
-                                        </div>
-                                    </div>
-                                <?php } ?>
+                                    <?php } ?>
+                                <?php }}?>
                             </div>
                         </div>
                     </div>
