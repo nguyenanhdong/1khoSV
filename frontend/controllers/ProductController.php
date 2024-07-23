@@ -172,7 +172,15 @@ class ProductController extends Controller
     //Giao vặt
     public function actionDelivery(){
         $this->view->title = 'Giao vặt';
-        return $this->render('delivery');
+        $listCategory   = Category::getListCateApp(0, 8, 0);
+        $deliveryHot = Advertisement::getAdvertisementHome(null, 100, null, null, 1);
+        // echo '<pre>';
+        // print_r($deliveryHot);
+        // echo '</pre>';die;
+        return $this->render('delivery',[
+            'listCategory' => $listCategory,
+            'deliveryHot' => $deliveryHot,
+        ]);
     }
 
     //Chi tiết giao vặt

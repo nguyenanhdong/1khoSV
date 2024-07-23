@@ -3,6 +3,7 @@
 use yii\helpers\Url;
 use yii\web\View;
 use backend\models\Config;
+use frontend\controllers\HelperController;
 use yii\widgets\Breadcrumbs;
 
 ?>
@@ -39,85 +40,47 @@ use yii\widgets\Breadcrumbs;
         <div class="sort_product">
             <p class="title_hot"><img src="/images/icon/hot.svg" alt=""> Tin hot dành cho bạn</p>
         </div>
-        <div class="product_list product_slide">
-            <?php for ($i = 0; $i < 5; $i++) { ?>
+        <div class="product_list product_slide slick_global">
+            <?php 
+            if(!empty($deliveryHot)){
+                foreach($deliveryHot as $row){
+            ?> 
                 <div class="product_item">
-                    <a href="<?= Url::to(['/product/detail-delivery']) ?>">
-                        <span class="prod_sale">56% <br> OFF</span>
-                        <img class="prod_avatar" src="/images/page/product-maycay.png" alt="">
+                    <a href="<?= Url::to(['/product/detail', 'id' => $row['id']]) ?>">
+                        <span class="prod_sale"><?= $row['percent_discount'] ?>% <br> OFF</span>
+                        <img class="prod_avatar" src="<?= $row['image'] ?>" alt="">
                         <div class="prod_price_star">
-                            <p class="prod_title">Máy cày Kubota sử dụng công nghệ mới</p>
+                            <p class="prod_title line_2" title="<?= $row['name'] ?>"><?= $row['name'] ?></p>
                             <div class="des_prod mt-2">
-                                <span>200.000</span>
-                                <div class="flex-center">
-                                    <img src="/images/icon/star.svg" alt="">
-                                    <p class="product_star">4.0 (200)</p>
-                                </div>
+                                <span><?= HelperController::formatPrice($row['price']) ?></span>
                             </div>
                         </div>
                     </a>
                 </div>
-            <?php } ?>
+            <?php }} ?>
         </div>
     </section>
 
     <section class="cat_list_index bg_cat_unset">
         <h2>Khám phá danh mục</h2>
         <div class="cat_list_group">
-            <a href="" class="cat_list_item">
-                <div class="flex-center">
-                    <img src="/images/page/may-no.png" alt="">
-                </div>
-                <p>Máy nổ, <br> Động cơ</p>
-            </a>
-            <a href="" class="cat_list_item">
-                <div class="flex-center">
-                    <img src="/images/page/may-no.png" alt="">
-                </div>
-                <p>Máy nổ, <br> Động cơ</p>
-            </a>
-            <a href="" class="cat_list_item">
-                <div class="flex-center">
-                    <img src="/images/page/may-no.png" alt="">
-                </div>
-                <p>Máy nổ, <br> Động cơ</p>
-            </a>
-            <a href="" class="cat_list_item">
-                <div class="flex-center">
-                    <img src="/images/page/may-no.png" alt="">
-                </div>
-                <p>Máy nổ, <br> Động cơ</p>
-            </a>
-            <a href="" class="cat_list_item">
-                <div class="flex-center">
-                    <img src="/images/page/may-no.png" alt="">
-                </div>
-                <p>Máy nổ, <br> Động cơ</p>
-            </a>
-            <a href="" class="cat_list_item">
-                <div class="flex-center">
-                    <img src="/images/page/may-no.png" alt="">
-                </div>
-                <p>Máy nổ, <br> Động cơ</p>
-            </a>
-            <a href="" class="cat_list_item">
-                <div class="flex-center">
-                    <img src="/images/page/may-no.png" alt="">
-                </div>
-                <p>Máy nổ, <br> Động cơ</p>
-            </a>
-            <a href="" class="cat_list_item">
-                <div class="flex-center">
-                    <img src="/images/page/may-no.png" alt="">
-                </div>
-                <p>Máy nổ, <br> Động cơ</p>
-            </a>
+            <?php 
+                if(!empty($listCategory)){
+                 foreach($listCategory as $row){
+            ?>
+                <a href="<?= Url::to(['/category/index', 'cate_parent_id' => $row['id']]) ?>" class="cat_list_item">
+                    <div class="flex-center">
+                        <img src="<?= $row['image'] ?>" alt="">
+                    </div>
+                    <p><?= $row['name'] ?></p>
+                </a>
+            <?php }} ?>
         </div>
     </section>
 
     <section class="list_product">
         <div class="sort_product">
-            <p class="d-none d-lg-block">Sản phẩm của shop</p>
+            <p class="d-none d-lg-block">Tất cả sản phẩm</p>
             <div class="sort_list">
                 <button class="btn_sort active">Cần bán</button>
                 <button class="btn_sort">Cần mua</button>

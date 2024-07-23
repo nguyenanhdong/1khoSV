@@ -66,10 +66,13 @@ class Advertisement extends \yii\db\ActiveRecord
         ];
     }
 
-    public static function getAdvertisementHome( $type = null, $limit = null, $offset = null, $sortBy = 'NEWS' ){
+    public static function getAdvertisementHome( $type = null, $limit = null, $offset = null, $sortBy = 'NEWS', $isHot = null ){
         $condition  = ['status' => self::STATUS_ACTIVE];
         if( $type > 0 ){
             $condition['type'] = $type;
+        }
+        if(!is_null($isHot)){
+            $condition['is_hot'] = $isHot;
         }
         $result     = self::find()->where($condition);
 

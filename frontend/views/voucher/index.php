@@ -5,7 +5,11 @@ use yii\web\View;
 use backend\models\Config;
 use yii\widgets\Breadcrumbs;
 use backend\controllers\CommonController;
-
+use backend\models\Agent;
+use frontend\controllers\HelperController;
+// echo '<pre>';
+// print_r(Agent::getInfoAgent(1)['name']);
+// echo '</pre>';die;
 ?>
 <div class="container">
     <?php
@@ -27,14 +31,17 @@ use backend\controllers\CommonController;
                 <button dt-tab="used" class="btn_voucher">Đã dùng/hết hạn</button>
             </div>
             <div class="voucher_list active" id="unused">
-                <?php for ($i = 0; $i < 20; $i++) { ?>
+                <?php
+                    if(!empty($dataUnused)){
+                        foreach($dataUnused as $row){
+                ?>
                     <div class="voucher_item">
                         <div class="voucher_avatar flex-center">
-                            <img src="/images/page/img-voucher.png" alt="">
+                            <img src="<?= $row['image'] ?>" alt="">
                         </div>
                         <div class="voucher_desc">
-                            <span>Giảm 50k</span>
-                            <p>Hoàn 10% cho đơn hàng có giá trị trên 1tr vào KHOvoucher</p>
+                            <span><?= $row['name'] ?></span>
+                            <p><?= $row['desc'] ?></p>
                             <a href="">Dùng ngay</a>
                         </div>
                         <div class="tooltips">
@@ -42,81 +49,88 @@ use backend\controllers\CommonController;
                             <div class="content_tooltips hide">
                                 <div class="voucher_item">
                                     <div class="voucher_avatar flex-center">
-                                        <img src="/images/page/img-voucher.png" alt="">
+                                        <img src="<?= $row['image'] ?>" alt="">
                                     </div>
                                     <div class="voucher_desc">
-                                        <span>Giảm 50k</span>
-                                        <p>Hoàn 10% cho đơn hàng có giá trị trên 1tr vào KHOvoucher</p>
+                                        <span><?= $row['name'] ?></span>
+                                        <p><?= $row['desc'] ?></p>
                                         <a href="">Dùng ngay</a>
                                     </div>
                                 </div>
                                 <div class="info_voucher">
-                                    <div class="text_voucher">
+                                    <!-- <div class="text_voucher">
                                         <p>Mã</p>
                                         <span>12908739</span>
-                                    </div>
+                                    </div> -->
                                     <div class="text_voucher">
                                         <p>Hạn sử dụng</p>
-                                        <span>20/10/2021</span>
+                                        <span><?= $row['expire_time'] ?></span>
                                     </div>
                                     <div class="text_list">
                                         <p>Điều kiện:</p>
                                         <ul>
-                                            <li>Giảm 50k Cho đơn hàng 200k</li>
-                                            <li>Áp dụng cho sản phẩm của Máy Cày Office</li>
+                                            <li><?= $row['name'] ?> Cho đơn hàng <?= HelperController::formatPrice($row['minimum_order']) ?></li>
+                                            <?php if(!empty(Agent::getInfoAgent($row['agent_id']))){ ?>
+                                                <li>Áp dụng cho sản phẩm của <a href="<?= Url::to(['/product/shop', 'id' => Agent::getInfoAgent($row['agent_id'])['id']]) ?>"><?= Agent::getInfoAgent($row['agent_id']) ? Agent::getInfoAgent($row['agent_id'])['name'] : ''; ?></a></li>
+                                            <?php } ?>
                                         </ul>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                <?php } ?>
+                <?php }} ?>
             </div>
             <div class="voucher_list" id="used">
-                <?php for ($i = 0; $i < 20; $i++) { ?>
+            <?php
+                if(!empty($dataUsed)){
+                    foreach($dataUsed as $row){
+                ?>
                     <div class="voucher_item">
                         <div class="voucher_avatar flex-center">
-                            <img src="/images/page/img-voucher.png" alt="">
+                            <img src="<?= $row['image'] ?>" alt="">
                         </div>
                         <div class="voucher_desc">
-                            <span>Giảm 20k</span>
-                            <p>Hoàn 15% cho đơn hàng có giá trị trên 1tr vào KHOvoucher</p>
-                            <a href="">Dùng ngay</a>
+                            <span><?= $row['name'] ?></span>
+                            <p><?= $row['desc'] ?></p>
+                            <!-- <a href="">Dùng ngay</a> -->
                         </div>
                         <div class="tooltips">
                             <img class="show_detail_voucher" src="/images/icon/i.svg" alt="">
                             <div class="content_tooltips hide">
                                 <div class="voucher_item">
                                     <div class="voucher_avatar flex-center">
-                                        <img src="/images/page/img-voucher.png" alt="">
+                                        <img src="<?= $row['image'] ?>" alt="">
                                     </div>
                                     <div class="voucher_desc">
-                                        <span>Giảm 50k</span>
-                                        <p>Hoàn 10% cho đơn hàng có giá trị trên 1tr vào KHOvoucher</p>
-                                        <a href="">Dùng ngay</a>
+                                        <span><?= $row['name'] ?></span>
+                                        <p><?= $row['desc'] ?></p>
+                                        <!-- <a href="">Dùng ngay</a> -->
                                     </div>
                                 </div>
                                 <div class="info_voucher">
-                                    <div class="text_voucher">
+                                    <!-- <div class="text_voucher">
                                         <p>Mã</p>
                                         <span>12908739</span>
-                                    </div>
+                                    </div> -->
                                     <div class="text_voucher">
                                         <p>Hạn sử dụng</p>
-                                        <span>20/10/2021</span>
+                                        <span><?= $row['expire_time'] ?></span>
                                     </div>
                                     <div class="text_list">
                                         <p>Điều kiện:</p>
                                         <ul>
-                                            <li>Giảm 50k Cho đơn hàng 200k</li>
-                                            <li>Áp dụng cho sản phẩm của Máy Cày Office</li>
+                                            <li><?= $row['name'] ?> Cho đơn hàng <?= HelperController::formatPrice($row['minimum_order']) ?></li>
+                                            <?php if(!empty(Agent::getInfoAgent($row['agent_id']))){ ?>
+                                                <li>Áp dụng cho sản phẩm của <a href="<?= Url::to(['/product/shop', 'id' => Agent::getInfoAgent($row['agent_id'])['id']]) ?>"><?= Agent::getInfoAgent($row['agent_id']) ? Agent::getInfoAgent($row['agent_id'])['name'] : ''; ?></a></li>
+                                            <?php } ?>
                                         </ul>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                <?php } ?>
+                <?php }} ?>
             </div>
         </div>
     </section>

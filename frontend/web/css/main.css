@@ -2752,7 +2752,7 @@ input:checked[type=checkbox] {
   max-height: 200px;
 }
 
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 1024px) {
   .slider-comment-nav .slick-track {
     width: 100% !important;
   }
