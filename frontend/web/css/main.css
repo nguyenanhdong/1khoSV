@@ -2752,6 +2752,14 @@ input:checked[type=checkbox] {
   max-height: 200px;
 }
 
+.content_product_delivery {
+  display: none;
+}
+
+.content_product_delivery.active {
+  display: block;
+}
+
 @media screen and (max-width: 1024px) {
   .slider-comment-nav .slick-track {
     width: 100% !important;

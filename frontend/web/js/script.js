@@ -139,6 +139,11 @@ $('.btn_voucher').click(function() {
   $('.btn_voucher').removeClass('active');
   $(this).addClass('active');
 });
+$('.tab_delivery').click(function() {
+  let dt_tab = $(this).attr('dt-tab');
+  $('.content_product_delivery').removeClass('active');
+  $('#'+dt_tab).addClass('active');
+});
 
 
 //js notification
@@ -226,7 +231,7 @@ $(document).on('click','.sort_product_wap', function(){
 //find product page category
 var page_product_cat = 0;
 var checkSendAjaxProduct = true;
-$(document).on('click','.see_more_btn', function(){
+$(document).on('click','.see_more_product_cat', function(){
   page_product_cat ++;
   let _this = $(this);
   let cate_parent_id = _this.attr('cate-parent-id');
@@ -820,33 +825,51 @@ function formatNumber(number) {
 
 
 // js dang tin giao vat
-document.getElementById('fileInput').addEventListener('change', function(event) {
-  const previewBox = document.getElementById('previewBox');
-  previewBox.innerHTML = ''; // Clear the current previews
 
-  Array.from(event.target.files).forEach(file => {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-          const previewItem = document.createElement('div');
-          previewItem.classList.add('preview-item');
-
-          if (file.type.startsWith('image/')) {
-              const img = document.createElement('img');
-              img.src = e.target.result;
-              previewItem.appendChild(img);
-          } else if (file.type.startsWith('video/')) {
-              const video = document.createElement('video');
-              video.src = e.target.result;
-              video.controls = true;
-              previewItem.appendChild(video);
-          }
-
-          previewBox.appendChild(previewItem);
-      };
-      reader.readAsDataURL(file);
-  });
+var page_buy = 0;
+var checkSendAjaxBuy= true;
+$(document).on('click','.see_more_delivery_buy', function(){
+  page_buy++;
+  $(this).append('<i class="spinner-border text-light"></i>')
+  console.log(111);
+  if(checkSendAjaxBuy){
+    checkSendAjaxBuy = false;
+    getProductDelivery(page_buy, 1)
+  }
+});
+var page_sell = 0;
+var checkSendAjaxSell= true;
+$(document).on('click','.see_more_delivery_sell', function(){
+  page_sell++;
+  $(this).append('<i class="spinner-border text-light"></i>')
+  console.log(111);
+  if(checkSendAjaxSell){
+    checkSendAjaxSell = false;
+    getProductDelivery(page_sell, 1)
+  }
 });
 
+function getProductDelivery(page, type){
+  $.ajax({
+    url: '/product/get-product-delivery',
+    type: 'POST',
+    data: {page, type},
+    success: function (res) {
+      $('.see_more_btn').find('.spinner-border').remove();
+      checkSendAjaxBuy = true;
+      checkSendAjaxSell = true;
+      if(res['data']){
+        if(type == 1)
+          $('#need_buy .product_list').append(res['data']);
+        else
+          $('#need_sell .product_list').append(res['data']);
+      }
+      if(!res['checkLoadMore']){
+        $('.see_more_product').remove();
+      }
+    }
+  });
+}
 //end js dang tin giao vat
 
 

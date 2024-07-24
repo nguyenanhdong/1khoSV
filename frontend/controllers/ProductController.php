@@ -174,13 +174,54 @@ class ProductController extends Controller
         $this->view->title = 'Giao vặt';
         $listCategory   = Category::getListCateApp(0, 8, 0);
         $deliveryHot = Advertisement::getAdvertisementHome(null, 100, null, null, 1);
+
+        $productBuy = Advertisement::getAdvertisementHome(1, 20, 0, null, null);
+        $productSell = Advertisement::getAdvertisementHome(2, 20, 0, null, null);
         // echo '<pre>';
-        // print_r($deliveryHot);
+        // print_r($productBuy);
         // echo '</pre>';die;
         return $this->render('delivery',[
             'listCategory' => $listCategory,
             'deliveryHot' => $deliveryHot,
+            'productBuy' => $productBuy,
+            'productSell' => $productSell,
+
         ]);
+    }
+
+    public function actionGetProductDelivery()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $page               = !empty(Yii::$app->request->post('page')) ? Yii::$app->request->post('page') : 0;
+        $type               = Yii::$app->request->post('type', '');
+        $response['data'] = '';
+        $response['checkLoadMore'] = false;
+        
+        $limit = 20;
+        $offset = $page * $limit;
+        $data     = Advertisement::getAdvertisementHome($type, $limit, $offset);
+        $offsetCheck = $limit + $offset + 1;
+        $response['checkLoadMore'] = !empty(Advertisement::getAdvertisementHome($type, 1, $offsetCheck)) ? true : false;
+        $item = '';
+        if (!empty($data)) {
+            foreach ($data as $row) {
+                $url = Url::to(['/product/detail', 'id' => $row['id']]);
+                $item .= '<div class="product_item">
+                                <a href="' . $url . '">
+                                    <span class="prod_sale">' . $row['percent_discount'] . '% <br> OFF</span>
+                                    <img class="prod_avatar" src="' . $row['image'] . '" alt="Image product">
+                                    <div class="prod_price_star">
+                                        <p class="prod_title line_2" title="' . $row['name'] . '">' . $row['name'] . '</p>
+                                        <div class="des_prod mt-2">
+                                            <span>' . HelperController::formatPrice($row['price']) . '</span>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>';
+            }
+        }
+        $response['data'] = $item;
+        return $response;
     }
 
     //Chi tiết giao vặt

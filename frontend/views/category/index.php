@@ -68,7 +68,7 @@ use yii\widgets\Breadcrumbs;
         </div>
         <?php if(count($category['product']) >= 10) { ?>
             <div class="see_more_product">
-                <button cate-parent-id="<?= $_GET['cate_parent_id'] ?>" class="see_more_btn">Xem thêm</button>
+                <button cate-parent-id="<?= $_GET['cate_parent_id'] ?>" class="see_more_btn see_more_product_cat">Xem thêm</button>
             </div>
         <?php } ?>
     </section>

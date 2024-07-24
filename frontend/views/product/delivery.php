@@ -75,39 +75,80 @@ use yii\widgets\Breadcrumbs;
                     <p><?= $row['name'] ?></p>
                 </a>
             <?php }} ?>
-        </div>
+        </div>  
     </section>
 
     <section class="list_product">
         <div class="sort_product">
             <p class="d-none d-lg-block">Tất cả sản phẩm</p>
             <div class="sort_list">
-                <button class="btn_sort active">Cần bán</button>
-                <button class="btn_sort">Cần mua</button>
+                <button dt-tab="need_buy" class="btn_sort tab_delivery active">Cần bán</button>
+                <button dt-tab="need_sell" class="btn_sort tab_delivery">Cần mua</button>
             </div>
         </div>
-        <div class="product_list">
-            <?php for ($i = 0; $i < 20; $i++) { ?>
-                <div class="product_item">
-                    <a href="<?= Url::to(['/product/detail-delivery']) ?>">
-                        <span class="prod_sale">56% <br> OFF</span>
-                        <img class="prod_avatar" src="/images/page/product-maycay.png" alt="">
-                        <div class="prod_price_star">
-                            <p class="prod_title">Máy cày Kubota sử dụng công nghệ mới</p>
-                            <div class="des_prod mt-2">
-                                <span>200.000</span>
-                                <div class="flex-center">
-                                    <img src="/images/icon/star.svg" alt="">
-                                    <p class="product_star">4.0 (200)</p>
+        <div id="need_buy" class="content_product_delivery active">
+            <div class="product_list">
+                <?php 
+                if(!empty($productBuy)){
+                    foreach($productBuy as $row){
+                ?> 
+                    <!-- <div class="product_item">
+                        <a href="<?= Url::to(['/product/detail-delivery']) ?>">
+                            <span class="prod_sale">56% <br> OFF</span>
+                            <img class="prod_avatar" src="/images/page/product-maycay.png" alt="">
+                            <div class="prod_price_star">
+                                <p class="prod_title">Máy cày Kubota sử dụng công nghệ mới</p>
+                                <div class="des_prod mt-2">
+                                    <span>200.000</span>
+                                    <div class="flex-center">
+                                        <img src="/images/icon/star.svg" alt="">
+                                        <p class="product_star">4.0 (200)</p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </a>
-                </div>
-            <?php } ?>
+                        </a>
+                    </div> -->
+                    <div class="product_item">
+                        <a href="<?= Url::to(['/product/detail', 'id' => $row['id']]) ?>">
+                            <span class="prod_sale"><?= $row['percent_discount'] ?>% <br> OFF</span>
+                            <img class="prod_avatar" src="<?= $row['image'] ?>" alt="">
+                            <div class="prod_price_star">
+                                <p class="prod_title line_2" title="<?= $row['name'] ?>"><?= $row['name'] ?></p>
+                                <div class="des_prod mt-2">
+                                    <span><?= HelperController::formatPrice($row['price']) ?></span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                <?php }} ?>
+            </div>
+            <div class="see_more_product">
+                <button class="see_more_btn see_more_delivery_buy">Xem thêm</button>
+            </div>
         </div>
-        <div class="see_more_product">
-            <button class="see_more_btn">Xem thêm</button>
+        <div id="need_sell" class="content_product_delivery">
+            <div class="product_list">
+                <?php 
+                if(!empty($productSell)){
+                    foreach($productSell as $row){
+                ?> 
+                    <div class="product_item">
+                        <a href="<?= Url::to(['/product/detail', 'id' => $row['id']]) ?>">
+                            <span class="prod_sale"><?= $row['percent_discount'] ?>% <br> OFF</span>
+                            <img class="prod_avatar" src="<?= $row['image'] ?>" alt="">
+                            <div class="prod_price_star">
+                                <p class="prod_title line_2" title="<?= $row['name'] ?>"><?= $row['name'] ?></p>
+                                <div class="des_prod mt-2">
+                                    <span><?= HelperController::formatPrice($row['price']) ?></span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                <?php }} ?>
+            </div>
+            <div class="see_more_product">
+                <button class="see_more_btn see_more_delivery_sell">Xem thêm</button>
+            </div>
         </div>
     </section>
 </div>
