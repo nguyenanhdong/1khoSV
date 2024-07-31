@@ -1074,7 +1074,7 @@ section h2 {
   justify-content: center;
   margin-top: 20px;
 }
-.see_more_product .see_more_btn, .see_more_product .see_more_shop, .see_more_product .see_more_product_history {
+.see_more_product .see_more_btn, .see_more_product .see_more_shop, .see_more_product .see_more_product_history, .see_more_product .btn_load_more {
   border-radius: 30px;
   background-color: #0091ff;
   padding: 9px 22px;

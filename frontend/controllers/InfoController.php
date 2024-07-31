@@ -3,6 +3,7 @@ namespace frontend\controllers;
 
 use backend\controllers\ApiNewController;
 use backend\models\Order;
+use backend\models\ProductReview;
 use common\models\District;
 use common\models\Province;
 use common\models\Users;
@@ -235,7 +236,21 @@ class InfoController extends Controller
     // Đánh giá
     public function actionReview(){
         $this->view->title = 'Đánh giá';
-        return $this->render('review');
+        $userId = Yii::$app->user->identity->id;
+        $limit = 2;
+        $offset = 0;
+        $dataNotReview = ProductReview::getListReviewOfUser($userId, 0, $limit, $offset);
+        $dataCheckLoadMoreNotReview = !empty(ProductReview::getListReviewOfUser($userId, 0, 1, $limit)) ? true : false;
+        // echo '<pre>';
+        // print_r($dataNotReview);
+        // echo '</pre>';die;
+        $dataReviewd = ProductReview::getListReviewOfUser($userId, 1, $limit, $offset);
+        
+        return $this->render('review',[
+            'dataNotReview' => $dataNotReview,
+            'dataReviewd' => $dataReviewd,
+            'dataCheckLoadMoreNotReview' => $dataCheckLoadMoreNotReview
+        ]);
     }
     // Trả hàng hoàn tiền
     public function actionReturn(){

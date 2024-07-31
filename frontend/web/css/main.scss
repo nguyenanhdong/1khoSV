@@ -1257,7 +1257,7 @@ section {
   justify-content: center;
   margin-top: 20px;
 
-  .see_more_btn,.see_more_shop,.see_more_product_history {
+  .see_more_btn,.see_more_shop,.see_more_product_history, .btn_load_more {
     border-radius: 30px;
     background-color: $brand;
     padding: 9px 22px;
@@ -3188,7 +3188,7 @@ input:checked[type="checkbox"] {
   display: none;
 }
 .content_product_delivery.active{
-  display: block;a
+  display: block;
 }
 @media screen and (max-width: 1024px) {
   .slider-comment-nav .slick-track{

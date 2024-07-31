@@ -5,6 +5,7 @@ use yii\web\View;
 use backend\models\Config;
 use yii\widgets\Breadcrumbs;
 use backend\controllers\CommonController;
+use frontend\controllers\HelperController;
 
 ?>
 <div class="container">
@@ -26,28 +27,35 @@ use backend\controllers\CommonController;
                 <button class="tablinks" data-tab="tab_reviewed">Đã đánh giá</button>
             </div>
             <div class="tab_content active" id="tab_review">
-                <?php for($i = 0; $i < 5; $i++) { ?>
+                <?php
+                    if(!empty($dataNotReview)){
+                        foreach($dataNotReview as $row){
+                ?>
                     <div class="group_item_shop d-flex flex-column">
                         <div class="item_shop">
                             <div class="item_shop_left d-flex flex-column">
                                 <div class="desc_item">
                                     <div class="flex-center avatar_pro">
-                                        <img src="/images/page/may-cay.png" alt="">
+                                        <img src="<?= $row['product_img'] ?>" alt="">
                                     </div>
                                     <div class="text_desc d-flex flex-column">
-                                        <p>Máy cày Kubota sử dụng công nghệ mới</p>
+                                        <p><?= $row['product_name'] ?></p>
                                         <div class="flex-item-center">
-                                            <strong>200.000</strong>
-                                            <span>-36%</span>
+                                            <strong><?= HelperController::formatPrice($row['price']) ?></strong>
+                                            <span>-<?= $row['percent_discount'] ?>%</span>
                                         </div>
                                         <div class="flex-item-center justify-content-between">
-                                            <p>Số lượng 1</p>
+                                            <p>Số lượng <?= $row['quantity'] ?></p>
                                             <div class="rating_product flex-item-center">
-                                                <img src="/images/icon/star-active.svg" alt="">
-                                                <img src="/images/icon/star-active.svg" alt="">
-                                                <img src="/images/icon/star-active.svg" alt="">
-                                                <img src="/images/icon/star-active.svg" alt="">
-                                                <img src="/images/icon/star-inactive.svg" alt="">
+                                                <?php 
+                                                    for($i = 0; $i < 5; $i++){ 
+                                                ?>
+                                                    <?php if( $i < $row['product_star']){ ?>
+                                                        <img src="/images/icon/star-active.svg" alt="">
+                                                    <?php }else{ ?>
+                                                        <img src="/images/icon/star-inactive.svg" alt="">
+                                                    <?php } ?>
+                                                <?php } ?>
                                             </div>
                                         </div>
                                     </div>
@@ -56,11 +64,30 @@ use backend\controllers\CommonController;
                             <div class="item_shop_right d-flex flex-column">
                                 <div class="btn_item">
                                     <div class="action_form">
-                                        <button class="btn_action btn-blue flex-center">Đánh giá</button>
+                                        <button class="btn_action btn-blue flex-center" data-toggle="modal" data-target="#modalReview<?= $row['product_id'] ?>">Đánh giá</button>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                        <div class="modal fade" id="modalReview<?= $row['product_id'] ?>" tabindex="-1" role="dialog" aria-labelledby="modaReviewTitle" aria-hidden="true">
+                            <div class="modal-dialog" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <h2>Địa chỉ giao hàng</h2>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <?php }} ?>
+                <?php if($dataCheckLoadMoreNotReview) { ?>
+                    <div class="see_more_product">
+                        <button dt-type="not-review" class="btn_load_more see_more_product_review">Xem thêm</button>
                     </div>
                 <?php } ?>
             </div>
