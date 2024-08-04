@@ -252,6 +252,29 @@ class InfoController extends Controller
             'dataCheckLoadMoreNotReview' => $dataCheckLoadMoreNotReview
         ]);
     }
+    public function actionGetProductReview(){
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $page = !empty(Yii::$app->request->post('page')) ? Yii::$app->request->post('page') : 0;
+        $userId = Yii::$app->user->identity->id;
+        $response['data'] = '';
+        $response['checkLoadMore'] = false;
+        
+        $limit = 2;
+        $offset = $page * $limit;
+        $offsetCheck = $limit + $offset + 1;
+
+        $dataNotReview = ProductReview::getListReviewOfUser($userId, 0, $limit, $offset);
+        $dataCheckLoadMoreNotReview = !empty(ProductReview::getListReviewOfUser($userId, 0, 1, $offsetCheck)) ? true : false;
+        $item = '';
+        if (!empty($dataNotReview)) {
+            foreach ($dataNotReview as $row) {
+                $item .= '';
+            }
+        }
+        $response['data'] = $item;
+        $response['checkLoadMore'] = $dataCheckLoadMoreNotReview;
+    return $response;
+    }
     // Trả hàng hoàn tiền
     public function actionReturn(){
         $this->view->title = 'Trả hàng hoàn tiền';

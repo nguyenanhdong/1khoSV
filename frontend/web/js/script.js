@@ -871,10 +871,36 @@ function getProductDelivery(page, type){
   });
 }
 //end js dang tin giao vat
-
-
-
-
+var pageReview = 0;
+var checkSendAjaxReview = true;
+$(document).on('click','.see_more_product_review', function(){
+  page_product_shop ++;
+  let _this = $(this);
+  _this.append('<i class="spinner-border text-light"></i>');
+  let sort = $('.btn_sort_shop.active').attr('sort');
+  let shop_id = $('.see_more_shop').attr('shop-id');
+  if(checkSendAjaxReview){
+    checkSendAjaxReview = false;
+    $.ajax({
+      url: '/product/get-product-shop',
+      type: 'POST',
+      data: {sort:sort, page:page, shop_id:shop_id},
+      success: function (res) {
+        $('.see_more_shop').find('.spinner-border').remove();
+        checkSendAjaxProductShop = true;
+        if(res['data']){
+          if(res['append'])
+            $('.product_list').append(res['data']);
+          else
+            $('.product_list').html(res['data']);
+        }
+        if(!res['checkLoadMore']){
+          $('.see_more_product').remove();
+        }
+      }
+    });
+  }
+});
 
 
 

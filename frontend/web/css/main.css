@@ -1563,24 +1563,25 @@ section h2 {
 .post_delivery h2 {
   margin-bottom: 20px;
 }
-.post_delivery .box-image {
+
+.box-image {
   background: #F5F6FA;
   border-radius: 5px;
   height: 110px;
   gap: 10px;
   position: relative;
 }
-.post_delivery .box-image .form-group {
+.box-image .form-group {
   opacity: 0;
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
 }
-.post_delivery .box-image label {
+.box-image label {
   color: #8F959E;
 }
-.post_delivery .box-image i {
+.box-image i {
   font-size: 12px;
 }
 
@@ -2758,6 +2759,66 @@ input:checked[type=checkbox] {
 
 .content_product_delivery.active {
   display: block;
+}
+
+.product_review_detail {
+  display: flex;
+  gap: 10px;
+  flex-direction: column;
+}
+
+.color_red {
+  color: red;
+}
+
+.form_review {
+  margin-top: 25px;
+}
+
+.modal_content_review {
+  border-radius: 10px;
+}
+
+#group-stars {
+  /* use display:inline-flex to prevent whitespace issues. alternatively, you can put all the children of .rating-group on a single line */
+  /* make hover effect work properly in IE */
+  /* hide radio inputs */
+  /* hide 'none' input from screenreaders */
+  /* set icon padding and size */
+  /* set default star color */
+  /* if any input is checked, make its following siblings grey */
+  /* make all stars orange on rating group hover */
+  /* make hovered input's following siblings grey on hover */
+}
+#group-stars .rating-group {
+  display: inline-flex;
+}
+#group-stars .rating__icon {
+  pointer-events: none;
+}
+#group-stars .rating__input {
+  position: absolute !important;
+  left: -9999px !important;
+}
+#group-stars .rating__input--none {
+  display: none;
+}
+#group-stars .rating__label {
+  cursor: pointer;
+  padding: 0 0.1em;
+  font-size: 20px;
+}
+#group-stars .rating__icon--star {
+  color: #FF981F;
+}
+#group-stars .rating__input:checked ~ .rating__label .rating__icon--star {
+  color: #ddd;
+}
+#group-stars .rating-group:hover .rating__label .rating__icon--star {
+  color: #FF981F;
+}
+#group-stars .rating__input:hover ~ .rating__label .rating__icon--star {
+  color: #ddd;
 }
 
 @media screen and (max-width: 1024px) {
