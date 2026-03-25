@@ -80,13 +80,13 @@ class SiteController extends Controller
     {
         $date_start    = date('Y-m-d', strtotime(' - 6 day', time()));
         $date_end      = date('Y-m-d');
-        if( isset($_POST['ajax']) ){
-            return json_encode($this->getDataStatistic($_POST['type'], $_POST['date_start'],$_POST['date_end'],true));
-        }
-        $dataStatistic = $this->getDataStatistic(false, $date_start,$date_end);
+        // if( isset($_POST['ajax']) ){
+        //     return json_encode($this->getDataStatistic($_POST['type'], $_POST['date_start'],$_POST['date_end'],true));
+        // }
+        // $dataStatistic = $this->getDataStatistic(false, $date_start,$date_end);
         
         return $this->render('index',[
-            'dataStatistic' => $dataStatistic,
+            // 'dataStatistic' => $dataStatistic,
             'date_end' => $date_end,
             'date_start'=> $date_start
         ]);

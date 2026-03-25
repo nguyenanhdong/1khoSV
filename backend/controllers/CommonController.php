@@ -10,13 +10,13 @@ use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Url;
 
-require_once realpath(dirname(__FILE__) . '/../../vendor/PHPExcel/Classes/PHPExcel/IOFactory.php');
-require_once realpath(dirname(__FILE__) . '/../../vendor/PHPExcel/Classes/PHPExcel.php');
-require_once realpath(dirname(__FILE__) . '/../../vendor/PHPExcel/Classes/PHPExcel/Cell.php');
+// require_once realpath(dirname(__FILE__) . '/../../vendor/PHPExcel/Classes/PHPExcel/IOFactory.php');
+// require_once realpath(dirname(__FILE__) . '/../../vendor/PHPExcel/Classes/PHPExcel.php');
+// require_once realpath(dirname(__FILE__) . '/../../vendor/PHPExcel/Classes/PHPExcel/Cell.php');
 
-use PHPExcel;
-use PHPExcel_IOFactory;
-use PHPExcel_Cell;
+// use PHPExcel;
+// use PHPExcel_IOFactory;
+// use PHPExcel_Cell;
 
 class CommonController extends Controller
 {

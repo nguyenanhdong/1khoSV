@@ -10,3 +10,6 @@ common/config/params2.php
 common/config/db.php
 logs
 frontend/web/assets
+frontend/web/uploads
+
+

@@ -48,7 +48,7 @@ var callBackModal = function(response, status, jqXHR){
    }
 };
 jQuery(document).ready(function(){
-   $('.select2').select2();
+//    $('.select2').select2();
    toastr.options = {
        closeButton:true,
        progressBar:true,

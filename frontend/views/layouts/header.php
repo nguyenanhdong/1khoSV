@@ -45,6 +45,9 @@ $isGuest = Yii::$app->user->isGuest;
 
 if(!$isGuest)
     $listNotify = NotifyUser::getListNotifyByUser(Yii::$app->user->identity->id);
+// echo '<pre>';
+// print_r($listNotify);
+// echo '</pre>';die;
 
 ?>
 

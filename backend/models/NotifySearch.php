@@ -19,7 +19,7 @@ class NotifySearch extends Notify
     {
         return [
             [['id'], 'integer'],
-            [['title','type','type_notify'], 'safe'],
+            [['title','user_notify'], 'safe'],
         ];
     }
 
@@ -60,7 +60,7 @@ class NotifySearch extends Notify
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
-            'type' => $this->type
+            'user_notify' => $this->user_notify
         ]);
         if( isset($_GET['tab']) && $_GET['tab'] != '' ){
             switch($_GET['tab']){
@@ -76,10 +76,10 @@ class NotifySearch extends Notify
         }else{
             $query->andFilterWhere(['user_notify'=>1]);
         }
-        if( !$this->type_notify || $this->type_notify == 1 )
-            $query->andFilterWhere(['obj_id'=>0]);
-        else
-            $query->andFilterWhere(['>','obj_id',0]);
+        // if( !$this->type_notify || $this->type_notify == 1 )
+        //     $query->andFilterWhere(['obj_id'=>0]);
+        // else
+        //     $query->andFilterWhere(['>','obj_id',0]);
             
         $query->andFilterWhere(['like', 'title', $this->title]);
 

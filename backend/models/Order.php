@@ -186,13 +186,13 @@ class Order extends \yii\db\ActiveRecord
             }
             
             //Cộng lượt sử dụng voucher
-            if( $isUseVoucherValid ){
-                Voucher::updateAll([
-                    'total_use' => new Expression("total_use + 1"),
-                ], ['id' => $voucher_id]);
+            // if( $isUseVoucherValid ){
+            //     Voucher::updateAll([
+            //         'total_use' => new Expression("total_use + 1"),
+            //     ], ['id' => $voucher_id]);
 
-                UserUseVoucher::insertHistory($user_id, $voucher_id);
-            }
+            //     UserUseVoucher::insertHistory($user_id, $voucher_id);
+            // }
             
             $transaction->commit();
 

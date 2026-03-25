@@ -7,6 +7,8 @@ use backend\models\Agent;
 use backend\models\Category;
 use backend\models\Product;
 use backend\models\ProductReview;
+use backend\models\UserFavouriteProduct;
+use backend\models\UserViewProduct;
 use Yii;
 use yii\helpers\Url;
 use yii\web\Controller;
@@ -19,9 +21,9 @@ class ProductController extends Controller
     //Chi tiết sản phẩm
     public function actionDetail($id){
         $product = Product::getProductDetail($id);
-        // echo '<pre>';
-        // print_r($product);
-        // echo '</pre>';die;
+        if(!Yii::$app->user->isGuest){
+            UserViewProduct::saveViewProduct(Yii::$app->user->identity->id, $id);
+        }
         $this->view->title = 'Chi tiết sản phẩm';
         return $this->render('detail-product',[
             'product' => $product
@@ -51,13 +53,315 @@ class ProductController extends Controller
         return $data;
     }
 
+    public function actionGetProductReview(){
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $limit          = 10;
+        $page           = Yii::$app->request->post('page', 1);
+        $type           = Yii::$app->request->post('type');
+        $offset         = $page * $limit;
+        $offsetCheck = $limit + $offset;
+        
+        $response['data'] = '';
+        $response['checkLoadMore'] = false;
+        $userId = Yii::$app->user->identity->id;
+
+        if($type == 'not-review'){
+            $dataNotReview = ProductReview::getListReviewOfUser($userId, 0, $limit, $offset);
+            $response['checkLoadMore'] = !empty(ProductReview::getListReviewOfUser($userId, 0, 1, $offsetCheck)) ? true : false;
+            if(!empty($dataNotReview)){
+                $item = '';
+                foreach($dataNotReview as $row){
+                    $rating = '';
+                    for ($i = 0; $i < 5; $i++) {
+                        if ($i < $row['product_star']) { 
+                            $rating .= '<img src="/images/icon/star-active.svg" alt="">';
+                            } else { 
+                                $rating .= '<img src="/images/icon/star-inactive.svg" alt="">';
+                            } 
+                    }
+                    $item .= '<div class="group_item_shop px-0 d-flex flex-column">
+                            <div class="item_shop">
+                                <div class="item_shop_left d-flex flex-column">
+                                    <div class="desc_item">
+                                        <div class="flex-center avatar_pro">
+                                            <img src=" '. $row['product_img'] .'" alt="">
+                                        </div>
+                                        <div class="text_desc d-flex flex-column">
+                                            <p>'. $row['product_name'] .'</p>
+                                            <div class="flex-item-center">
+                                                <strong>'. HelperController::formatPrice($row['price']) .'</strong>
+                                                <span>-'. $row['percent_discount'] .'%</span>
+                                            </div>
+                                            <div class="flex-item-center justify-content-between">
+                                                <p>Số lượng '. $row['quantity'] .'</p>
+                                                <div class="rating_product flex-item-center">
+                                                    '. $rating .'
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="item_shop_right d-flex flex-column">
+                                    <div class="btn_item">
+                                        <div class="action_form">
+                                            <button class="btn_action btn-blue flex-center" data-toggle="modal" data-target="#modalReview'. $row['order_id'] .'">Đánh giá</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal fade" id="modalReview'. $row['order_id'] .'" tabindex="-1" role="dialog" aria-labelledby="modaReviewTitle" aria-hidden="true">
+                                <div class="modal-dialog" role="document">
+                                    <div class="modal-content modal_content_review">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <h2>ĐÁNH GIÁ SẢN PHẨM</h2>
+                                            <div class="product_review desc_item">
+                                                <div class="flex-center avatar_pro">
+                                                    <img src="'. $row['product_img'] .'" alt="">
+                                                </div>
+                                                <div class="product_review_detail">
+                                                    <p>'. $row['product_name'] .'</p>
+                                                    <div class="flex-item-center text_desc">
+                                                        <strong>'. HelperController::formatPrice($row['price']) .'</strong>
+                                                        <span>-'. $row['percent_discount'] .'%</span>
+                                                    </div>
+                                                    <p>Số lượng '. $row['quantity'] .'</p>
+                                                </div>
+                                            </div>
+                                            <div class="form_review">
+                                                <label>Chất lượng sản phẩm <span class="color_red">*</span></label>
+
+                                                <div id="group-stars">
+                                                    <div class="rating-group">
+                                                        <input  disabled checked class="rating__input rating__input--none rating_'. $row['order_id'] .'" name="rating'. $row['order_id'] .'" id="rating'. $row['order_id'] .'-none" value="0" type="radio">
+                                                        <label aria-label="1 star" class="rating__label" for="rating'. $row['order_id'] .'-1"><i class="rating__icon rating__icon--star fa fa-star"></i></label>
+                                                        <input  class="rating__input rating_'. $row['order_id'] .'" name="rating'. $row['order_id'] .'" id="rating'. $row['order_id'] .'-1" value="1" type="radio">
+                                                        <label aria-label="2 stars" class="rating__label" for="rating'. $row['order_id'] .'-2"><i class="rating__icon rating__icon--star fa fa-star"></i></label>
+                                                        <input class="rating__input rating_'. $row['order_id'] .'" name="rating'. $row['order_id'] .'" id="rating'. $row['order_id'] .'-2" value="2" type="radio">
+                                                        <label aria-label="3 stars" class="rating__label" for="rating'. $row['order_id'] .'-3"><i class="rating__icon rating__icon--star fa fa-star"></i></label>
+                                                        <input  class="rating__input rating_'. $row['order_id'] .'" name="rating'. $row['order_id'] .'" id="rating'. $row['order_id'] .'-3" value="3" type="radio">
+                                                        <label aria-label="4 stars" class="rating__label" for="rating'. $row['order_id'] .'-4"><i class="rating__icon rating__icon--star fa fa-star"></i></label>
+                                                        <input  class="rating__input rating_'. $row['order_id'] .'" name="rating'. $row['order_id'] .'" id="rating'. $row['order_id'] .'-4" value="4" type="radio">
+                                                        <label aria-label="5 stars" class="rating__label" for="rating'. $row['order_id'] .'-5"><i class="rating__icon rating__icon--star fa fa-star"></i></label>
+                                                        <input  class="rating__input rating_'. $row['order_id'] .'" name="rating'. $row['order_id'] .'" id="rating'. $row['order_id'] .'-5" value="5" type="radio">
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                            <div class="form-group">
+                                                <div class="box-image flex-center flex-column">
+                                                    <div class="form-group field-fileInput">
+                                                        <input type="hidden" name="Advertisement[image][]" value=""><input class="fileInput" type="file" id="fileInput_'. $row['order_id'] .'" order-id="'. $row['order_id'] .'" name="Advertisement[image][]" multiple="" accept="image/*,video/*">
+                                                        <div class="help-block"></div>
+                                                    </div> <img src="/images/icon/icon-img.svg" alt="">
+                                                    <label for="">Chọn 3 video ngắn dưới 1 phút + 8 hình ảnh</label>
+                                                    <i class="error">Dung lượng ảnh tối đa 1MB, dung lượng video tối đa 20MB</i>
+                                                </div>
+                                                <div class="preview-box" id="previewBox_'. $row['order_id'] .'"></div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="">Đánh giá <span class="color_red">*</span></label>
+                                                <textarea rows="5" name="" id="content_'. $row['order_id'] .'"></textarea>
+                                            </div>
+                                            <div class="form-group">
+                                                <button type="button" pro-id="'. $row['product_id'] .'" od-id="'. $row['order_id'] .'" class="btn_action btn_submit_review btn-orange flex-center">Gửi đánh giá</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>';
+                }
+                $response['data'] = $item;
+            }
+        }else if($type = 'reviewed'){
+            $dataReviewd = ProductReview::getListReviewOfUser($userId, 1, $limit, $offset);
+            $response['checkLoadMore'] = !empty(ProductReview::getListReviewOfUser($userId, 1, 1, $offsetCheck)) ? true : false;
+            if(!empty($dataReviewd)){
+                $item = '';
+                foreach($dataReviewd as $row){
+                    $avatar = !empty($row['avatar']) ? $row['avatar'] : '/images/icon/user-icon.svg';
+                    $elementNav = '';
+                    $elementFor = '';
+                    if(!empty($row['video_image'])){
+                        foreach($row['video_image'] as $link){ 
+                            if(strpos($link, 'mp4') !== false){
+                                $elementNav .= '<div class="item_slide slide_nav position-relative">
+                                                <video class="img_slide_nav" width="640" height="360">
+                                                    <source src="'. $link .'" type="video/mp4">
+                                                </video>
+                                                <div class="icon_play flex-center"><img src="/images/icon/play.svg"></div>
+                                            </div>';
+                                $elementFor .= '<div class="item_slide item_for">
+                                                    <video class="" width="640" height="360" controls>
+                                                        <source src="'. $link .'" type="video/mp4">
+                                                    </video>
+                                                </div>';
+                            }else{
+                                $elementNav .= '<div class="item_slide slide_nav"><img class="img_slide_nav" src="'. $link .'"></div>';
+                                $elementFor .= '<div class="item_slide item_for"><img class="" src="'. $link .'"></div>';
+                            }
+                        }
+                    }
+                    $item .= '<div class="comment_item">
+                                    <img class="comment_avatar" src="'. $avatar .'" alt="">
+                                    <div class="comment_group_right">
+                                        <div class="user_name flex-item-center">
+                                            <p>'. $row['fullname'] .'</p>
+                                            <span>•</span>
+                                            <span>'. $row['date_review'] .'</span>
+                                        </div>
+                                        <p>'. $row['content'] .'</p>
+                                        <div class="video_image_comment slider-comment-nav">
+                                            '. $elementNav .'
+                                        </div>
+                                        <div class="video_image_comment slider-comment-for hide">
+                                            '. $elementFor .'
+                                        </div>
+                                    </div>
+                                </div>';
+                }
+                $response['data'] = $item;
+            }
+        }
+      
+        return $response;
+    }
+
+    public function actionGetProductSeen(){
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $limit          = 10;
+        $page           = Yii::$app->request->post('page', 1);
+        $offset         = $page * $limit;
+        $offsetCheck = $limit + $offset;
+        
+        $response['data'] = '';
+        $userId = Yii::$app->user->identity->id;
+
+        $data = UserViewProduct::getListProductView($userId, $limit, $offset);
+        $response['checkLoadMore'] = !empty(UserViewProduct::getListProductView($userId, 1, $offsetCheck)) ? true : false;
+        if(!empty($data)){
+            $item = '';
+            foreach($data as $row){
+                $rating = '';
+                for ($i = 0; $i < 5; $i++) {
+                    if ($i < $row['star']) { 
+                        $rating .= '<img src="/images/icon/star-active.svg" alt="">';
+                        } else { 
+                            $rating .= '<img src="/images/icon/star-inactive.svg" alt="">';
+                        } 
+                }
+                $item .= '<div class="group_item_shop d-flex flex-column">
+                            <div class="item_shop">
+                                <div class="item_shop_left d-flex flex-column">
+                                    <div class="desc_item">
+                                        <div class="flex-center avatar_pro">
+                                            <img src="'. $row['image'] .'" alt="">
+                                        </div>
+                                        <div class="text_desc d-flex flex-column">
+                                            <p>'. $row['name'] .'</p>
+                                            <div class="flex-item-center">
+                                                <strong>'. HelperController::formatPrice($row['price']) .'</strong>
+                                                <span>-'. $row['percent_discount'] .'%</span>
+                                            </div>
+                                            <div class="flex-item-center justify-content-between">
+                                                <p>Số lượng '. $row['quantity_sold'] .'</p>
+                                                <div class="rating_product flex-item-center">
+                                                    '. $rating .'
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="item_shop_right d-flex flex-column">
+                                    <div class="btn_item">
+                                        <div class="action_viewd">
+                                            <div class=" position-relative check_heart">
+                                            </div>
+                                            <a target="_blank" href="'. Url::to(['/product/detail', 'id' => $row['id']]) .'" class="btn_action btn-blue flex-center">Xem chi tiết</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>';
+            }
+            $response['data'] = $item;
+        }
+        return $response;
+    }
+    public function actionGetProductFavourite(){
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $limit          = 10;
+        $page           = Yii::$app->request->post('page', 1);
+        $offset         = $page * $limit;
+        $offsetCheck = $limit + $offset;
+        
+        $response['data'] = '';
+        $userId = Yii::$app->user->identity->id;
+
+        $data = UserFavouriteProduct::getListProductFavourites($userId, $limit, $offset);
+        $response['checkLoadMore'] = !empty(UserFavouriteProduct::getListProductFavourites($userId, 1, $offsetCheck)) ? true : false;
+        if(!empty($data)){
+            $item = '';
+            foreach($data as $row){
+                $rating = '';
+                for ($i = 0; $i < 5; $i++) {
+                    if ($i < $row['star']) { 
+                        $rating .= '<img src="/images/icon/star-active.svg" alt="">';
+                        } else { 
+                            $rating .= '<img src="/images/icon/star-inactive.svg" alt="">';
+                        } 
+                }
+                $item .= '<div class="group_item_shop d-flex flex-column">
+                            <div class="item_shop">
+                                <div class="item_shop_left d-flex flex-column">
+                                    <div class="desc_item">
+                                        <div class="flex-center avatar_pro">
+                                            <img src="'. $row['image'] .'" alt="">
+                                        </div>
+                                        <div class="text_desc d-flex flex-column">
+                                            <p>'. $row['name'] .'</p>
+                                            <div class="flex-item-center">
+                                                <strong>'. HelperController::formatPrice($row['price']) .'</strong>
+                                                <span>-'. $row['percent_discount'] .'%</span>
+                                            </div>
+                                            <div class="flex-item-center justify-content-between">
+                                                <p>Số lượng '. $row['quantity_sold'] .'</p>
+                                                <div class="rating_product flex-item-center">
+                                                    '. $rating .'
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="item_shop_right d-flex flex-column">
+                                    <div class="btn_item">
+                                        <div class="action_viewd">
+                                            <div class=" position-relative check_heart">
+                                            </div>
+                                            <a target="_blank" href="'. Url::to(['/product/detail', 'id' => $row['id']]) .'" class="btn_action btn-blue flex-center">Xem chi tiết</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>';
+            }
+            $response['data'] = $item;
+        }
+        return $response;
+    }
+
     public function actionViewMoreReview(){
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         $product_id     = Yii::$app->request->post('product_id', '');
         $limit          = 3;
         $page           = Yii::$app->request->post('page', 1);
         $offset         = ($page - 1) * $limit;
-        $offsetCheck = $limit + $offset + 1;
+        $offsetCheck = $limit + $offset;
         $response['data'] = '';
         $response['checkLoadMore'] = false;
         if(!empty($product_id)){
@@ -141,7 +445,7 @@ class ProductController extends Controller
 
         $listCateIdProd     = [];
         $listProductTab     = Product::getProductByAgent($listCateIdProd, $id, $sort, $limit, $offset);
-        $offsetCheck = $limit + $offset + 1;
+        $offsetCheck = $limit + $offset;
         $response['checkLoadMore'] = !empty(Product::getProductByAgent($listCateIdProd, $id, $sort, 1, $offsetCheck)) ? true : false;
         $item = '';
         if (!empty($listProductTab)) {
@@ -200,7 +504,7 @@ class ProductController extends Controller
         $limit = 20;
         $offset = $page * $limit;
         $data     = Advertisement::getAdvertisementHome($type, $limit, $offset);
-        $offsetCheck = $limit + $offset + 1;
+        $offsetCheck = $limit + $offset;
         $response['checkLoadMore'] = !empty(Advertisement::getAdvertisementHome($type, 1, $offsetCheck)) ? true : false;
         $item = '';
         if (!empty($data)) {

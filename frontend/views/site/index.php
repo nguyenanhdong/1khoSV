@@ -16,7 +16,7 @@ use frontend\controllers\HelperController;
                     foreach($dataHome['banner'] as $row){
             ?>
             <div class="banner_item">
-                <a href="<?= Url::to(['category/index', 'cate_parent_id' => $row['category_id']]) ?>">
+                <a href="<?= !empty($row['category_id']) ? Url::to(['category/index', 'cate_parent_id' => $row['category_id']]) : 'javascript:;' ?>">
                     <img src="<?= $row['image'] ?>" alt="banner home">
                 </a>
             </div>

@@ -1010,6 +1010,7 @@ section {
     border-radius: 10px;
     background-color: $white;
     padding: 25px 20px;
+    height: max-content;
 
     .shop_info_bar {
       display: flex;
@@ -1798,7 +1799,7 @@ section {
 
 .btn-blue {
   background-color: #EBF4FF;
-  color: #3D93F8;
+  color: #3D93F8 !important;
   border: 1px solid #3D93F8;
 }
 
@@ -1860,6 +1861,10 @@ section {
     text-indent: 15px;
     font-size: 14px;
     outline: none;
+  }
+  .fileInput, #fileInput{
+    height: 125px;
+    cursor: pointer;
   }
   textarea{
     background-color: #F5F6FA;
@@ -2413,7 +2418,7 @@ input:checked[type="checkbox"] {
           width: 100%;
           gap: 10px;
 
-          button {
+          button, a {
             height: 40px;
           }
         }
@@ -3184,6 +3189,11 @@ input:checked[type="checkbox"] {
   max-width: 200px;
   max-height: 200px;
 }
+.modal_content_review .preview-item img,
+.modal_content_review .preview-item video {
+  max-width: 80px;
+  max-height: 80px;
+}
 .content_product_delivery{
   display: none;
 }
@@ -3202,6 +3212,10 @@ input:checked[type="checkbox"] {
 }
 .modal_content_review{
   border-radius: 10px;
+
+  .modal-body{
+    padding: 0 50px 30px;
+  }
 }
 
 
@@ -3253,6 +3267,15 @@ input:checked[type="checkbox"] {
   /* make hovered input's following siblings grey on hover */
   .rating__input:hover ~ .rating__label .rating__icon--star {
     color: #ddd;
+  }
+}
+
+.action_viewd {
+  display: flex;
+  justify-content: end;
+  width: 100%;
+  a {
+    height: 40px;
   }
 }
 

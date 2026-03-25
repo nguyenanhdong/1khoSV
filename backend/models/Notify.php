@@ -40,6 +40,10 @@ class Notify extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
+            'title' => 'Tiêu đề',
+            'description' => 'Mô tả',
+            'content' => 'Nội dung',
+            'user_notify' => 'Đối tượng nhận thông báo',// 1: Khách hàng / 2: Đại lý
         ];
     }
 

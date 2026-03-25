@@ -8,6 +8,7 @@ use yii\bootstrap\Tabs;
 
 $this->title = 'Dashboard';
 ?>
+<?php /*
 <div class="site-index">
     <div class="right" style="text-align: right; margin-bottom: 12px; width: 100%;">
         <div id="date-ranger-all" style="width: auto;" class="pull-right tooltips btn btn-fit-height grey-salt" data-placement="top" data-original-title="Tất cả thời gian">
@@ -100,6 +101,8 @@ $this->title = 'Dashboard';
         </div>
     </div>
 </div>
+*/ ?>
+
 <script src="/assets/global/plugins/jquery.min.js" type="text/javascript"></script>
 <style>
 button.applyBtn.btn.btn-sm.blue { background-color: #886ab5; color: #fff; }
@@ -108,9 +111,6 @@ button.applyBtn.btn.btn-sm.blue:hover {opacity:.8 }
 </style>
 <script type="text/javascript">
     /* defined datas */
-    var dataUserRegister = $.parseJSON('<?= json_encode($dataStatistic['chart']['user_register']) ?>');
-    var dataTransaction  = $.parseJSON('<?= json_encode($dataStatistic['chart']['transaction']) ?>');
-    var dataTransactionSuccess  = $.parseJSON('<?= json_encode($dataStatistic['chart']['transaction_success']) ?>');
     
     var dataTargetProfit = [];
     var flot_toggle = function(){

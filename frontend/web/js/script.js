@@ -776,6 +776,8 @@ $(document).on('click', '#submit_order', function(){
           setTimeout(function(){
             window.location.href = '/info/await-confirmed';
           }, 1000);
+        }else{
+          toastr['warning'](response.msg);
         }
       },
       error: function() {
@@ -871,36 +873,195 @@ function getProductDelivery(page, type){
   });
 }
 //end js dang tin giao vat
-var pageReview = 0;
-var checkSendAjaxReview = true;
-$(document).on('click','.see_more_product_review', function(){
-  page_product_shop ++;
+
+var pageNotReview = 0;
+var checkSendAjaxNotReview = true;
+$(document).on('click','.see_more_product_not_review', function(){
+  let type = $(this).attr('dt-type');
+  pageNotReview ++;
   let _this = $(this);
   _this.append('<i class="spinner-border text-light"></i>');
-  let sort = $('.btn_sort_shop.active').attr('sort');
-  let shop_id = $('.see_more_shop').attr('shop-id');
-  if(checkSendAjaxReview){
-    checkSendAjaxReview = false;
+  if(checkSendAjaxNotReview){
+    checkSendAjaxNotReview = false;
     $.ajax({
-      url: '/product/get-product-shop',
+      url: '/product/get-product-review',
       type: 'POST',
-      data: {sort:sort, page:page, shop_id:shop_id},
+      data: {page:pageNotReview, type: type},
       success: function (res) {
-        $('.see_more_shop').find('.spinner-border').remove();
-        checkSendAjaxProductShop = true;
+        $('.see_more_product_not_review').find('.spinner-border').remove();
+        checkSendAjaxNotReview = true;
         if(res['data']){
-          if(res['append'])
-            $('.product_list').append(res['data']);
-          else
-            $('.product_list').html(res['data']);
+          $('.list_review').append(res['data']);
         }
         if(!res['checkLoadMore']){
-          $('.see_more_product').remove();
+          _this.parent().remove();
         }
       }
     });
   }
 });
+
+var pageReviewed = 0;
+var checkSendAjaxReviewed = true;
+$(document).on('click','.see_more_product_reviewed', function(){
+  let type = $(this).attr('dt-type');
+  pageReviewed ++;
+  let _this = $(this);
+  _this.append('<i class="spinner-border text-light"></i>');
+  if(checkSendAjaxReviewed){
+    checkSendAjaxReviewed = false;
+    $.ajax({
+      url: '/product/get-product-review',
+      type: 'POST',
+      data: {page:pageReviewed, type: type},
+      success: function (res) {
+        $('.see_more_product_reviewed').find('.spinner-border').remove();
+        checkSendAjaxReviewed = true;
+        if(res['data']){
+          $('.comment_list').append(res['data']);
+
+          setTimeout(function () {
+            $(".slider-comment-for").not('.slick-initialized').slick(options_for)
+            $(".slider-comment-nav").not('.slick-initialized').slick(options_nav)
+          }, 100);
+        }
+        if(!res['checkLoadMore']){
+          _this.parent().remove();
+        }
+      }
+    });
+  }
+});
+
+$(document).on('click','.btn_submit_review', function(){
+  let _this = $(this);
+  let productId = $(this).attr('pro-id');
+  let orderId = $(this).attr('od-id');
+  let files = $('#fileInput_'+orderId)[0].files;
+  let content = $('#content_'+orderId).val();
+  let rating = $(`.rating_${+orderId}:checked`).val();  
+
+  if(rating == 0){
+    toastr['error']('Vui lòng chọn chất lượng sản phẩm');
+    return;
+  }
+  
+  if(!content){
+    toastr['error']('Vui lòng nhập nội dung đánh giá');
+    return;
+  }
+
+  // Create a FormData object
+  let formData = new FormData();
+  $.each(files, function(i, file) {
+    formData.append('files[]', file);
+  });
+  formData.append('rating', rating);
+  formData.append('content', content);
+  formData.append('product_id', productId);
+  formData.append('order_id', orderId);
+
+  $.ajax({
+    url: '/info/save-review',
+    type: 'POST',
+    data: formData,
+    processData: false,
+    contentType: false,
+    success: function (res) {
+      if(res.status){
+        $('#modalReview'+orderId).modal('hide');
+        $('.modal-backdrop').hide();
+        setTimeout(() => {
+          _this.parent().parent().parent().parent().parent().parent().remove();
+        }, 300);
+        toastr['success'](res.message);
+      }else{
+        toastr['error'](res.message);
+      }
+      console.log("🚀 ~ $ ~ res:", res)
+    }
+  });
+});
+
+$(document).on('change','.fileInput', function(event){
+  const orderId = $(this).attr('order-id'); 
+  const previewBox = $('#previewBox_'+orderId);
+        previewBox.html(''); // Clear the current previews
+  Array.from(event.target.files).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+          const previewItem = document.createElement('div');
+          previewItem.classList.add('preview-item');
+
+          if (file.type.startsWith('image/')) {
+              const img = document.createElement('img');
+              img.src = e.target.result;
+              previewItem.appendChild(img);
+          } else if (file.type.startsWith('video/')) {
+              const video = document.createElement('video');
+              video.src = e.target.result;
+              video.controls = true;
+              previewItem.appendChild(video);
+          }
+
+          previewBox.append(previewItem);
+      };
+      reader.readAsDataURL(file);
+  });
+});
+
+var pageSeen = 0;
+var checkSendAjaxSeen = true;
+$(document).on('click','.see_more_product_seen', function(){
+  pageSeen ++;
+  let _this = $(this);
+  _this.append('<i class="spinner-border text-light"></i>');
+  if(checkSendAjaxSeen){
+    checkSendAjaxSeen = false;
+    $.ajax({
+      url: '/product/get-product-seen',
+      type: 'POST',
+      data: {page:pageSeen},
+      success: function (res) {
+        $('.see_more_product_seen').find('.spinner-border').remove();
+        checkSendAjaxSeen = true;
+        if(res['data']){
+          $('.list_seen').append(res['data']);
+        }
+        if(!res['checkLoadMore']){
+          _this.parent().remove();
+        }
+      }
+    });
+  }
+});
+
+var pageFavourite = 0;
+var checkSendAjaxFavourite = true;
+$(document).on('click','.see_more_product_favourite', function(){
+  pageFavourite ++;
+  let _this = $(this);
+  _this.append('<i class="spinner-border text-light"></i>');
+  if(checkSendAjaxFavourite){
+    checkSendAjaxFavourite = false;
+    $.ajax({
+      url: '/product/get-product-favourite',
+      type: 'POST',
+      data: {page:pageFavourite},
+      success: function (res) {
+        $('.see_more_product_favourite').find('.spinner-border').remove();
+        checkSendAjaxFavourite = true;
+        if(res['data']){
+          $('.list_favourite').append(res['data']);
+        }
+        if(!res['checkLoadMore']){
+          _this.parent().remove();
+        }
+      }
+    });
+  }
+});
+
 
 
 

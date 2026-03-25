@@ -1,248 +1,256 @@
 <?php
-/**
- * Created by Visual code.
- * User: ngochan
- * Date: 12/03/20
- * Time: 22:10 PM
- */
 
-$group_dashboard = [
-    [
-        'label' => 'Dashboard',
-        'icon' => 'fal fa-home',
-        'url' => '/'
-    ],
-];
-
-$group_package = [
-    [
-        'label' => 'Quản lý gói dịch vụ',
-        'icon' => 'fal fa-list-alt',
-        'url' => '/package/index'
-    ]
-];
-$group_promotion = [
-    [
-        'label' => 'Quản lý ưu đãi',
-        'icon' => 'fal fa-gift',
-        'url' => '/promotion/index'
-    ]
-];
-$group_gift_code = [
-    [
-        'label' => 'Quản lý mã khuyến mại',
-        'icon' => 'fal fa-gift',
-        'url' => '/gift-code/index'
-    ]
-];
-$group_banner = [
-    [
-        'label' => 'Quản lý banner',
-        'icon' => 'fal fa-image',
-        'url' => '/banner/index'
-    ]
-];
-$group_customer = [
-    [
-        'label' => 'Quản lý khách hàng',
-        'icon' => 'fal fa-user',
-        'url' => '/customer/index'
-    ]
-];
-$group_setting = [
-    [
-        'label' => 'Cấu hình',
-        'icon' => 'fal fa-cog',
-        'url' => '/config/index'
-    ]
-];
-$group_feedback = [
-    [
-        'label' => 'Feedback',
-        'icon' => 'fal fa-comments',
-        'url' => '/feedback/index'
-    ]
-];
-$group_contact = [
-    [
-        'label' => 'Liên hệ',
-        'icon' => 'fal fa-comments',
-        'url' => '/contact/index'
-    ]
-];
-$group_product = [
-    [
-        'label' => 'Dụng cụ bán lẻ',
-        'icon' => 'fal fa-cart-plus',
-        'url' => '/house-cleaning-tools/index'
-    ],
-    [
-        'label' => 'Sản phẩm dịch vụ',
-        'icon' => 'fal fa-cart-plus',
-        'url' => '/caundry-product/index'
-    ]
-];
-$group_order = [
-    [
-        'label' => 'Dọn nhà',
-        'icon' => 'fal fa-cart-plus',
-        'url' => '/order-work/index?service_id=1'
-    ],
-    [
-        'label' => 'Giặt là',
-        'icon' => 'fal fa-cart-plus',
-        'url' => '/order-work/index?service_id=2'
-    ],
-    [
-        'label' => 'Shipper',
-        'icon' => 'fal fa-cart-plus',
-        'url' => '/order-work/index?service_id=3'
-    ],
-    [
-        'label' => 'Phun thuốc muỗi',
-        'icon' => 'fal fa-cart-plus',
-        'url' => '/order-work/index?service_id=7'
-    ],
-    
-];
-
-$group_notify = [
-    [
-        'label' => 'Quản lý thông báo',
-        'icon' => 'fal fa-bell',
-        'url' => '/notify/index'
-    ]
-];
-
-
-$group_staff = [
-    [
-        'label' => 'Quản lý nhân viên',
-        'icon' => 'fal fa-user-md',
-        'url' => '/staff/index'
-    ]
-];
-$group_news = [
-    [
-        'label' => 'Quản lý bài viết',
-        'icon' => 'fal fa-newspaper',
-        'url' => '/news/index'
-    ]
-];
-
-$group_question = [
-    [
-        'label' => 'Quản lý câu hỏi',
-        'icon' => 'fal fa-question',
-        'url' => '/question/index'
-    ]
-];
-$group_calendar     = [
-    [
-        'label' => 'Lịch làm việc',
-        'icon' => 'fal fa-calendar',
-        'url' => '/work-order/index'
-    ]
-];
 $menu_group_controller = [
     [
-        'label' => 'Dashboard',
-        'icon'  => 'fal fa-home',
-        'controller' => 'site',
-        'child_action' => $group_dashboard
-    ],
-    [
-        'label' => 'Quản lý thông báo',
-        'icon'  => 'fal fa-bell',
-        'controller' => 'notify',
-        'child_action' => $group_notify
-    ],
-    [
-        'label' => 'Quản lý đơn hàng',
-        'icon'  => 'fal fa-cart-plus',
-        'controller' => 'order-work',
-        'child_action' => $group_order
-    ],
-    [
-        'label' => 'Quản lý sản phẩm',
-        'icon'  => 'fal fa-cart-plus',
-        'controller' => 'house-cleaning-tools',
-        'child_action' => $group_product
-    ],
-    [
-        'label' => 'Quản lý banner',
-        'controller' => 'banner',
-        'child_action' => $group_banner
-    ],
-    // [
-    //     'label' => 'Quản lý gói dịch vụ',
-    //     'icon'  => 'fal fa-bus',
-    //     'controller' => 'package',
-    //     'child_action' => $group_package
-    // ],
-    [
-        'label' => 'Quản lý mã khuyến mại',
-        'icon'  => 'fal fa-gift',
-        'controller' => 'gift-code',
-        'child_action' => $group_gift_code
-    ],
-    [
-        'label' => 'Quản lý ưu đãi',
-        'icon'  => 'fal fa-newspaper',
-        'controller' => 'promotion',
-        'child_action' => $group_promotion
-    ],
-    // [
-    //     'label' => 'Quản lý bài viết',
-    //     'icon'  => 'fal fa-newspaper',
-    //     'controller' => 'news',
-    //     'child_action' => $group_news
-    // ],
-    [
-        'label' => 'Quản lý khách hàng',
-        'icon'  => 'fal fa-user',
-        'controller' => 'customer',
-        'child_action' => $group_customer
-    ],
-    [
-        'label' => 'Quản lý nhân viên',
-        'icon'  => 'fal fa-user-secret',
-        'controller' => 'staff',
-        'child_action' => $group_staff
-    ],
-    [
-        'label' => 'Lịch làm việc',
-        'icon'  => 'fal fa-calendar',
-        'controller' => 'work-order',
-        'child_action' => $group_calendar
-    ],
-    [
-        'label' => 'Quản lý Feedback',
-        'icon'  => 'fal fa-comments',
-        'controller' => 'feedback',
-        'child_action' => $group_feedback
-    ],
-    [
-        'label' => 'Quản lý liên hệ',
-        'icon'  => 'fal fa-comments',
-        'controller' => 'contact',
-        'child_action' => $group_contact
-    ],
-    [
-        'label' => 'Quản lý câu hỏi',
-        'icon'  => 'fal fa-question',
-        'controller' => 'question',
-        'child_action' => $group_question
-    ],
-    [
-        'label' => 'Cấu hình',
+        'label' => 'Banner',
         'icon'  => 'fal fa-cog',
-        'controller' => 'config',
-        'child_action' => $group_setting
-    ]
+        'controller' => 'assignment,role,permission',
+        'child_action' => [
+            [
+                'label' => 'Banner',
+                'icon' => 'fal fa-image',
+                'url' => '/banner/index'
+            ]
+        ]
+    ],
+    [
+        'label' => 'Chuyên mục',
+        'icon'  => 'fal fa-cog',
+        'controller' => 'assignment,role,permission',
+        'child_action' => [
+            [
+                'label' => 'Chuyên mục',
+                'icon' => 'fal fa-list',
+                'url' => '/category/index'
+            ]
+        ]
+    ],
+    [
+        'label' => 'Sản phẩm',
+        'icon'  => 'fal fa-credit-card',
+        'controller' => 'assignment,role,permission',
+        'child_action' => [
+            [
+                'label' => 'Sản phẩm',
+                'icon' => 'fal fa-credit-card',
+                'url' => '/product/index'
+            ],
+        ]
+    ],
+    [
+        'label' => 'Thông báo',
+        'icon'  => 'fal fa-credit-card',
+        'controller' => 'assignment,role,permission',
+        'child_action' => [
+            [
+                'label' => 'Thông báo',
+                'icon' => 'fal fa-credit-card',
+                'url' => '/notify/index'
+            ],
+        ]
+    ],
+    // [
+    //     'label' => 'Product VAS',
+    //     'icon'  => 'fal fa-credit-card',
+    //     'controller' => 'assignment,role,permission',
+    //     'child_action' => [
+    //         [
+    //             'label' => 'Product VAS',
+    //             'icon' => 'fal fa-credit-card',
+    //             'url' => '/product-vas/index'
+    //         ],
+    //     ]
+    // ],
+    // [
+    //     'label' => 'Package',
+    //     'icon'  => 'fal fa-credit-card',
+    //     'controller' => 'assignment,role,permission',
+    //     'child_action' => [
+    //         [
+    //             'label' => 'Package',
+    //             'icon' => 'fal fa-credit-card',
+    //             'url' => '/package/index'
+    //         ],
+    //     ]
+    // ],
+    // // [
+    // //     'label' => 'Product lucky draw',
+    // //     'icon'  => 'fal fa-question-circle',
+    // //     'controller' => 'assignment,role,permission',
+    // //     'child_action' => [
+    // //         [
+    // //             'label' => 'Product lucky draw',
+    // //             'icon' => 'fal fa-credit-card',
+    // //             'url' => '/product-lucky-draw/index'
+    // //         ],
+    // //     ]
+    // // ],
+    // // [
+    // //     'label' => 'Brand',
+    // //     'icon'  => 'fal fa-question-circle',
+    // //     'controller' => 'assignment,role,permission',
+    // //     'child_action' => [
+    // //         [
+    // //             'label' => 'Brand',
+    // //             'icon' => 'fal fa-credit-card',
+    // //             'url' => '/brand/index'
+    // //         ],
+    // //     ]
+    // // ],
+    // [
+    //     'label' => 'Config',
+    //     'icon'  => 'fal fa-cog',
+    //     'controller' => 'assignment,role,permission',
+    //     'child_action' => [
+    //         // [
+    //         //     'label' => 'Terms',
+    //         //     'icon' => 'fal fa-list',
+    //         //     'url' => '/config/terms'
+    //         // ],
+    //         [
+    //             'label' => 'Sold out image',
+    //             'icon' => 'fal fa-credit-card',
+    //             'url' => '/config/sold-out-image'
+    //         ],
+    //     ]
+    // ],
+    // // [
+    // //     'label' => 'Get coin',
+    // //     'icon'  => 'fal fa-cog',
+    // //     'controller' => 'assignment,role,permission',
+    // //     'child_action' => [
+    // //         [
+    // //             'label' => 'Get coin',
+    // //             'icon' => 'fal fa-copyright',
+    // //             'url' => '/get-coin/index'
+    // //         ],
+    // //     ]
+    // // ],
+    // // [
+    // //     'label' => 'Accumulate points',
+    // //     'icon'  => 'fal fa-bars',
+    // //     'controller' => 'assignment,role,permission',
+    // //     'child_action' => [
+    // //         [
+    // //             'label' => 'Accumulate points list',
+    // //             'icon' => 'fal fa-list',
+    // //             'url' => '/tasks/index'
+    // //         ],
+    // //         [
+    // //             'label' => 'Accumulate points item',
+    // //             'icon' => 'fal fa-list-alt',
+    // //             'url' => '/task-item/index'
+    // //         ],
+    // //     ]
+    // // ],
+    // [
+    //     'label' => 'Report',
+    //     'icon'  => 'fal fa-file-alt',
+    //     'controller' => 'assignment,role,permission',
+    //     'child_action' => [
+    //         [
+    //             'label' => 'Transactions',
+    //             'icon' => 'fal fa-history',
+    //             'url' => '/report/report-transactions'
+    //         ],
+    //         [
+    //             'label' => 'Receiving gift',
+    //             'icon' => 'fal fa-gift',
+    //             'url' => '/report/report-receiving-gift'
+    //         ],
+    //     ]
+    // ],
+    // // [
+    // //     'label' => 'Config Currency',
+    // //     'icon'  => 'fal fa-cog',
+    // //     'controller' => 'assignment,role,permission',
+    // //     'child_action' => [
+    // //         [
+    // //             'label' => 'Currency',
+    // //             'icon' => 'fal fa-copyright',
+    // //             'url' => '/currency/index'
+    // //         ],
+    // //         [
+    // //             'label' => 'Currency Exchange rate',
+    // //             'icon' => 'fal fa-copyright',
+    // //             'url' => '/currency-exchange-rate/index'
+    // //         ],
+    // //     ]
+    // // ],
+    // // [
+    // //     'label' => 'Faq',
+    // //     'icon'  => 'fal fa-question-circle',
+    // //     'controller' => 'assignment,role,permission',
+    // //     'child_action' => [
+    // //         [
+    // //             'label' => 'Faq',
+    // //             'icon' => 'fal fa-question-circle',
+    // //             'url' => '/faq/index'
+    // //         ],
+    // //     ]
+    // // ],
+    // [
+    //     'label' => 'Account Management',
+    //     'icon'  => 'fal fa-cog',
+    //     'controller' => 'assignment,role,permission',
+    //     'child_action' => [
+    //         [
+    //             'label' => 'Account Management',
+    //             'icon' => 'fal fa-user',
+    //             'url' => '/assignment/index'
+    //         ],
+    //     ]
+    // ],
+    // [
+    //     'label' => 'Config Home Regalos',
+    //     'icon'  => 'fal fa-cog',
+    //     'controller' => 'assignment,role,permission',
+    //     'child_action' => [
+    //         [
+    //             'label' => 'Config Home Regalos',
+    //             'icon' => 'fal fa-home',
+    //             'url' => '/config-home-page/index'
+    //         ],
+    //     ]
+    // ],
+    // [
+    //     'label' => 'Config Home Beneficios',
+    //     'icon'  => 'fal fa-cog',
+    //     'controller' => 'assignment,role,permission',
+    //     'child_action' => [
+    //         [
+    //             'label' => 'Config Home Beneficios',
+    //             'icon' => 'fal fa-home',
+    //             'url' => '/config-home-page-beneficios/index'
+    //         ],
+    //     ]
+    // ],
+    // [
+    //     'label' => 'Config Home VAS',
+    //     'icon'  => 'fal fa-cog',
+    //     'controller' => 'assignment,role,permission',
+    //     'child_action' => [
+    //         [
+    //             'label' => 'Config Home VAS',
+    //             'icon' => 'fal fa-home',
+    //             'url' => '/config-home-page-vas/index'
+    //         ],
+    //     ]
+    // ],
+    // [
+    //     'label' => 'Config Package Page',
+    //     'icon'  => 'fal fa-cog',
+    //     'controller' => 'assignment,role,permission',
+    //     'child_action' => [
+    //         [
+    //             'label' => 'Config Package Page',
+    //             'icon' => 'fal fa-home',
+    //             'url' => '/product-category/config-category-home-package'
+    //         ],
+    //     ]
+    // ],
 ];
 
 return [
     "menu" => $menu_group_controller
 ];
-?>

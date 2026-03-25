@@ -13,6 +13,7 @@ return [
 
     'adminEmail' => 'admin@example.com',
     'urlDomain' => 'https://api.1kho.com.vn',
+    // 'urlDomain' => 'http://localhost:91',
     'secretKeyJWT' => 'Qd7F9!qIY2@#k441JFN4^&svxHGEYBLP@_f5yUbl',
     // 'fireBase'   => [
     //     'customer' => [

@@ -24,7 +24,8 @@ class Category extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['name'],'required','message'=>'Nhập {attribute}']
+            [['name'],'required','message'=>'Nhập {attribute}'],
+            [['sort_order', 'show_in_header','show_in_home','home_position'], 'safe'],
         ];
     }
     
@@ -36,7 +37,12 @@ class Category extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'image' => 'Ảnh',
-            'name' => 'Tên'
+            'name' => 'Tên',
+            'parent_id' => 'Chuyên mục chuyên mục cha',
+            'sort_order' => 'Thứ tự hiển thị chuyên mục con',
+            'show_in_header' => 'Hiển thị menu header',
+            'show_in_home' => 'Hiển thị trang chủ',
+            'home_position' => 'Thứ tự hiển thị chuyên mục cha',
         ];
     }
 
@@ -119,6 +125,13 @@ class Category extends \yii\db\ActiveRecord
         ";
         
         return Yii::$app->db->CreateCommand($sql, $params)->queryAll();
+    }
+
+    public static function getListCategoryParent(){
+        return ArrayHelper::map(self::find()->where(['status' => 1, 'is_delete' => 0, 'parent_id' => 0])->asArray()->all(), 'id', 'name');
+    }
+    public static function getListCategory(){
+        return ArrayHelper::map(self::find()->where(['status' => 1, 'is_delete' => 0])->asArray()->all(), 'id', 'name');
     }
 
 }

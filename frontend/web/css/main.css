@@ -885,6 +885,8 @@ section h2 {
   border-radius: 10px;
   background-color: #fff;
   padding: 25px 20px;
+  height: -moz-max-content;
+  height: max-content;
 }
 .voucher .voucher_sidebar .shop_info_bar {
   display: flex;
@@ -1543,7 +1545,7 @@ section h2 {
 
 .btn-blue {
   background-color: #EBF4FF;
-  color: #3D93F8;
+  color: #3D93F8 !important;
   border: 1px solid #3D93F8;
 }
 
@@ -1600,6 +1602,10 @@ section h2 {
   text-indent: 15px;
   font-size: 14px;
   outline: none;
+}
+.form-group .fileInput, .form-group #fileInput {
+  height: 125px;
+  cursor: pointer;
 }
 .form-group textarea {
   background-color: #F5F6FA;
@@ -2067,7 +2073,7 @@ input:checked[type=checkbox] {
   width: 100%;
   gap: 10px;
 }
-.history_right .group_item_shop .item_shop_right .btn_item .action_form button {
+.history_right .group_item_shop .item_shop_right .btn_item .action_form button, .history_right .group_item_shop .item_shop_right .btn_item .action_form a {
   height: 40px;
 }
 
@@ -2753,6 +2759,12 @@ input:checked[type=checkbox] {
   max-height: 200px;
 }
 
+.modal_content_review .preview-item img,
+.modal_content_review .preview-item video {
+  max-width: 80px;
+  max-height: 80px;
+}
+
 .content_product_delivery {
   display: none;
 }
@@ -2777,6 +2789,9 @@ input:checked[type=checkbox] {
 
 .modal_content_review {
   border-radius: 10px;
+}
+.modal_content_review .modal-body {
+  padding: 0 50px 30px;
 }
 
 #group-stars {
@@ -2819,6 +2834,15 @@ input:checked[type=checkbox] {
 }
 #group-stars .rating__input:hover ~ .rating__label .rating__icon--star {
   color: #ddd;
+}
+
+.action_viewd {
+  display: flex;
+  justify-content: end;
+  width: 100%;
+}
+.action_viewd a {
+  height: 40px;
 }
 
 @media screen and (max-width: 1024px) {

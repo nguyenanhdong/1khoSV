@@ -30,9 +30,9 @@ class Banner extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['name'],'required','message'=>'Nhập {attribute}'],
+            [['name','image'],'required','message'=>'Nhập {attribute}'],
             [['image'], 'string', 'max' => 400],
-            [['description','type_show','is_show_button','type','date_start','date_end'], 'safe'],
+            [['description','type_show','is_show_button','type','date_start','date_end','type'], 'safe'],
         ];
     }
     

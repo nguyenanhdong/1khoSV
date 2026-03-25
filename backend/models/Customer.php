@@ -59,4 +59,22 @@ class Customer extends \yii\db\ActiveRecord
             'province' => 'Thành phố',
         ];
     }
+
+    public static function findIdentity($id){        
+        return static::findOne(['id'=>$id,'status'=>self::STATUS_ACTIVE]);
+    }
+    /* modified */
+    public static function findIdentityByAccessToken($token, $type = null){
+            return static::findOne(['access_token' =>$token]);
+    }
+
+    public static function findByUsername($username){
+        return static::findOne(['username'=>$username,'status'=>self::STATUS_ACTIVE]);
+    }
+    public static function findByEmail($email){
+        return static::findOne(['email'=>$email,'status'=>self::STATUS_ACTIVE]);
+    }
+    public static function findByPhone($phone){
+        return static::findOne(['phone'=>$phone,'status'=>self::STATUS_ACTIVE]);
+    }
 }

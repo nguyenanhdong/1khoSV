@@ -92,6 +92,7 @@ class ProductReview extends \yii\db\ActiveRecord
         $content            = $params['content_review'];
 
         $flagCanReview      = self::checkUserReviewOrder($user_id, $order_id);
+      
         if( $flagCanReview ){
             $modelOrder= Order::findOne(['id' => $order_id, 'user_id' => $user_id]);
             if( !$modelOrder || $modelOrder->status != Order::STATUS_PURCHASED ){
@@ -151,7 +152,7 @@ class ProductReview extends \yii\db\ActiveRecord
     public static function getListReviewOfUser($user_id, $type, $limit = null, $offset = null){
         if( $type == 0 ){//Chưa đánh giá
             $query = self::find()
-            ->select('A.id, D.id as product_id, D.name as product_name, D.image as product_img, E.fullname as agent_name, C.price_origin, C.price, C.total_price, C.quantity')
+            ->select('A.id, D.id as product_id, D.name as product_name, D.image as product_img,D.star as product_star, E.fullname as agent_name, C.price_origin, C.price, C.total_price, C.quantity')
             ->from(Order::tableName() . ' A')
             ->leftJoin(self::tableName() . ' B', 'A.id = B.order_id')
             ->innerJoin(OrderProduct::tableName() . ' C', 'A.id = C.order_id')
@@ -203,7 +204,8 @@ class ProductReview extends \yii\db\ActiveRecord
                     'price'=> $price,
                     'price_old' => $price_old,
                     'percent_discount' => $percent_discount,
-                    'status_name' => 'Đã mua'
+                    'status_name' => 'Đã mua',
+                    'product_star' => $item['product_star']
                 ];
             }else{
                 $video_image = [];

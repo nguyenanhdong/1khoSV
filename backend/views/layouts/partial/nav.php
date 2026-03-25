@@ -15,19 +15,11 @@
     $menu           = isset(Yii::$app->params['menu']) ? Yii::$app->params['menu'] : [];
     $actionCurrent  = explode('?',Yii::$app->request->url);
     $actionCurrent  = $actionCurrent[0];
-    $total_feedback = Feedback::find()->where(['is_processed'=>0])->count();
+    // $total_feedback = Feedback::find()->where(['is_processed'=>0])->count();
     $total_order    = 0;//OrderWork::find()->where('status = 0 and staff_id = 0')->count();
-    $total_contact  = Contact::find()->where('is_processed = 0')->count();
+    // $total_contact  = Contact::find()->where('is_processed = 0')->count();
 ?>
 <nav id="js-primary-nav" class="primary-nav" role="navigation">
-    <div class="nav-filter">
-        <div class="position-relative">
-            <input type="text" id="nav_filter_input" placeholder="Filter menu" class="form-control" tabindex="0">
-            <a href="#" onclick="return false;" class="btn-primary btn-search-close js-waves-off" data-action="toggle" data-class="list-filter-active" data-target=".page-sidebar">
-                <i class="fal fa-chevron-up"></i>
-            </a>
-        </div>
-    </div>
     <div class="info-card">
         <img src="/img/demo/avatars/avatar-admin.png" class="profile-image rounded-circle" alt="<?= $user->fullname ?>">
         <div class="info-card-text">
@@ -39,9 +31,6 @@
             <span class="d-inline-block text-truncate text-truncate-sm"></span>
         </div>
         <img src="/img/card-backgrounds/cover-2-lg.png" class="cover" alt="cover">
-        <a href="#" onclick="return false;" class="pull-trigger-btn" data-action="toggle" data-class="list-filter-active" data-target=".page-sidebar" data-focus="nav_filter_input">
-            <i class="fal fa-angle-down"></i>
-        </a>
     </div>
     <ul id="js-nav-menu" class="nav-menu">
         <?php 
@@ -56,12 +45,12 @@
                     $totalChild         = count($groupMenu['child_action']);
                     $totalNotify        = 0;
 
-                    if( $groupMenu['controller'] == 'feedback' )
-                        $totalNotify    = $total_feedback;
-                    else if( $groupMenu['controller'] == 'contact' )
-                        $totalNotify    = $total_contact;
-                    elseif( $groupMenu['controller'] == 'order-work' )
-                        $totalNotify    = $total_order;
+                    // if( $groupMenu['controller'] == 'feedback' )
+                    //     $totalNotify    = $total_feedback;
+                    // else if( $groupMenu['controller'] == 'contact' )
+                    //     $totalNotify    = $total_contact;
+                    // elseif( $groupMenu['controller'] == 'order-work' )
+                    //     $totalNotify    = $total_order;
 
                     if( $totalChild == 1 ){
                         $link_parent = $groupMenu['child_action'][0]['url'];

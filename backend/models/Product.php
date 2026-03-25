@@ -23,7 +23,8 @@ class Product extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['name'],'required','message'=>'Nhập {attribute}']
+            [['name','description','image','category_id','price','quantity_in_stock'],'required','message'=>'Nhập {attribute}'],
+            [['video','description','create_at','price','price_discount','quantity_in_stock','origin','state','weight','width','height','length','fee_ship','is_highlight','status','view_count','quantity_sold','agent_id'], 'safe'],
         ];
     }
     
@@ -35,7 +36,26 @@ class Product extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'image' => 'Ảnh',
-            'name' => 'Tên'
+            'video' => 'Video',
+            'name' => 'Tên',
+            'description' => 'Mô tả',
+            'category_id' => 'Chuyên mục',
+            'create_at' => 'Ngày tạo',
+            'price' => 'Giá',
+            'price_discount' => 'Giá khuyến mại',
+            'quantity_in_stock' => 'Số lượng hàng tồn kho',
+            'origin' => 'Xuất xứ',
+            'state' => 'Tình trạng sản phẩm',
+            'weight' => 'Cân nặng',
+            'width' => 'Chiểu rộng',
+            'height' => 'Chiểu cao',
+            'length' => 'Chiểu dài',
+            'fee_ship' => 'Phí vận chuyển',
+            'is_highlight' => 'Sản phẩm nổi bật',
+            'status' => 'Trạng thái',
+            'view_count' => 'Lượt xem sản phẩm',
+            'quantity_sold' => 'Số lượt bán',
+            'agent_id' => 'Mã đại lý',
         ];
     }
 
