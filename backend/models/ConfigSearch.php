@@ -42,6 +42,7 @@ class ConfigSearch extends Config
     public function search($params)
     {
         $query = Config::find();
+        $query->orderBy(['id' => SORT_DESC]);
 
         // add conditions that should always apply here
 

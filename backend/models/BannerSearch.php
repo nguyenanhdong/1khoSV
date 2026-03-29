@@ -42,6 +42,7 @@ class BannerSearch extends Banner
     public function search($params)
     {
         $query = Banner::find();
+        $query->orderBy(['id' => SORT_DESC]);
 
         // add conditions that should always apply here
 

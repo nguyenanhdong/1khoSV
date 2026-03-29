@@ -42,6 +42,7 @@ class CustomerSearch extends Customer
     public function search($params)
     {
         $query = Customer::find();
+        $query->orderBy(['id' => SORT_DESC]);
 
         // add conditions that should always apply here
 

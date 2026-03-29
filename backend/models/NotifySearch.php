@@ -42,6 +42,7 @@ class NotifySearch extends Notify
     public function search($params)
     {
         $query = Notify::find();
+        $query->orderBy(['id' => SORT_DESC]);
 
         // add conditions that should always apply here
 
