@@ -49,6 +49,18 @@ $menu_group_controller = [
             ],
         ]
     ],
+    [
+        'label' => 'Voucher',
+        'icon'  => 'fal fa-credit-card',
+        'controller' => 'assignment,role,permission',
+        'child_action' => [
+            [
+                'label' => 'Voucher',
+                'icon' => 'fal fa-credit-card',
+                'url' => '/voucher/index'
+            ],
+        ]
+    ],
     // [
     //     'label' => 'Product VAS',
     //     'icon'  => 'fal fa-credit-card',

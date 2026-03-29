@@ -22,7 +22,8 @@ class Voucher extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            
+            [['name','type_voucher','type_price','price','date_start','date_end'],'required','message'=>'Nhập {attribute}'],
+            [['name','type_voucher','type_price','price','max_price_by_percent','minimum_order','total_maximum_use','maximum_use_by_user','date_start','date_end','agent_id','product_id'], 'safe'],
         ];
     }
     
@@ -33,6 +34,17 @@ class Voucher extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
+            'name' => 'Tên voucher',
+            'type_voucher' => 'Loại voucher',
+            'type_price' => 'Loại giảm',
+            'price' => 'Số tiền giảm',
+            'max_price_by_percent' => 'Số tiền hoặc xu hoàn',
+            'minimum_order' => 'Số tiền đơn hàng tối thiểu để được áp dụng',
+            'total_maximum_use' => 'Tổng lượt sử dụng tối đa',
+            'maximum_use_by_user' => 'Lượt sử dụng tối đa (người mua)',
+            'date_start' => 'Ngày bắt đầu',
+            'date_end' => 'Ngày kết thúc',
+            'product_id' => 'Sản phẩm áp dụng',
         ];
     }
     

@@ -32,4 +32,12 @@ return [
         1 => 'Khách hàng',
         2 => 'Đại lý',
     ],
+    'type_voucher' => [ // loai voucher
+        1 => 'Giảm tiền',
+        2 => 'Hoàn xu',
+    ],
+    'type_price' => [ // loai voucher
+        1 => 'Giảm theo số tiền',
+        2 => 'Giảm theo %',
+    ],
 ];
