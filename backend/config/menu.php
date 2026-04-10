@@ -61,6 +61,18 @@ $menu_group_controller = [
             ],
         ]
     ],
+    [
+        'label' => 'Đơn hàng',
+        'icon'  => 'fal fa-credit-card',
+        'controller' => 'assignment,role,permission',
+        'child_action' => [
+            [
+                'label' => 'Đơn hàng',
+                'icon' => 'fal fa-credit-card',
+                'url' => '/order/index'
+            ],
+        ]
+    ],
     // [
     //     'label' => 'Product VAS',
     //     'icon'  => 'fal fa-credit-card',

@@ -10,14 +10,14 @@ return [
         'cache' => [
             'class' => 'yii\caching\FileCache',
         ],
-        // 'db' => [
-        //     'class' => 'yii\db\Connection',
-        //     'dsn' => 'mysql:host=localhost;dbname=fastjob',//edhcklfhosting_fastjob
-        //     'username' => 'root',//edhcklfhosting_fastjob
-        //     'password' => '', //3wHL4CWV4C_-uI4fmV9e0x
-        //     'charset' => 'utf8',
-        //     'emulatePrepare' => true
-        // ],
+        'db' => [
+            'class' => 'yii\db\Connection',
+            'dsn' => 'mysql:host=localhost:3308;dbname=kho',//edhcklfhosting_fastjob
+            'username' => 'root',//edhcklfhosting_fastjob
+            'password' => '', //3wHL4CWV4C_-uI4fmV9e0x
+            'charset' => 'utf8',
+            'emulatePrepare' => true
+        ],
         'formatter' => [
             'dateFormat' => 'YYYY-MM-DD HH:mm:ss',
             'decimalSeparator' => ',',

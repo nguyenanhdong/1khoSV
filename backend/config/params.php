@@ -40,4 +40,16 @@ return [
         1 => 'Giảm theo số tiền',
         2 => 'Giảm theo %',
     ],
+    'status_order' => [
+        0 => 'Đang chờ xử lý',
+        1 => 'Đã xác nhận',
+        2 => 'Đang giao hàng',
+        3 => 'Đã mua hàng',
+        4 => 'Hoàn tiền',
+        5 => 'Đã hủy',
+    ],
+    'type_payment' => [
+        1 => 'Chuyển khoản',
+        2 => 'Thanh toán khi nhận hàng',
+    ],
 ];
