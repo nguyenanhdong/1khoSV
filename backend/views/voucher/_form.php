@@ -1,6 +1,8 @@
 <?php
 
 use backend\models\Category;
+use backend\models\Product;
+use kartik\datetime\DateTimePicker;
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 
@@ -9,8 +11,13 @@ use yii\widgets\ActiveForm;
 /* @var $form yii\widgets\ActiveForm */
 
 $categoryParent = Category::getListCategoryParent();
+$listProductByVoucher = Product::getAllProductByVoucher();
 if(!$model->isNewRecord){
     unset($categoryParent[$_GET['id']]);
+}
+
+if (!empty($model->product_id)) {
+    $model->product_id = array_filter(explode(';', $model->product_id));
 }
 ?>
 
@@ -19,13 +26,61 @@ if(!$model->isNewRecord){
     <div class="row">
         <div class="col-lg-8">
             <div class="input-group-control">
-                <?= $form->field($model, 'title')->textInput(['maxlength' => true]) ?>
-                <?= $form->field($model, 'description')->textarea(['maxlength' => true]) ?>
-                <?= $form->field($model, 'content')->textarea(['maxlength' => true, 'id' => 'editor', 'class' => 'form-control editor', 'style' => 'height: 300px;']) ?>
+                <?= $form->field($model, 'name')->textInput(['maxlength' => true]) ?>
+                <?= $form->field($model, 'price')->textInput(['type' => 'number','maxlength' => true]) ?>
+                <?= $form->field($model, 'max_price_by_percent')->textInput(['type' => 'number','maxlength' => true]) ?>
+                <?= $form->field($model, 'minimum_order')->textInput(['type' => 'number','maxlength' => true]) ?>
+                <?= $form->field($model, 'total_maximum_use')->textInput(['type' => 'number','maxlength' => true]) ?>
+                <?= $form->field($model, 'maximum_use_by_user')->textInput(['type' => 'number','maxlength' => true]) ?>
+                <div class="row">
+                    <div class="col-lg-6">
+                        <?=
+                            $form->field($model, 'date_start')->widget(DateTimePicker::classname(), [
+                                'options' => [
+                                    'value' => ($model->date_start) ? date('Y-m-d', strtotime($model->date_start)) : '',
+                                    'class' => 'common_datetime_picker',
+                                    'readonly' => true
+                                ],
+                                'pluginOptions' => [
+                                    'autoclose' => true,
+                                    'format' => 'yyyy-mm-dd',
+                                    'minuteStep' => 5,
+                                    'todayHighlight' => true,
+                                    'todayBtn' => true,
+                                    // 'startDate' => date('Y-m-d H:i'),
+                                    'minView' => 2,
+                                ]
+                            ]);
+                        ?>                                                                        
+                    </div>
+                    <div class="col-lg-6">
+                        <?=
+                            $form->field($model, 'date_end')->widget(DateTimePicker::classname(), [
+                                'options' => [
+                                    'value' => ($model->date_end) ? date('Y-m-d', strtotime($model->date_end)) : '',
+                                    'class' => 'common_datetime_picker',
+                                    'readonly' => true
+                                ],
+                                'pluginOptions' => [
+                                    'autoclose' => true,
+                                    'format' => 'yyyy-mm-dd',
+                                    'minuteStep' => 5,
+                                    'todayHighlight' => true,
+                                    'todayBtn' => true,
+                                    // 'startDate' => date('Y-m-d H:i'),
+                                    'minView' => 2,
+                                ]
+                            ]);
+                        ?>                                           
+                    </div>
+                </div>                  
             </div>
         </div>
         <div class="col-lg-4">
-            <?= $form->field($model, 'user_notify')->dropDownList(Yii::$app->params['user_notify'],['prompt' => Yii::t('app', 'Chọn đối tượng'), 'class' => 'form-control select2 select2-hidden']) ?>
+            <?= $form->field($model, 'type_voucher')->dropDownList(Yii::$app->params['type_voucher'],['prompt' => Yii::t('app', 'Chọn loại voucher'), 'class' => 'form-control select2 select2-hidden']) ?>
+            <?= $form->field($model, 'type_price')->dropDownList(Yii::$app->params['type_price'],['prompt' => Yii::t('app', 'Chọn loại giảm'), 'class' => 'form-control select2 select2-hidden']) ?>
+            <?= $form->field($model, 'product_id')->dropDownList($listProductByVoucher,['prompt' => Yii::t('app', 'Chọn sản phẩm áp dụng'), 'class' => 'form-control select2', 'multiple' => true]) ?>
+            
         </div>
     </div>
     <div class="row">

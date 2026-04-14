@@ -5,8 +5,8 @@ use yii\widgets\ActiveForm;
 /* @var $this yii\web\View */
 /* @var $model backend\models\CategoryTags */
 
-$this->title = 'Cập nhật thông báo';
-$this->params['breadcrumbs'][] = ['label' => 'Thông báo', 'url' => ['index']];
+$this->title = 'Cập nhật voucher';
+$this->params['breadcrumbs'][] = ['label' => 'Voucher', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="course-create">

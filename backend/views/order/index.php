@@ -3,6 +3,8 @@
 use yii\helpers\Html;
 use yii\grid\GridView;
 use backend\models\Category;
+use backend\models\Customer;
+use backend\models\User;
 use yii\helpers\ArrayHelper;
 
 $this->title = 'Đơn hàng';
@@ -34,10 +36,28 @@ $this->params['breadcrumbs']['icon_page'] = 'fa-tag';
                     ['class' => 'yii\grid\SerialColumn','header' => 'No.','contentOptions' => array('style' => 'width:70px')],
 
                     [
+                        'label' => 'Tên khách hàng',
+                        'attribute' => 'user_id',
+                        'value' => function ($model) {
+                            return Customer::findOne($model->user_id)->fullname ?? '';
+                        },
+                        'contentOptions' => ['style'=>'width:200px'],
+                        'enableSorting' => false,
+                    ],
+                    [
+                        'label' => 'SĐT',
+                        'attribute' => 'user_id',
+                        'value' => function ($model) {
+                            return Customer::findOne($model->user_id)->phone ?? '';
+                        },
+                        'contentOptions' => ['style'=>'width:200px'],
+                        'enableSorting' => false,
+                    ],
+                    [
                         'label' => 'Tổng giá gốc',
                         'attribute' => 'price',
                         'value' => function ($model) {
-                            return $model->price;
+                            return number_format($model->price);
                         },
                         'contentOptions' => ['style'=>'width:200px'],
                         'enableSorting' => false,
@@ -46,7 +66,7 @@ $this->params['breadcrumbs']['icon_page'] = 'fa-tag';
                         'label' => 'Phí vận chuyển',
                         'attribute' => 'fee_ship',
                         'value' => function ($model) {
-                            return $model->fee_ship;
+                            return number_format($model->fee_ship);
                         },
                         'contentOptions' => ['style'=>'width:200px'],
                         'enableSorting' => false,
@@ -55,7 +75,7 @@ $this->params['breadcrumbs']['icon_page'] = 'fa-tag';
                         'label' => 'Tổng tiền đơn hàng',
                         'attribute' => 'total_price',
                          'value' => function ($model) {
-                            return $model->total_price;
+                            return number_format($model->total_price);
                         },
                         'contentOptions' => ['style'=>'width:200px'],
                         'enableSorting' => false,
@@ -76,15 +96,15 @@ $this->params['breadcrumbs']['icon_page'] = 'fa-tag';
                         },
                         'contentOptions' => array('style' => 'width:150px')
                     ],                    
-                    [
-                        'label' => 'Đại lý',
-                        'attribute' => 'agent_id',
-                         'value' => function ($model) {
-                            return $model->agent_id;
-                        },
-                        'contentOptions' => ['style'=>'width:200px'],
-                        'enableSorting' => false,
-                    ],                    
+                    // [
+                    //     'label' => 'Đại lý',
+                    //     'attribute' => 'agent_id',
+                    //      'value' => function ($model) {
+                    //         return $model->agent_id;
+                    //     },
+                    //     'contentOptions' => ['style'=>'width:200px'],
+                    //     'enableSorting' => false,
+                    // ],                    
                     [
                         'label' => 'Ngày tạo',
                         'attribute' => 'create_at',

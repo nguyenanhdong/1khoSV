@@ -10,6 +10,12 @@ use yii\widgets\DetailView;
 /* @var $model backend\models\CategoryTags */
 /* @var $form yii\widgets\ActiveForm */
 
+$optionStatus = '';
+foreach (Yii::$app->params['status_order'] as $key => $value) {
+    $selected = '';
+    if ($model->status == $key) $selected = 'selected';
+    $optionStatus .= '<option ' . $selected . ' value="' . $key . '">' . $value . '</option>';
+}
 ?>
 
 <div class="category-tags-form">
@@ -73,91 +79,69 @@ use yii\widgets\DetailView;
                 'value' => !empty($model->time_cancel) ? date('d-m-Y H:i:s', strtotime($model->time_cancel)) : '-'
             ],
             [
-                'label' => Yii::t('app', 'Status'),
+                'label' => 'Trạng thái',
                 'format' => 'raw',
-                'value' => function ($model) use ($isDisabled) {
-                    $statusOptions = ['' => Yii::t('app', 'Select status')] + Yii::$app->params['dealer_order_status'];
-                    $status = !empty(Yii::$app->params['dealer_order_status'][$model->status]) ? Yii::$app->params['dealer_order_status'][$model->status] : '-';
-
-                    $right = '<div id="approve-form-wrapper" style="display: flex; align-items: center; gap: 10px; flex-wrap: nowrap;">'
-                            . Html::hiddenInput('id', $model->id, ['id' => 'dealer-id'])
-                            // Dropdown
-                            . Html::dropDownList('status', $model->status, $statusOptions, [
-                                'class' => 'form-control',
-                                'id' => 'dealer-order-select-status',
-                                'style' => 'width: 230px;',
-                                'disabled' => $isDisabled,
-                            ])
-
-                            
-
-                            // Save button
-                            . Html::button(Yii::t('app', 'Save'), [
-                                'class' => 'btn btn-primary sss',
-                                'id' => 'btn-change-status-submit',
-                                'style' => 'min-width: 100px;',
-                                'disabled' => $isDisabled,
-                            ])
-                            . '</div>';
-
-                    return "<div style='display: flex; align-items: center; gap: 10px; margin-bottom: 10px;'>"
-                        . "<div style='min-width: 100px; text-align: left; padding-right: 10px;' id='dealer-order-status'>{$status}</div>"
-                        . "<div style='text-align: left;'>" .  Yii::t('app', 'Change status') . '</div>'
-                        . $right
-                        . "</div>";
-                },
+                'value' => '
+                    <div class="w-40">
+                        <div class="form-group">
+                        <select class="form-control select2" id="status" name="status">
+                            <option value="">Chọn trạng thái</option>
+                            ' . $optionStatus . '
+                        </select>
+                        <span class="help-block error-message none" id="status_error_message">Vui lòng chọn trạng thái</span>
+                        </div>
+                    </div>
+                '
             ],
             [
-                    'label' => Yii::t('app', 'Reason'),
-                    'format' => 'raw',
-                    'contentOptions' => ['id' => 'reason_box_reject'],
-                    'value' => '
-                        <div id="reason_box_reject" style="margin-top: 10px;">
-                            <div>
-                            '.
-                            Html::textInput('reject_reason', $model->reject_reason, [
-                                'class' => 'form-control',
-                                'id' => 'dealer-order-cancel-reason',
-                                'maxlength' => 255,
-                                'disabled' => $isDisabled,
-                            ])
-                            .'
-                                <span id="reason-error" class="help-block error-message none">' . Yii::t('app', 'Please enter a reason') . '</span>
-                            </div>
+                'label' => 'Ghi chú',
+                'format' => 'raw',
+                'value' => '
+                    <div class="w-40">
+                        <div class="form-group">
+                            <input type="text" class="form-control" id="reason" name="reason" value="' . (!empty($model->reason_cancel) ? $model->reason_cancel : '') . '">
+                            <span class="help-block error-message none" id="reason_error_message">Vui lòng nhập lý do</span>
                         </div>
-                    '
-                ],                    
+                    </div>
+                '
+            ],
+            // [
+            //         'label' => Yii::t('app', 'Reason'),
+            //         'format' => 'raw',
+            //         'contentOptions' => ['id' => 'reason_box_reject'],
+            //         'value' => '
+            //             <div id="reason_box_reject" style="margin-top: 10px;">
+            //                 <div>
+            //                 '.
+            //                 Html::textInput('reject_reason', $model->reject_reason, [
+            //                     'class' => 'form-control',
+            //                     'id' => 'dealer-order-cancel-reason',
+            //                     'maxlength' => 255,
+            //                     'disabled' => $isDisabled,
+            //                 ])
+            //                 .'
+            //                     <span id="reason-error" class="help-block error-message none">' . Yii::t('app', 'Please enter a reason') . '</span>
+            //                 </div>
+            //             </div>
+            //         '
+            //     ],                    
             [
                 'label' => Yii::t('app', 'Date create'),
-                'value' => CommonController::formatDateORC($model->created_at)
+                'value' => date('d-m-Y H:i:s', strtotime($model->create_at))
             ],
-            [
-                'label' => Yii::t('app', 'Date update'),
-                'value' => CommonController::formatDateORC($model->updated_at)
-            ],
-            [
-                'label' => Yii::t('app', 'Processing Time'),
-                'format' => 'raw', // bắt buộc để render HTML
-                'value' => function ($model) {
-                    if (empty($model->created_at)) {
-                        return '-';
-                    }
-
-                    $created = new \DateTime($model->created_at);
-                    $now = new \DateTime();
-                    $diff = $now->diff($created);
-                    $days = $diff->days;
-
-                    if ($days >= 3 && in_array($model->status, ['PENDING', 'IN_REVIEW'])) {
-                        return "<span style='color:red; font-weight:bold;'>$days</span>";
-                    }
-
-                    return $days;
-                },
-            ],
+            // [
+            //     'label' => Yii::t('app', 'Date update'),
+            //     'value' => date('d-m-Y H:i:s', strtotime($model->updated_at))
+            // ],
         ],
     ]) ?>
+
+    <div class="text-center">
+        <a href="index" class="btn btn-primary"><i style="margin-right:5px" class="fal fa-long-arrow-left"></i><?= Yii::t('app', 'Back') ?></a>
+        <?= Html::submitButton('<i class="fal fa-edit"></i> ' . Yii::t('app', 'Update') . '', ['class' => 'btn btn-success', 'id' => 'save_update_status_order', 'disabled' => false]) ?>
+    </div>
 </div>
+<input type="hidden" id="order_id" value="<?= $_GET['id'] ?>">
 <link rel="stylesheet" href="/css/dropzone.css" />
 <link href="/css/cropper.css" rel="stylesheet" />
 <script src="/js/dropzone.js"></script>
@@ -404,6 +388,7 @@ use yii\widgets\DetailView;
         });
     });
 </script>
+
 <style>
     .control-label {
         width: 100%
@@ -414,5 +399,74 @@ use yii\widgets\DetailView;
         max-height: 100px;
         /* object-fit: cover; */
         margin: 20px 0 0;
+    }
+    .none{display: none;}
+    th {
+        width: 300px;
+    }
+
+    tr td {
+        white-space: normal !important;
+    }
+
+    .img-thumbnail {
+        width: 200px;
+        margin-right: 10px;
+    }
+    .disable-button__save{
+        pointer-events: none;
+        opacity: 0.7;
+    }
+
+    .change_status_sim {
+        gap: 10px;
+        display: grid;
+        /*grid-template-columns: 200px 200px 200px 100px 200px 100px;*/
+        align-items: center;
+    }
+
+    .change_status_sim p,
+    .change_status_sim label {
+        margin: 0;
+    }
+
+    .error-input {
+        border: 1px solid red !important;
+    }
+
+    .error-message {
+        color: red;
+        font-size: 12px;
+        margin-top: 5px;
+        display: block;
+    }
+
+    .none {
+        display: none;
+    }
+
+    .change_approve_status_sim .select2 {
+        width: 200px!important;
+    }
+    .change_status_sim_text {
+        display: grid;
+        grid-template-columns: 200px 200px 200px;
+        gap: 10px;
+    }
+    .change_status_sim_action {
+        display: grid;
+        grid-template-columns: 200px 200px 200px;
+        gap: 10px;
+    }
+    .change_status_sim_action button {
+        width: fit-content;
+    }
+
+    .w-40 {
+        width: 40% !important;
+    }
+
+    #save_update_sim_card_btn:disabled {
+        cursor: not-allowed;
     }
 </style>

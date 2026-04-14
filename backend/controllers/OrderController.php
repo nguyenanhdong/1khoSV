@@ -73,6 +73,33 @@ class OrderController extends Controller
         ]);
     }
 
+    public function actionUpdateStatus() {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        if (!isset($_POST['status']) || !$_POST['status']) {
+            return [
+                'success' => false,
+                'msg' => Yii::t('app', 'Vui lòng chọn trạng thái'),
+                'isObject' => 0
+            ];
+        }
+        if(!empty($_POST['orderId'])){
+            $model = $this->findModel($_POST['orderId']);
+            $model->status = $_POST['status'];
+            $model->reason_cancel = $_POST['reason'] ?? '';
+            if($model->save()){
+                return [
+                    'success' => true,
+                    'msg' => Yii::t('app', 'Cập nhật thành công'),
+                ];
+            } else{
+                return [
+                    'success' => false,
+                    'msg' => $model->errors
+                ];
+            }
+        }
+    }    
+
     public function actionDelete($id)
     {
         $model = Banner::findOne($id);

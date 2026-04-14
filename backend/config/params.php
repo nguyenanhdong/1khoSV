@@ -46,7 +46,7 @@ return [
         2 => 'Đang giao hàng',
         3 => 'Đã mua hàng',
         4 => 'Hoàn tiền',
-        5 => 'Đã hủy',
+        5 => 'Hủy',
     ],
     'type_payment' => [
         1 => 'Chuyển khoản',
