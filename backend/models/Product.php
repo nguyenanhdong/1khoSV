@@ -306,4 +306,8 @@ class Product extends \yii\db\ActiveRecord
 
         return $data;
     }
+
+    public static function getAllProductByVoucher(){
+        return ArrayHelper::map(self::find()->where(['status' => self::STATUS_ACTIVE])->asArray()->all(), 'id', 'name');
+    }
 }

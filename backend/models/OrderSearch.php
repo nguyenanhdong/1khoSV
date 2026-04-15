@@ -5,12 +5,10 @@ namespace backend\models;
 use Yii;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
-use backend\models\Voucher;
+use backend\models\Banner;
 
-/**
- * BannerSearch represents the model behind the search form about `backend\models\Banner`.
- */
-class VoucherSearch extends Voucher
+
+class OrderSearch extends Order
 {
     /**
      * @inheritdoc
@@ -19,7 +17,7 @@ class VoucherSearch extends Voucher
     {
         return [
             [['id'], 'integer'],
-            [['name','type_voucher','type_price'], 'safe'],
+            [['status','type_payment','agent_id'], 'safe'],
         ];
     }
 
@@ -41,10 +39,7 @@ class VoucherSearch extends Voucher
      */
     public function search($params)
     {
-        $query = Voucher::find();
-        $query->orderBy(['id' => SORT_DESC]);
-
-        // add conditions that should always apply here
+        $query = OrderSearch::find();
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
@@ -53,7 +48,7 @@ class VoucherSearch extends Voucher
                 'defaultOrder' => [
                     'id' => SORT_DESC
                 ],
-            ],            
+            ],
             'pagination' => [ 'pageSize' => 10 ],
         ]);
 
@@ -63,13 +58,12 @@ class VoucherSearch extends Voucher
             return $dataProvider;
         }
 
-        // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
-            'type_voucher' => $this->type_voucher,
-            'type_price' => $this->type_price
+            'status' => $this->status,
+            'type_payment' => $this->type_payment,
+            'agent_id' => $this->agent_id
         ]);
-        $query->andFilterWhere(['like', 'name', $this->name]);
 
         return $dataProvider;
     }

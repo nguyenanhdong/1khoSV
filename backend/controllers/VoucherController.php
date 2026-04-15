@@ -51,6 +51,9 @@ class VoucherController extends Controller
         $model = new Voucher();
 
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
+            if (is_array($model->product_id)) {
+                $model->product_id = ';' . implode(';', $model->product_id) . ';';
+            }            
             if ($model->save()) {
                 Yii::$app->session->setFlash('success', "Tạo voucher thành công");
             } else
@@ -70,11 +73,11 @@ class VoucherController extends Controller
 
         $modelOld      = $model->getAttributes();
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
-            $model->save(false);
-
-            // if (is_array($modelOld['product_show_home'])) {
-            //     $modelOld['product_show_home'] = ';' . implode(';', $modelOld['product_show_home']) . ';';
-            // }
+            
+            if (is_array($model->product_id)) {
+                $model->product_id = ';' . implode(';', $model->product_id) . ';';
+            }
+                $model->save(false);
             Yii::$app->session->setFlash('success', "Cập nhật voucher thành công");
             return $this->redirect(['index']);
         }

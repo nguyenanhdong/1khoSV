@@ -8,8 +8,10 @@ use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use backend\models\Banner;
 use backend\models\BannerSearch;
+use backend\models\Order;
+use backend\models\OrderSearch;
 
-class BannerController extends Controller
+class OrderController extends Controller
 {
 
     /**
@@ -44,38 +46,18 @@ class BannerController extends Controller
      */
     public function actionIndex()
     {
-        $searchModel = new BannerSearch();
+        $searchModel = new OrderSearch();
         
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
   
-        $model = new Banner();
 
         return $this->render('index', [
             'dataProvider' => $dataProvider,
             'searchModel' => $searchModel,
-            'model' => $model,
         ]);
     }
 
-    public function actionCreate()
-    {
-        $model = new Banner();
-        
-        if($model->load(Yii::$app->request->post()) && $model->validate())
-        {
-            if( $model->save() ){
-                Yii::$app->session->setFlash('message', "Add banner success");
-            }else{
-                Yii::$app->session->setFlash('message', "Error!");
-            }
-                
-            return $this->redirect(['index']);
-        }
-
-        return $this->render('create', [
-            'model' => $model,
-        ]);
-    }
+   
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
@@ -83,13 +65,40 @@ class BannerController extends Controller
         if($model->load(Yii::$app->request->post()) && $model->validate())
         {
             $model->save(false);
-            Yii::$app->session->setFlash('message', "Cập nhật banner thành công");
+            Yii::$app->session->setFlash('message', "Cập nhật đơn hàng thành công");
             return $this->redirect(['index']);
         }
         return $this->render('update', [
             'model' => $model,
         ]);
     }
+
+    public function actionUpdateStatus() {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        if (!isset($_POST['status']) || !$_POST['status']) {
+            return [
+                'success' => false,
+                'msg' => Yii::t('app', 'Vui lòng chọn trạng thái'),
+                'isObject' => 0
+            ];
+        }
+        if(!empty($_POST['orderId'])){
+            $model = $this->findModel($_POST['orderId']);
+            $model->status = $_POST['status'];
+            $model->reason_cancel = $_POST['reason'] ?? '';
+            if($model->save()){
+                return [
+                    'success' => true,
+                    'msg' => Yii::t('app', 'Cập nhật thành công'),
+                ];
+            } else{
+                return [
+                    'success' => false,
+                    'msg' => $model->errors
+                ];
+            }
+        }
+    }    
 
     public function actionDelete($id)
     {
@@ -104,7 +113,7 @@ class BannerController extends Controller
 
     protected function findModel($id)
     {
-        if (($model = Banner::findOne($id)) !== null) {
+        if (($model = Order::findOne($id)) !== null) {
             return $model;
         } else {
             throw new NotFoundHttpException('The requested page does not exist.');

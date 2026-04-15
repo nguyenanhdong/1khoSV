@@ -48,7 +48,7 @@ var callBackModal = function(response, status, jqXHR){
    }
 };
 jQuery(document).ready(function(){
-//    $('.select2').select2();
+   $('.select2').select2();
    toastr.options = {
        closeButton:true,
        progressBar:true,
@@ -175,4 +175,57 @@ jQuery(document).ready(function(){
            _parent.find('.sp-number-char')
        }
    });
+
+    $('#save_update_status_order').click(function() {
+        const orderId = $('#order_id').val();
+        const status = $('#status').val();
+        const reason = $('#reason').val();
+        // console.log('orderId: ', orderId);
+        // console.log('status: ', status);
+        if (!status) {
+            $('#status_error_message').show();
+            return;
+        }
+
+        if(status == 5 && !reason){
+            $('#reason_error_message').show();
+            return;
+        }
+
+        const confirmAction = 'Bạn có chắc chắn muốn cập nhật trạng thái đơn hàng?';
+        if (confirmAction) {
+            $.ajax({
+                url: "/order/update-status",
+                type: "POST",
+                data: {
+                    orderId: orderId,
+                    status: status,
+                    reason: reason
+                },
+                success: function(res) {
+                    if (res.success) {
+                        toastr["success"](res.msg);
+                        setTimeout(function(){
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        const firstProperty = typeof res.msg === 'string' ? res.msg : Object.keys(res.msg)[0];
+                        const firstElement = typeof res.msg === 'string' ? res.msg : res.msg[firstProperty][0];
+                        if (firstProperty && firstElement) {
+                            toastr["error"](firstElement);
+                        } else {
+                            toastr["error"](res.msg);
+                        }
+                    }
+                },
+                error: function() {
+                    toastr["error"](translation("An error occurred while updating the order device."));
+                }
+            });
+        }
+    });   
+
+    $(document).on('click', '#reason', function() {
+        $('#reason_error_message').hide();
+    });
 });

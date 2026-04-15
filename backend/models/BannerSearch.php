@@ -48,7 +48,12 @@ class BannerSearch extends Banner
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
-            'sort' => ['attributes' => ['position']],
+            'sort' => [
+                'attributes' => ['id'],
+                'defaultOrder' => [
+                    'id' => SORT_DESC
+                ],
+            ],    
             'pagination' => [ 'pageSize' => 10 ],
         ]);        
 

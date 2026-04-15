@@ -1,92 +1,147 @@
 <?php
 
 use backend\models\Category;
-use backend\models\Product;
-use kartik\datetime\DateTimePicker;
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
+use kartik\datetime\DateTimePicker;
+use yii\widgets\DetailView;
 
 /* @var $this yii\web\View */
 /* @var $model backend\models\CategoryTags */
 /* @var $form yii\widgets\ActiveForm */
 
-if (!empty($model->product_id)) {
-    $model->product_id = array_filter(explode(';', $model->product_id));
+$optionStatus = '';
+foreach (Yii::$app->params['status_order'] as $key => $value) {
+    $selected = '';
+    if ($model->status == $key) $selected = 'selected';
+    $optionStatus .= '<option ' . $selected . ' value="' . $key . '">' . $value . '</option>';
 }
 ?>
 
 <div class="category-tags-form">
-    <?php $form = ActiveForm::begin(); ?>
-    <div class="row">
-        <div class="col-lg-8">
-            <div class="input-group-control">
-                <?= $form->field($model, 'name')->textInput(['maxlength' => true]) ?>
-                <?= $form->field($model, 'price')->textInput(['type' => 'number','maxlength' => true]) ?>
-                <?= $form->field($model, 'max_price_by_percent')->textInput(['type' => 'number','maxlength' => true]) ?>
-                <?= $form->field($model, 'minimum_order')->textInput(['type' => 'number','maxlength' => true]) ?>
-                <?= $form->field($model, 'total_maximum_use')->textInput(['type' => 'number','maxlength' => true]) ?>
-                <?= $form->field($model, 'maximum_use_by_user')->textInput(['type' => 'number','maxlength' => true]) ?>
-                <div class="row">
-                    <div class="col-lg-6">
-                        <?=
-                            $form->field($model, 'date_start')->widget(DateTimePicker::classname(), [
-                                'options' => [
-                                    'value' => ($model->date_start) ? date('Y-m-d', strtotime($model->date_start)) : '',
-                                    'class' => 'date_start',
-                                    'readonly' => true
-                                ],
-                                'pluginOptions' => [
-                                    'autoclose' => true,
-                                    'format' => 'yyyy-mm-dd',
-                                    'minuteStep' => 5,
-                                    'todayHighlight' => true,
-                                    'todayBtn' => true,
-                                    // 'startDate' => date('Y-m-d H:i'),
-                                    'minView' => 2,
-                                ]
-                            ]);
-                        ?>  
+    <?= DetailView::widget([
+        'model' => $model,
+        'attributes' => [
+            [
+                'label' => 'Tổng giá gốc của đơn hàng',
+                'value' => !empty($model->price) ? $model->price : '-'
+            ],
+            [
+                'label' => 'Số tiền được giảm khi dùng voucher',
+                'value' => !empty($model->price_voucher) ? $model->price_voucher : '-'
+            ],
+            [
+                'label' => 'Số điểm trong ví dùng để thanh toán',
+                'value' => !empty($model->price_wallet) ? $model->price_wallet : '-'
+            ],
+            [
+                'label' => 'Phí ship',
+                'value' => !empty($model->fee_ship) ? $model->fee_ship : '-'
+            ],
+            [
+                'label' => 'Tổng tiên đơn hàng',
+                'value' => !empty($model->total_price) ? $model->total_price : '-'
+            ],
+            [
+                'label' => 'Voucher được áp dụng',
+                'value' => !empty($model->voucher_id) ? $model->voucher_id : '-'
+            ],
+            [
+                'label' => 'Voucher được áp dụng',
+                'value' => !empty($model->voucher_point_refundable) ? $model->voucher_point_refundable : '-'
+            ],
+            [
+                'label' => 'Địa chỉ giao hàng',
+                'value' => !empty($model->delivery_address_id) ? $model->delivery_address_id : '-'
+            ],
+            [
+                'label' => 'Phương thức thanh toán',
+                'value' => !empty(Yii::$app->params['type_payment'][$model->type_payment]) ? Yii::$app->params['type_payment'][$model->type_payment] : '-'
+            ],
+            [
+                'label' => 'Trạng thái',
+                'value' => !empty(Yii::$app->params['status_order'][$model->status]) ? Yii::$app->params['status_order'][$model->status] : '-'
+            ],
+            [
+                'label' => 'Đại lý',
+                'value' => !empty($model->agent_id) ?  $model->agent_id : '-'
+            ],
+            [
+                'label' => 'Thời gian thanh toán',
+                'value' => !empty($model->time_payment) ? date('d-m-Y H:i:s', strtotime($model->time_payment)) : '-'
+            ],
+            [
+                'label' => 'Lý do hủy đơn',
+                'value' => !empty($model->reason_cancel) ? $model->reason_cancel : '-'
+            ],
+            [
+                'label' => 'Thời gian hủy đơn',
+                'value' => !empty($model->time_cancel) ? date('d-m-Y H:i:s', strtotime($model->time_cancel)) : '-'
+            ],
+            [
+                'label' => 'Trạng thái',
+                'format' => 'raw',
+                'value' => '
+                    <div class="w-40">
+                        <div class="form-group">
+                        <select class="form-control select2" id="status" name="status">
+                            <option value="">Chọn trạng thái</option>
+                            ' . $optionStatus . '
+                        </select>
+                        <span class="help-block error-message none" id="status_error_message">Vui lòng chọn trạng thái</span>
+                        </div>
                     </div>
-                    <div class="col-lg-6">
-                        <?=
-                            $form->field($model, 'date_end')->widget(DateTimePicker::classname(), [
-                                'options' => [
-                                    'value' => ($model->date_end) ? date('Y-m-d', strtotime($model->date_end)) : '',
-                                    'class' => 'date_end',
-                                    'readonly' => true
-                                ],
-                                'pluginOptions' => [
-                                    'autoclose' => true,
-                                    'format' => 'yyyy-mm-dd',
-                                    'minuteStep' => 5,
-                                    'todayHighlight' => true,
-                                    'todayBtn' => true,
-                                    // 'startDate' => date('Y-m-d H:i'),
-                                    'minView' => 2,
-                                ]
-                            ]);
-                        ?>                                           
+                '
+            ],
+            [
+                'label' => 'Ghi chú',
+                'format' => 'raw',
+                'value' => '
+                    <div class="w-40">
+                        <div class="form-group">
+                            <input type="text" class="form-control" id="reason" name="reason" value="' . (!empty($model->reason_cancel) ? $model->reason_cancel : '') . '">
+                            <span class="help-block error-message none" id="reason_error_message">Vui lòng nhập lý do</span>
+                        </div>
                     </div>
-                </div>                  
-            </div>
-        </div>
-        <div class="col-lg-4">
-            <?= $form->field($model, 'type_voucher')->dropDownList(Yii::$app->params['type_voucher'],['prompt' => Yii::t('app', 'Chọn loại voucher'), 'class' => 'form-control select2 select2-hidden']) ?>
-            <?= $form->field($model, 'type_price')->dropDownList(Yii::$app->params['type_price'],['prompt' => Yii::t('app', 'Chọn loại giảm'), 'class' => 'form-control select2 select2-hidden']) ?>
-            <?= $form->field($model, 'product_id')->dropDownList($listProductByVoucher,['prompt' => Yii::t('app', 'Chọn sản phẩm áp dụng'), 'class' => 'form-control select2', 'multiple' => true]) ?>
-            
-        </div>
+                '
+            ],
+            // [
+            //         'label' => Yii::t('app', 'Reason'),
+            //         'format' => 'raw',
+            //         'contentOptions' => ['id' => 'reason_box_reject'],
+            //         'value' => '
+            //             <div id="reason_box_reject" style="margin-top: 10px;">
+            //                 <div>
+            //                 '.
+            //                 Html::textInput('reject_reason', $model->reject_reason, [
+            //                     'class' => 'form-control',
+            //                     'id' => 'dealer-order-cancel-reason',
+            //                     'maxlength' => 255,
+            //                     'disabled' => $isDisabled,
+            //                 ])
+            //                 .'
+            //                     <span id="reason-error" class="help-block error-message none">' . Yii::t('app', 'Please enter a reason') . '</span>
+            //                 </div>
+            //             </div>
+            //         '
+            //     ],                    
+            [
+                'label' => Yii::t('app', 'Date create'),
+                'value' => date('d-m-Y H:i:s', strtotime($model->create_at))
+            ],
+            // [
+            //     'label' => Yii::t('app', 'Date update'),
+            //     'value' => date('d-m-Y H:i:s', strtotime($model->updated_at))
+            // ],
+        ],
+    ]) ?>
+
+    <div class="text-center">
+        <a href="index" class="btn btn-primary"><i style="margin-right:5px" class="fal fa-long-arrow-left"></i><?= Yii::t('app', 'Back') ?></a>
+        <?= Html::submitButton('<i class="fal fa-edit"></i> ' . Yii::t('app', 'Update') . '', ['class' => 'btn btn-success', 'id' => 'save_update_status_order', 'disabled' => false]) ?>
     </div>
-    <div class="row">
-        <div class="col-lg-12">
-            <div class="form-group text-center" style="margin-top:10px">
-                <?= Html::submitButton($model->isNewRecord ? '<i class="fal fa-plus"></i> Thêm' : '<i class="fal fa-edit"></i> Cập nhật', ['class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary']) ?>
-                <a class="btn btn-info btn_cancel" href="index">Hủy</a>
-            </div>
-        </div>
-    </div>
-    <?php ActiveForm::end(); ?>
 </div>
+<input type="hidden" id="order_id" value="<?= $_GET['id'] ?>">
 <link rel="stylesheet" href="/css/dropzone.css" />
 <link href="/css/cropper.css" rel="stylesheet" />
 <script src="/js/dropzone.js"></script>
@@ -333,6 +388,7 @@ if (!empty($model->product_id)) {
         });
     });
 </script>
+
 <style>
     .control-label {
         width: 100%
@@ -343,5 +399,74 @@ if (!empty($model->product_id)) {
         max-height: 100px;
         /* object-fit: cover; */
         margin: 20px 0 0;
+    }
+    .none{display: none;}
+    th {
+        width: 300px;
+    }
+
+    tr td {
+        white-space: normal !important;
+    }
+
+    .img-thumbnail {
+        width: 200px;
+        margin-right: 10px;
+    }
+    .disable-button__save{
+        pointer-events: none;
+        opacity: 0.7;
+    }
+
+    .change_status_sim {
+        gap: 10px;
+        display: grid;
+        /*grid-template-columns: 200px 200px 200px 100px 200px 100px;*/
+        align-items: center;
+    }
+
+    .change_status_sim p,
+    .change_status_sim label {
+        margin: 0;
+    }
+
+    .error-input {
+        border: 1px solid red !important;
+    }
+
+    .error-message {
+        color: red;
+        font-size: 12px;
+        margin-top: 5px;
+        display: block;
+    }
+
+    .none {
+        display: none;
+    }
+
+    .change_approve_status_sim .select2 {
+        width: 200px!important;
+    }
+    .change_status_sim_text {
+        display: grid;
+        grid-template-columns: 200px 200px 200px;
+        gap: 10px;
+    }
+    .change_status_sim_action {
+        display: grid;
+        grid-template-columns: 200px 200px 200px;
+        gap: 10px;
+    }
+    .change_status_sim_action button {
+        width: fit-content;
+    }
+
+    .w-40 {
+        width: 40% !important;
+    }
+
+    #save_update_sim_card_btn:disabled {
+        cursor: not-allowed;
     }
 </style>
