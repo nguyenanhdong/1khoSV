@@ -24,6 +24,14 @@ use yii\widgets\ActiveForm;
                     <label class="lab_select" for=""><?= Yii::t('app', 'Tên chuyên mục') ?></label>
                     <?= $form->field($model, 'name')->textInput(['placeholder'=>'Nhập tên chuyên mục'])->label(false) ?>
                 </div>
+                <div class="col-lg-3">
+                    <label class="lab_select" for=""><?= Yii::t('app', 'Hiển thị trang chủ') ?></label>
+                    <?= $form->field($model, 'show_in_home')->dropDownList(Yii::$app->params['status'],['prompt'=>'Tất cả', 'class' => 'form-control select2 select2-hidden'])->label(false) ?>
+                </div> 
+                <div class="col-lg-3">
+                    <label class="lab_select" for=""><?= Yii::t('app', 'Hiển thị menu header') ?></label>
+                    <?= $form->field($model, 'show_in_header')->dropDownList(Yii::$app->params['status'],['prompt'=>'Tất cả', 'class' => 'form-control select2 select2-hidden'])->label(false) ?>
+                </div> 
                           
                 <div class="col-lg-3">
                     <div class="form-group">

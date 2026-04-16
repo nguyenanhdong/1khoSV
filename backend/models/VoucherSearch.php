@@ -42,6 +42,7 @@ class VoucherSearch extends Voucher
     public function search($params)
     {
         $query = Voucher::find();
+        $query->orderBy(['id' => SORT_DESC]);
 
         // add conditions that should always apply here
 

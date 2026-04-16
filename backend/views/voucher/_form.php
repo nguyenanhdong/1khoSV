@@ -10,12 +10,6 @@ use yii\widgets\ActiveForm;
 /* @var $model backend\models\CategoryTags */
 /* @var $form yii\widgets\ActiveForm */
 
-$categoryParent = Category::getListCategoryParent();
-$listProductByVoucher = Product::getAllProductByVoucher();
-if(!$model->isNewRecord){
-    unset($categoryParent[$_GET['id']]);
-}
-
 if (!empty($model->product_id)) {
     $model->product_id = array_filter(explode(';', $model->product_id));
 }
@@ -38,7 +32,7 @@ if (!empty($model->product_id)) {
                             $form->field($model, 'date_start')->widget(DateTimePicker::classname(), [
                                 'options' => [
                                     'value' => ($model->date_start) ? date('Y-m-d', strtotime($model->date_start)) : '',
-                                    'class' => 'common_datetime_picker',
+                                    'class' => 'date_start',
                                     'readonly' => true
                                 ],
                                 'pluginOptions' => [
@@ -51,14 +45,14 @@ if (!empty($model->product_id)) {
                                     'minView' => 2,
                                 ]
                             ]);
-                        ?>                                                                        
+                        ?>  
                     </div>
                     <div class="col-lg-6">
                         <?=
                             $form->field($model, 'date_end')->widget(DateTimePicker::classname(), [
                                 'options' => [
                                     'value' => ($model->date_end) ? date('Y-m-d', strtotime($model->date_end)) : '',
-                                    'class' => 'common_datetime_picker',
+                                    'class' => 'date_end',
                                     'readonly' => true
                                 ],
                                 'pluginOptions' => [

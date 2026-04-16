@@ -15,7 +15,7 @@ class CategorySearch extends Category
     {
         return [
             [['id'], 'integer'],
-            [['name'], 'safe']
+            [['name','show_in_home','show_in_header'], 'safe']
         ];
     }
 
@@ -38,6 +38,7 @@ class CategorySearch extends Category
     public function search($params)
     {
         $query = Category::find();
+        $query->orderBy(['id' => SORT_DESC]);
 
         // add conditions that should always apply here
 
@@ -55,6 +56,8 @@ class CategorySearch extends Category
 
         $query->andFilterWhere([
             'id' => $this->id,
+            'show_in_home' => $this->show_in_home,
+            'show_in_header' => $this->show_in_header,
         ]);
         $query->andFilterWhere(['like', 'name', $this->name]);
         $query->andFilterWhere(['is_delete' => 0]);
