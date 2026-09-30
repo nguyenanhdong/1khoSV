@@ -42,6 +42,7 @@ class AgrimacService
         'order.deliver'        => ['deliverOrder', ['orders'], ['admin', 'delivery']],
         'order.cancel'         => ['cancelOrder', ['orders'], ['admin', 'kt_banhang', 'sale']],
         'market.status'        => ['setMarketOrderStatus', ['orders'], ['admin']],
+        'market.refund'        => ['processMarketRefund', ['orders'], ['admin']],
         'warranty.activate'    => ['activateWarranty', ['warranty'], null],
         'claim.save'           => ['saveClaim', ['warranty'], null],
         'commission.pay'       => ['payCommission', ['accounting'], ['admin', 'kt_congno']],
@@ -1020,6 +1021,34 @@ class AgrimacService
         $this->db->createCommand()->update('order', $set, ['id' => $id])->execute();
         $label = D::MARKET_ORDER_STATUS[$status]['label'];
         return ['message' => '✓ Đơn #' . $id . ' → ' . $label, 'data' => ['marketOrder' => R::marketOrder($id), 'counts' => R::marketOrderCounts()]];
+    }
+
+    /** Duyệt / từ chối yêu cầu trả hàng - hoàn tiền của khách (order_refund). Duyệt thì đơn chuyển sang "Hoàn tiền". */
+    private function processMarketRefund(array $d)
+    {
+        $refund = (new Query())->from('order_refund')->where(['id' => (int)($d['refundId'] ?? 0)])->one($this->db);
+        if (!$refund) {
+            throw new Invalid([], 'Yêu cầu hoàn tiền không tồn tại');
+        }
+        if ((int)$refund['status'] !== 0) {
+            throw new Invalid([], 'Yêu cầu này đã được xử lý');
+        }
+        $approve = ($d['decision'] ?? '') === 'approve';
+        $note = $this->str($d, 'note', 400);
+        if (!$approve && $note === '') {
+            throw new Invalid(['note' => 'Vui lòng nhập lý do từ chối']);
+        }
+        $now = date('Y-m-d H:i:s');
+        $this->db->createCommand()->update('order_refund', [
+            'status' => $approve ? 1 : 2, 'reason_cancel' => $approve ? null : $note, 'time_process' => $now,
+        ], ['id' => $refund['id']])->execute();
+        if ($approve) {
+            $this->db->createCommand()->update('order', ['status' => 4], ['id' => (int)$refund['order_id']])->execute();
+        }
+        return [
+            'message' => ($approve ? '✓ Đã đồng ý hoàn tiền' : 'Đã từ chối yêu cầu') . ' · đơn #' . (int)$refund['order_id'],
+            'data' => ['marketOrder' => R::marketOrder((int)$refund['order_id']), 'counts' => R::marketOrderCounts()],
+        ];
     }
 
     /* ======================= Bảo hành ======================= */

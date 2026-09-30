@@ -5,39 +5,46 @@ use yii\web\View;
 use backend\models\Config;
 use frontend\controllers\HelperController;
 use yii\widgets\Breadcrumbs;
+use yii\helpers\Html;
 
+/* @var $shopId int */
+/* @var $following bool */
+/* @var $rating array ['star', 'total'] */
+/* @var $total int */
+/* @var $pageSize int */
+$agent = $data['agentInfo'];
 ?>
 <div class="container">
     <section class="shop">
-        <img src="<?= $data['agentInfo']['cover'] ?>" alt="" class="banner_shop w-100">
+        <img src="<?= Html::encode($agent['cover']) ?>" alt="" class="banner_shop w-100" onerror="this.style.display='none'">
         <div class="shop_info">
             <div class="shop_info_group">
                 <div class="info_desc flex-item-center">
-                    <img src="<?= $data['agentInfo']['avatar'] ?>" alt="">
+                    <img src="<?= Html::encode($agent['avatar']) ?>" alt="" onerror="this.onerror=null;this.src='/images/icon/shop.png'">
                     <div class="text_rating">
-                        <a href="javascript:;"><?= $data['agentInfo']['name'] ?></a>
+                        <h1 class="shop_name"><?= Html::encode($agent['name']) ?></h1>
                         <div class="rating_box flex-item-center">
-                            <!-- <div>
-                                <img src="/images/icon/star.svg" alt="">
-                                <img src="/images/icon/star.svg" alt="">
-                                <img src="/images/icon/star.svg" alt="">
-                                <img src="/images/icon/star.svg" alt="">
-                                <img src="/images/icon/star.svg" alt="">
+                            <?php if ($rating['total'] > 0): ?>
+                            <div>
+                                <?php for ($i = 1; $i <= 5; $i++): ?>
+                                    <img src="/images/icon/<?= $i <= round($rating['star']) ? 'star' : 'star-inactive' ?>.svg" alt="">
+                                <?php endfor; ?>
                             </div>
-                            <span>4.5/5.0 (200)</span>
-                            <span>•</span> -->
-                            <span><?= $data['agentInfo']['total_follow'] ?> Người theo dõi</span>
+                            <span><?= number_format($rating['star'], 1) ?>/5.0 (<?= number_format($rating['total'], 0, ',', '.') ?>)</span>
+                            <span>•</span>
+                            <?php endif; ?>
+                            <span><span class="follow_count"><?= (int)$agent['total_follow'] ?></span> Người theo dõi</span>
                         </div>
                     </div>
                 </div>
-                <button class="btn_follow btn_action">Theo dõi</button>
+                <button type="button" class="btn_follow btn_action <?= $following ? 'following' : '' ?>" data-agent="<?= $shopId ?>"><?= $following ? 'Đang theo dõi' : 'Theo dõi' ?></button>
             </div>
             <div class="search_shop">
                 <div class="form-group position-relative">
                     <div class="icon_search_shop flex-center">
                         <img class="" src="/images/icon/k.svg" alt="">
                     </div>
-                    <input type="text" placeholder="Tìm trong shop này">
+                    <input type="search" id="shop_search" placeholder="Tìm trong shop này" maxlength="100" autocomplete="off">
                 </div>
             </div>
         </div>
@@ -79,15 +86,15 @@ use yii\widgets\Breadcrumbs;
         <section class="cat_list_index">
             <div class="cat_list_index_title d-flex d-lg-none">
                 <p>Danh mục sản phẩm</p>
-                <a href="">Tất cả <i class="fal fa-long-arrow-right"></i></a>
+                <a href="javascript:;" class="shop_cat_filter" data-cat="0">Tất cả <i class="fal fa-long-arrow-right"></i></a>
             </div>
             <div class="cat_list_group">
                 <?php foreach ($data['category'] as $cat) { ?>
-                    <a href="<?= Url::to(['/category/index', 'cate_parent_id' => $cat['id']]) ?>" class="cat_list_item">
+                    <a href="javascript:;" class="cat_list_item shop_cat_filter" data-cat="<?= (int)$cat['id'] ?>">
                         <div class="flex-center">
-                            <img src="<?= $cat['image'] ?>" alt="">
+                            <img src="<?= Html::encode($cat['image']) ?>" alt="">
                         </div>
-                        <p><?= $cat['name'] ?></p>
+                        <p><?= Html::encode($cat['name']) ?></p>
                     </a>
                 <?php } ?>
             </div>
@@ -106,34 +113,13 @@ use yii\widgets\Breadcrumbs;
                 <button sort="price_desc" class="btn_sort_shop d-none d-lg-block">Giá giảm</button>
             </div>
         </div>
-        <div class="product_list">
-            <?php
-            if (!empty($data['productTab'])) {
-                foreach ($data['productTab'] as $prod) {
-            ?>
-                    <div class="product_item">
-                        <a href="<?= Url::to(['/product/detail', 'id' => $prod['id']]) ?>">
-                            <span class="prod_sale"><?= $prod['percent_discount'] ?>% <br> OFF</span>
-                            <img class="prod_avatar" src="<?= $prod['image'] ?>" alt="">
-                            <div class="prod_price_star">
-                                <p class="prod_title line_2" title="<?= $prod['name'] ?>"><?= $prod['name'] ?></p>
-                                <div class="des_prod mt-2">
-                                    <span><?= HelperController::formatPrice($prod['price']) ?></span>
-                                    <div class="flex-center">
-                                        <img src="/images/icon/star.svg" alt="Star">
-                                        <p class="product_star"><?= $prod['star'] ?> (<?= $prod['total_rate'] ?>)</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-            <?php } 
-            } ?>
+        <div class="product_top_title justify-content-start"><span class="color-gray" id="shop_total"><?= number_format($total, 0, ',', '.') ?> sản phẩm</span></div>
+        <div class="product_list" id="shop_products">
+            <?php foreach ($data['productTab'] ?? [] as $prod) echo $this->render('_item', ['prod' => $prod]); ?>
+            <?php if (empty($data['productTab'])): ?><div class="search_empty w-100">Shop chưa có sản phẩm</div><?php endif; ?>
         </div>
-        <?php if (count($data['productTab']) >= 10) { ?>
-            <div class="see_more_product">
-                <button shop-id="<?= $_GET['id'] ?>" class="see_more_shop">Xem thêm</button>
-            </div>
-        <?php } ?>
+        <div class="see_more_product" style="<?= $total > count($data['productTab'] ?? []) ? '' : 'display:none' ?>">
+            <button shop-id="<?= $shopId ?>" class="see_more_btn see_more_shop">Xem thêm</button>
+        </div>
     </section>
 </div>

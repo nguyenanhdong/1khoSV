@@ -28,6 +28,7 @@ class AgrimacData
         'category' => ['icon' => '🗂', 'label' => 'Chuyên mục sàn', 'url' => '/category/index', 'before' => 'products'],
         'voucher'  => ['icon' => '🎟', 'label' => 'Voucher', 'url' => '/voucher/index'],
         'notify'   => ['icon' => '🔔', 'label' => 'Thông báo', 'url' => '/notify/index'],
+        'site-content' => ['icon' => '📝', 'label' => 'Nội dung & liên hệ', 'url' => '/site-content/index'],
     ];
 
     const ROLES = [

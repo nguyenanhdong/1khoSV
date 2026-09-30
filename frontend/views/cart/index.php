@@ -7,6 +7,9 @@ use frontend\controllers\HelperController;
 use yii\bootstrap\ActiveForm;
 use yii\widgets\Breadcrumbs;
 use yii\helpers\Html;
+use frontend\components\SiteInfo;
+
+$bank = SiteInfo::bank();
 
 ?>
 <div class="container">
@@ -40,13 +43,13 @@ use yii\helpers\Html;
                             <div class="choose_product">
                                 <input type="checkbox" class="input_choose_product" value="<?= $row['product_id'] ?>">
                                 <div class="img_product flex-center">
-                                    <img src="<?= $row['images'] ?>" alt="">
+                                    <img src="<?= Html::encode($row['images']) ?>" alt="" onerror="this.style.visibility='hidden'">
                                 </div>
                             </div>
                             <div class="desc_product">
                                 <div class="d-flex flex-column">
-                                    <a href=""><?= $row['name'] ?></a>
-                                    <span class="discount">-<?= $row['percent_discount'] ?>%</span>
+                                    <a href="<?= Url::to(['/product/detail', 'id' => $row['product_id']]) ?>"><?= Html::encode($row['name']) ?></a>
+                                    <?php if ($row['percent_discount'] > 0): ?><span class="discount">-<?= (int)$row['percent_discount'] ?>%</span><?php endif; ?>
                                 </div>
                                 <div>
                                     <p><?= $row['price_format'] ?></p>
@@ -79,9 +82,11 @@ use yii\helpers\Html;
                             </div>
                             <?php if(!empty($deliveryAddress->province)){ ?>
                                 <div>
-                                    <p><?= $deliveryAddress->address . ',' . $deliveryAddress->district . ', ' .$deliveryAddress->province  ?></p>
-                                    <span><?= $deliveryAddress->province ?></span>
+                                    <p><?= Html::encode($deliveryAddress->fullname . ' · ' . $deliveryAddress->phone) ?></p>
+                                    <span><?= Html::encode($deliveryAddress->address . ', ' . $deliveryAddress->district . ', ' . $deliveryAddress->province) ?></span>
                                 </div>
+                            <?php } else { ?>
+                                <div><p class="color-gray">Chưa có địa chỉ giao hàng</p></div>
                             <?php } ?>
                         </div>
                     </div>
@@ -94,9 +99,9 @@ use yii\helpers\Html;
                             <div class="flex-center">
                                 <img src="/images/icon/bank.svg" alt="">
                             </div>
-                            <div>
-                                <p>MBBank</p>
-                                <span>**** 5647</span>
+                            <div id="payment_method_label">
+                                <p>Chưa chọn</p>
+                                <span>Bấm "Thay đổi" để chọn phương thức thanh toán</span>
                             </div>
                         </div>
                     </div>
@@ -104,6 +109,10 @@ use yii\helpers\Html;
                         <div class="title_type flex-item-center justify-content-between">
                             <p>Chọn voucher</p>
                             <a href="javascript:;" data-toggle="modal" data-target="#modalVoucherPayment">Chọn <img src="/images/icon/ar-right.svg" alt=""></a>
+                        </div>
+                        <div class="type_text_item" id="voucher_label" style="display:none">
+                            <div class="flex-center"><img src="/images/icon/badge.svg" alt=""></div>
+                            <div><p></p><span><a href="javascript:;" class="clear_voucher">Bỏ chọn voucher</a></span></div>
                         </div>
                     </div>
                 </div>
@@ -119,11 +128,9 @@ use yii\helpers\Html;
                         <p>Phí ship</p>
                         <span class="fee_ship">0</span>
                     </div>
-                    <div>
-                        <p><img src="/images/icon/vi.svg" alt=""> Sử dụng ví: <span class="wallet_point"><?= $user->wallet_point ?></span></p>
-                        <div class="center">
-                            <input id="payment_point" class="on_off" type="checkbox" value="1" />
-                        </div>
+                    <div class="voucher_deduct_row" style="display:none">
+                        <p>Giảm voucher</p>
+                        <span class="voucher_deduct">0</span>
                     </div>
                     <div>
                         <p>Tổng</p>
@@ -196,16 +203,21 @@ use yii\helpers\Html;
             </div>
             <div class="modal-body">
                 <h2>Thanh toán</h2>
-                <div class="type_payment">
-                    <input class="option-input radio type_payment" type="radio" name="type-payment" value="1">
+                <label class="type_payment">
+                    <input class="option-input radio type_payment" type="radio" name="type-payment" value="1"
+                           data-label="Chuyển khoản qua ngân hàng"
+                           data-sub="<?= $bank ? Html::encode(trim($bank['ten_bank'] . ' · ' . $bank['stk'] . ' · ' . $bank['ten_tk'], ' ·')) : 'Thông tin tài khoản sẽ được gửi sau khi đặt hàng' ?>">
                     <img src="/images/icon/bank.svg" alt="">
-                    <p>Chuyển khoản qua ngân hàng</p>
-                </div>
-                <div class="type_payment">
-                    <input class="option-input radio type_payment" type="radio" name="type-payment" value="2">
+                    <p>Chuyển khoản qua ngân hàng
+                        <?php if ($bank && $bank['stk'] !== ''): ?><br><small class="color-gray"><?= Html::encode($bank['ten_bank']) ?> · STK <?= Html::encode($bank['stk']) ?> · <?= Html::encode($bank['ten_tk']) ?></small><?php endif; ?>
+                    </p>
+                </label>
+                <label class="type_payment">
+                    <input class="option-input radio type_payment" type="radio" name="type-payment" value="2"
+                           data-label="Thanh toán khi nhận hàng (COD)" data-sub="Trả tiền mặt khi nhận hàng">
                     <img src="/images/icon/car-ship.svg" alt="">
                     <p>Thanh toán khi nhận hàng (COD)</p>
-                </div>
+                </label>
             </div>
         </div>
     </div>
@@ -228,17 +240,19 @@ use yii\helpers\Html;
                     ?>
                         <div class="voucher_item voucher_item_cart">
                             <div class="voucher_avatar flex-center">
-                                <img src="<?= $row['image'] ?>" alt="">
+                                <img src="<?= Html::encode($row['image']) ?>" alt="">
                             </div>
                             <div class="voucher_desc">
-                                <span><?= $row['name'] ?></span>
-                                <p><?= $row['desc'] ?></p>
+                                <span><?= Html::encode($row['name']) ?></span>
+                                <p><?= Html::encode($row['desc']) ?></p>
                             </div>
                             <div class="use_voucher flex-center">
-                                <input class="option-input radio input_voucher" type="radio" name="vouche-payment" value="<?= $row['id'] ?>">
+                                <input class="option-input radio input_voucher" type="radio" name="vouche-payment" value="<?= (int)$row['id'] ?>" data-name="<?= Html::encode($row['name']) ?>">
                             </div>
                         </div>
-                    <?php }} ?>
+                    <?php }} else { ?>
+                        <p class="text-center color-gray p-3">Bạn chưa có voucher nào dùng được</p>
+                    <?php } ?>
                 </div>
             </div>
         </div>

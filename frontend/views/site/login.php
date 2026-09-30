@@ -5,7 +5,7 @@
             <label for="">Số điện thoại của bạn</label>
             <div class="group_phone">
                 <img src="/images/icon/phone-input.svg" alt="">
-                <input id="phone_number" type="text" placeholder="0987888999">
+                <input id="phone_number" type="tel" inputmode="tel" autocomplete="tel" placeholder="0987888999">
                 <input style="display: none;" id="otp" type="text" placeholder="123456">
             </div>
             <span>*Chúng tôi sẽ gửi cho bạn một OTP để hoàn tất <br> đăng ký của bạn</span>
@@ -16,8 +16,8 @@
         </div>
         <span class="text-center">- Hoặc tiếp tục với -</span>
         <div class="social_login">
-            <button class="login_fb flex-center"><img src="/images/icon/facebook.svg" alt=""> Facebook</button>
-            <button class="login_gg flex-center"><img src="/images/icon/google.svg" alt=""> Google</button>
+            <button type="button" class="login_fb flex-center"><img src="/images/icon/facebook.svg" alt=""> Facebook</button>
+            <button type="button" class="login_gg flex-center"><img src="/images/icon/google.svg" alt=""> Google</button>
         </div>
     </div>
     <div class="verify_otp">
@@ -42,71 +42,45 @@
 <script src="https://www.gstatic.com/firebasejs/5.2.0/firebase.js"></script>
 <script type="text/javascript">
     (function() {
-    console.log('Start file login with firebase');
     // Initialize Firebase
     var config = JSON.parse('<?= json_encode(Yii::$app->params['fireBase']['login']) ?>');
     firebase.initializeApp(config);
     firebase.auth().languageCode = 'en';//Chú ý dòng này -> Lấy ngôn ngữ hiện tại đang active
-    //Google singin provider
-    var ggProvider = new firebase.auth.GoogleAuthProvider();
+    function sendIdToken(idToken) {
+        return $.ajax({ type: 'POST', url: '/site/login', data: {type: 'idToken', token: idToken} }).done(function (res) {
+            if (res && res.status) {
+                toastr['success']('Đăng nhập thành công');
+                setTimeout(function () { window.location.href = res.redirect || '/'; }, 500);
+            } else {
+                toastr['error']((res && res.message) || 'Đăng nhập thất bại');
+            }
+        }).fail(function () { toastr['error']('Có lỗi xảy ra vui lòng thử lại sau'); });
+    }
 
-    //Login in variables
-    const btnGoogle = document.getElementById('btnGoogle');
+    // Đăng nhập Google / Facebook qua Firebase (provider cần được bật trong Firebase Console → Authentication)
+    function socialLogin(provider, $btn) {
+        if ($btn.prop('disabled')) return;
+        $btn.prop('disabled', true);
+        firebase.auth().signInWithPopup(provider)
+            .then(function (result) { return result.user.getIdToken(true); })
+            .then(sendIdToken)
+            .catch(function (error) {
+                var messages = {
+                    'auth/popup-closed-by-user': 'Bạn đã đóng cửa sổ đăng nhập',
+                    'auth/cancelled-popup-request': 'Bạn đã đóng cửa sổ đăng nhập',
+                    'auth/popup-blocked': 'Trình duyệt đang chặn cửa sổ đăng nhập, vui lòng cho phép popup',
+                    'auth/operation-not-allowed': 'Hình thức đăng nhập này chưa được bật, vui lòng dùng số điện thoại',
+                    'auth/account-exists-with-different-credential': 'Email này đã đăng nhập bằng phương thức khác'
+                };
+                toastr['error'](messages[error.code] || 'Đăng nhập thất bại, vui lòng thử lại');
+            })
+            .then(function () { $btn.prop('disabled', false); });
+    }
+    $('.login_gg').on('click', function () { socialLogin(new firebase.auth.GoogleAuthProvider(), $(this)); });
+    $('.login_fb').on('click', function () { socialLogin(new firebase.auth.FacebookAuthProvider(), $(this)); });
+
     const btnPhone = document.getElementById('btnPhone');
     const verify_otp = document.getElementById('verify_otp');
-
-    //Sing in with Google
-    // btnGoogle.addEventListener('click', e => {
-    //     firebase.auth().signInWithPopup(ggProvider).then(function(result) {
-    //         //Dùng 1 trong 2 cách bên dưới
-    //         //Cách 1
-    //         firebase.auth().currentUser.getIdToken(true).then(function(idToken) {
-    //             $.ajax({
-    //                 type: 'POST',
-    //                 url: window.location.href,
-    //                 data: {type: 'idToken', token: idToken},
-    //                 success: function(res){
-    //                     console.log('res idToken:',res);
-    //                     if( res.status ){
-    //                         alert('Login Success');//Dòng này dùng tạm => Chạy product thì xoá đi
-    //                         // window.location.reload();
-    //                     }else{
-    //                         alert(res.message);
-    //                     }
-    //                 },
-    //                 error: function(err){
-    //                     alert("Có lỗi xảy ra vui lòng thử lại sau");
-    //                 }
-    //             });
-    //         }).catch(function(error) {
-    //             alert("Có lỗi xảy ra vui lòng thử lại sau");
-    //         });
-
-    //         //Cách 2
-    //         // var accessToken = result.credential.accessToken;
-    //         // var user        = result.user;
-    //         // $.ajax({
-    //         //     type: 'POST',
-    //         //     url: window.location.href,
-    //         //     data: {type: 'accessToken', token: accessToken},
-    //         //     success: function(res){
-    //         //         console.log('res accessToken:',res);
-    //         //         if( res.status ){
-    //         //                 alert('Login Success');//Dòng này dùng tạm => Chạy product thì xoá đi
-    //         //                 // window.location.reload();
-    //         //             }else{
-    //         //                 alert(res.message);
-    //         //             }
-    //         //     },
-    //         //     error: function(err){
-    //         //         alert("Có lỗi xảy ra vui lòng thử lại sau");
-    //         //     }
-    //         // });
-    //     }).catch(function(error) {
-    //         alert(error.message);
-    //         console.error('Error: hande error here>>>', error)
-    //     })
-    // }, false)
 
     var flagShowOtp = false;
     var isLoadingSendOTP = false;
@@ -126,9 +100,7 @@
     
     btnPhone.addEventListener('click', e => {
         $('#btnPhone').append('<i class="spinner-border text-light"></i>');
-        console.log(111);
         if( !flagShowOtp ){
-            console.log(222);
             var phone_number = $.trim($('#phone_number').val());
             if( phone_number == '' ){
                 $('#phone_number').focus();
@@ -140,13 +112,23 @@
                 $(".img_loading").show();
                 isLoadingSendOTP = true;
                 // window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container');
-                firebase.auth().signInWithPhoneNumber(phone_number, window.recaptchaVerifier) 
+                var e164 = phone_number.replace(/[^0-9+]/g, '');
+                if (/^0\d{9}$/.test(e164)) e164 = '+84' + e164.substring(1);
+                if (!/^\+\d{10,13}$/.test(e164)) {
+                    $('#btnPhone').find('.spinner-border').remove();
+                    toastr['warning']('Số điện thoại không hợp lệ');
+                    return;
+                }
+                firebase.auth().signInWithPhoneNumber(e164, window.recaptchaVerifier)
                 .then(function(confirmationResult) {
-                console.log(333);
                     flagShowOtp = true;
                     $('.verify_otp').show(500);
                     $('.login_group').remove();
                     window.confirmationResult = confirmationResult;
+                })
+                .catch(function (error) {
+                    $('#btnPhone').find('.spinner-border').remove();
+                    toastr['error'](error.code === 'auth/too-many-requests' ? 'Bạn thử quá nhiều lần, vui lòng thử lại sau' : 'Không gửi được mã OTP, vui lòng kiểm tra số điện thoại');
                 });
             }
         }
@@ -168,36 +150,13 @@
                 $(".img_loading").hide();
                 isLoadingVerifyOTP = false;
                 const user = result.user;
-                console.log('user:',user);
-                firebase.auth().currentUser.getIdToken(true).then(function(idToken) {
-                    $.ajax({
-                        type: 'POST',
-                        url: window.location.href,
-                        data: {type: 'idToken', token: idToken},
-                        success: function(res){
-                            console.log('res idToken:',res);
-                            // $('#verify_otp').find('.spinner-border').remove();
-                            if( res.status ){
-                                toastr['success']('Đăng nhập thành công');
-                                setTimeout(function(){
-                                    window.location.href = '/';
-                                },500);
-                            }else{
-                                alert(res.message);
-                            }
-                        },
-                        error: function(err){
-                            toastr['error']('Có lỗi xảy ra vui lòng thử lại sau');
-                        }
-                    });
-                }).catch(function(error) {
+                firebase.auth().currentUser.getIdToken(true).then(sendIdToken).catch(function(error) {
                     toastr['error']('Có lỗi xảy ra vui lòng thử lại sau');
                 });
             }).catch((error) => {
-                console.log('err verify otp:',error)
                 isLoadingVerifyOTP = false;
                 $(".img_loading").hide();
-                alert(error.message);
+                toastr['error'](error.code === 'auth/invalid-verification-code' ? 'Mã xác nhận không đúng' : 'Mã xác nhận đã hết hạn, vui lòng gửi lại');
             });
         }
     }, false);

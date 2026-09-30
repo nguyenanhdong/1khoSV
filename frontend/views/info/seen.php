@@ -62,12 +62,8 @@ use frontend\controllers\HelperController;
                                 <div class="item_shop_right d-flex flex-column">
                                     <div class="btn_item">
                                         <div class="action_viewd">
-                                            <div class=" position-relative check_heart">
-                                                <!-- <input type="checkbox" class="checkbox_heart"> 
-                                                <label for="heart">
-                                                </label> -->
-                                                <!-- <img src="/images/icon/heart-inactive.svg" alt=""> -->
-                                            </div>
+                                            <?php $liked = \backend\models\UserFavouriteProduct::checkStatusUserFavourites(Yii::$app->user->id, $row['id']); ?>
+                                            <button type="button" class="btn_favourite btn_favourite_sm <?= $liked ? 'active' : '' ?>" data-product="<?= (int)$row['id'] ?>" title="Yêu thích"><img src="/images/icon/<?= $liked ? 'heart-active' : 'heart-inactive' ?>.svg" alt=""></button>
                                             <a target="_blank" href="<?= Url::to(['/product/detail', 'id' => $row['id']]) ?>" class="btn_action btn-blue flex-center">Xem chi tiết</a>
                                         </div>
                                     </div>

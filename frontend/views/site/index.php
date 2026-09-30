@@ -26,7 +26,7 @@ use frontend\controllers\HelperController;
     <section class="cat_list_index">
         <div class="cat_list_index_title d-flex d-lg-none">
             <p>Danh mục sản phẩm</p>
-            <a href="">Tất cả <i class="fal fa-long-arrow-right"></i></a>
+            <a href="<?= Url::to(['/product/search']) ?>">Tất cả <i class="fal fa-long-arrow-right"></i></a>
         </div>
         <div class="cat_list_group">
             <?php 
@@ -41,75 +41,6 @@ use frontend\controllers\HelperController;
                 </a>
             <?php }} ?>
         </div>
-    </section>
-
-    <section class="product_top">
-        <div class="product_top_title">
-            <h2>Tin Rao vặt</h2>
-            <a href="">Tất cả <i class="far fa-angle-right"></i></a>
-        </div>
-        <div class="product_top_tab">
-            <p class="tab_advertis active" dt-tab="news">Tin mới</p>
-            <p>•</p>
-            <p class="tab_advertis" dt-tab="buy">Tin đăng mua</p>
-            <p>•</p>
-            <p class="tab_advertis" dt-tab="sell">Bán nhanh có trả phí</p>
-        </div>
-        <div class="product_top_cat">
-            <div class="product_top_cat_item">
-                <div>
-                    <a class="flex-center" href="">Máy cày</a>
-                    <span>UP to 80% OFF</span>
-                </div>
-                <div>
-                    <img src="/images/page/may-cay.png" alt="">
-                </div>
-            </div>
-            <div class="product_top_cat_item">
-                <div>
-                    <a class="flex-center" href="">Máy cày</a>
-                    <span>UP to 80% OFF</span>
-                </div>
-                <div>
-                    <img src="/images/page/may-cay.png" alt="">
-                </div>
-            </div>
-            <div class="product_top_cat_item">
-                <div>
-                    <a class="flex-center" href="">Máy cày</a>
-                    <span>UP to 80% OFF</span>
-                </div>
-                <div>
-                    <img src="/images/page/may-cay.png" alt="">
-                </div>
-            </div>
-        </div>
-        <?php
-            if(!empty($dataHome['advertisement'])){
-                foreach($dataHome['advertisement'] as $tab => $rows){
-        ?> 
-            <div id="<?= $tab ?>" class="tab_adver_content <?= $tab == 'news' ? '' : 'hide' ?>">
-                <div class="product_list product_slide slick_global">
-                    <?php
-                        if(!empty($rows)){
-                            foreach($rows as $row){
-                    ?> 
-                        <div class="product_item">
-                            <a href="<?= Url::to(['/product/detail', 'id' => $row['id']]) ?>">
-                                <span class="prod_sale"><?= $row['percent_discount'] ?>% <br> OFF</span>
-                                <img class="prod_avatar" src="<?= $row['image'] ?>" alt="">
-                                <div class="prod_price_star">
-                                    <p class="prod_title line_2" title="<?= $row['name'] ?>"><?= $row['name'] ?></p>
-                                    <div class="des_prod mt-2">
-                                        <span><?= HelperController::formatPrice($row['price']) ?></span>
-                                    </div>
-                                </div>
-                            </a>
-                        </div>
-                    <?php }} ?>
-                </div>
-            </div>
-        <?php }} ?>
     </section>
 
     <section class="sale_index">

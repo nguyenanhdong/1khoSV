@@ -1,6 +1,7 @@
 <?php
 
 use yii\helpers\Url;
+use yii\helpers\Html;
 
 $controller = Yii::$app->controller->id;
 $action = Yii::$app->controller->action->id;
@@ -10,11 +11,11 @@ $user = Yii::$app->user->identity;
 <div class="voucher_sidebar">
     <div class="shop_info_bar">
         <div class="shop_avatar">
-            <img class="w-100" src="<?= $user->avatar ? $user->avatar : '/images/icon/user-icon.svg' ?>" alt="">
+            <img class="w-100" src="<?= Html::encode($user->avatar ?: '/images/icon/user-icon.svg') ?>" alt="" onerror="this.onerror=null;this.src='/images/icon/user-icon.svg'">
         </div>
         <div class="shop_des">
-            <p><?= $user->fullname ?> <img src="/images/icon/badge.svg" alt=""></p>
-            <span>Ví tích điểm <strong><?= $user->wallet_point ?></strong> xu</span>
+            <p><?= Html::encode($user->fullname ?: 'Khách hàng 1Kho') ?> <img src="/images/icon/badge.svg" alt=""></p>
+            <span><?= Html::encode($user->phone ?: '') ?></span>
         </div>
     </div>
     <div class="list_item_sidebar">
@@ -84,42 +85,27 @@ $user = Yii::$app->user->identity;
         </div>
 
         <div class="sidebar_item">
-            <a class="<?= $action == 'acc-points' ? 'active' : '' ?>" href="<?= Url::to(['/info/acc-points']) ?>">Quản lý giao vặt <i class="far fa-angle-right"></i></a>
+            <a class="<?= $controller == 'voucher' ? 'active' : '' ?>" href="<?= Url::to(['/voucher/index']) ?>">Voucher của tôi <i class="far fa-angle-right"></i></a>
         </div>
+        <?php foreach (['chinh-sach-bao-hanh' => 'Chính sách bảo hành', 'chinh-sach-doi-tra' => 'Chính sách đổi trả hàng hóa', 'chinh-sach-bao-mat' => 'Chính sách bảo mật', 'gioi-thieu' => 'Giới thiệu 1Kho'] as $slug => $label): ?>
         <div class="sidebar_item">
-            <a class="" href="<?= Url::to(['/site/guarantee']) ?>"> Chính sách bảo hành <i class="far fa-angle-right"></i></a>
+            <a href="<?= Url::to(['/site/page', 'slug' => $slug]) ?>"><?= $label ?> <i class="far fa-angle-right"></i></a>
         </div>
-        <div class="sidebar_item">
-            <a class="" href="<?= Url::to(['/site/return-policy']) ?>"> Chính sách đổi trả hàng hóa <i class="far fa-angle-right"></i></a>
-        </div>
-        <div class="sidebar_item">
-            <a class="" href="<?= Url::to(['/site/privacy-policy']) ?>"> Chính sách bảo mật <i class="far fa-angle-right"></i></a>
-        </div>
-
-
-        <div class="sidebar_item">
-            <a class="<?= $action == 'acc-points' ? 'active' : '' ?>" href="<?= Url::to(['/info/acc-points']) ?>">Ví tích điểm <i class="far fa-angle-right"></i></a>
-        </div>
-        <div class="sidebar_item">
-            <a href="javascript:;">Chia sẻ ứng dụng <i class="far fa-angle-right"></i></a>
-        </div>
-        <div class="sidebar_item">
-            <a class="<?= $action == 'review' ? 'active' : '' ?>" href="<?= Url::to(['/info/review']) ?>">Đánh giá ứng dụng <i class="far fa-angle-right"></i></a>
-        </div>
-        <div class="sidebar_item">
-            <a class="" href="<?= Url::to(['/info/introduce']) ?>">Liên hệ <i class="far fa-angle-right"></i></a>
-        </div>
-        <div class="sidebar_item">
-            <a class="<?= $action == 'introduce' ? 'active' : '' ?>" href="<?= Url::to(['/info/introduce']) ?>">Giới thiệu <i class="far fa-angle-right"></i></a>
-        </div>
+        <?php endforeach; ?>
         <div class="sidebar_item">
             <a class="<?= $action == 'invite-friend' ? 'active' : '' ?>" href="<?= Url::to(['/info/invite-friend']) ?>">Mời bạn bè <i class="far fa-angle-right"></i></a>
         </div>
         <div class="sidebar_item">
-            <a class="" href="">Bán hàng cùng sàn <i class="far fa-angle-right"></i></a>
+            <a href="javascript:;" class="js_share" data-url="<?= Url::home(true) ?>" data-title="1Kho - Sàn máy nông nghiệp">Chia sẻ 1Kho <i class="far fa-angle-right"></i></a>
         </div>
         <div class="sidebar_item">
-            <a class="" href="">Xoá tài khoản <i class="far fa-angle-right"></i></a>
+            <a href="<?= Url::to(['/site/contact']) ?>">Liên hệ <i class="far fa-angle-right"></i></a>
+        </div>
+        <div class="sidebar_item">
+            <a href="<?= Url::to(['/site/contact', 'topic' => 'seller']) ?>">Bán hàng cùng sàn <i class="far fa-angle-right"></i></a>
+        </div>
+        <div class="sidebar_item">
+            <a href="javascript:;" class="js_delete_account">Xoá tài khoản <i class="far fa-angle-right"></i></a>
         </div>
         <a href="<?= Url::to(['/site/logout']) ?>" class="log_out"><img src="/images/icon/logout.svg" alt="">Đăng Xuất</a>
     </div>

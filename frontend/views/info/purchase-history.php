@@ -61,7 +61,7 @@ $current_page = '/info/purchase-history';
                                     <div class="btn_item">
                                         <div class="action_form">
                                             <a href="<?= Url::to(['/info/order-detail', 'id' => $row['order_id']]) ?>" class="btn_action btn-blue flex-center">Xem chi tiết</a>
-                                            <a href="<?= Url::to(['/product/detail', 'id' => $row['product_id']]) ?>" class="btn_action btn-orange flex-center">Mua lại</a>
+                                            <a href="<?= Url::to(['/cart/reorder', 'id' => $row['order_id']]) ?>" class="btn_action btn-orange flex-center">Mua lại</a>
                                         </div>
                                     </div>
                                 </div>

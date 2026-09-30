@@ -1,6 +1,7 @@
 <?php
 
 use yii\helpers\Url;
+use yii\helpers\Html;
 use yii\web\View;
 use backend\models\Config;
 use frontend\controllers\HelperController;
@@ -18,17 +19,17 @@ use yii\widgets\Breadcrumbs;
     ?>
     <section class="list_product">
         <div class="product_top_title justify-content-start">
-            <h2 class="mr-2"><?= $category['info']['name'] ?? '' ?></h2>
-            <!-- <span class="color-gray">0 sản phẩm</span> -->
+            <h2 class="mr-2"><?= Html::encode($category['info']['name'] ?? '') ?></h2>
+            <span class="color-gray" id="category_total"><?= number_format($total, 0, ',', '.') ?> sản phẩm</span>
         </div>
         <div class="list_product_cat">
             <?php 
                 if(!empty($category['cate_child'])){
                     foreach($category['cate_child'] as $row){
             ?>
-                <a class="tab_cat_child" cat-id="<?= $row['id'] ?>" href="javascript:;">
-                    <img src="<?= $row['image'] ?>" alt="<?= $row['name'] ?>">
-                    <p class="text-center"><?= $row['name'] ?></p>
+                <a class="tab_cat_child <?= (int)$row['id'] === $activeChild ? 'active' : '' ?>" cat-id="<?= $row['id'] ?>" href="javascript:;">
+                    <img src="<?= Html::encode($row['image']) ?>" alt="<?= Html::encode($row['name']) ?>" onerror="this.style.visibility='hidden'">
+                    <p class="text-center"><?= Html::encode($row['name']) ?></p>
                 </a>
             <?php }} ?>
         </div>
@@ -44,32 +45,12 @@ use yii\widgets\Breadcrumbs;
             </div>
         </div>
         <div class="product_list">
-            <?php 
-                if(!empty($category['product'])){
-                    foreach($category['product'] as $prod){
-            ?>
-                <div class="product_item">
-                        <a href="<?= Url::to(['/product/detail', 'id' => $prod['id']]) ?>">
-                            <span class="prod_sale"><?= $prod['percent_discount'] ?>% <br> OFF</span>
-                            <img class="prod_avatar" src="<?= $prod['image'] ?>" alt="">
-                            <div class="prod_price_star">
-                                <p class="prod_title line_2" title="<?= $prod['name'] ?>"><?= $prod['name'] ?></p>
-                                <div class="des_prod mt-2">
-                                    <span><?= HelperController::formatPrice($prod['price']) ?></span>
-                                    <div class="flex-center">
-                                        <img src="/images/icon/star.svg" alt="Star">
-                                        <p class="product_star"><?= $prod['star'] ?> (<?= $prod['total_rate'] ?>)</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                </div>
-            <?php }} ?>
+            <?php foreach ($category['product'] as $prod) echo $this->render('@frontend/views/product/_item', ['prod' => $prod]); ?>
+            <?php if (empty($category['product'])): ?><div class="search_empty w-100">Chưa có sản phẩm trong chuyên mục này</div><?php endif; ?>
         </div>
-        <?php if(count($category['product']) >= 10) { ?>
-            <div class="see_more_product">
-                <button cate-parent-id="<?= $_GET['cate_parent_id'] ?>" class="see_more_btn see_more_product_cat">Xem thêm</button>
+            <div class="see_more_product" style="<?= $total > count($category['product']) ? '' : 'display:none' ?>">
+                <button cate-parent-id="<?= (int)$category['info']['id'] ?>" <?= $activeChild ? 'cate-child-id="' . $activeChild . '"' : '' ?> class="see_more_btn see_more_product_cat">Xem thêm</button>
             </div>
-        <?php } ?>
+        
     </section>
 </div>

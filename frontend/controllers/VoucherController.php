@@ -10,16 +10,12 @@ use yii\web\Controller;
  */
 class VoucherController extends Controller
 {
-    public function beforeAction($action)
+    public function behaviors()
     {
-        if (Yii::$app->user->isGuest) {
-            $this->redirect(['/site/login']);
-            return false; 
-        }
-        return parent::beforeAction($action);
+        return ['login' => ['class' => \frontend\components\LoginRequired::class]];
     }
     public function actionIndex(){
-        $this->view->title = 'Ví voucher';
+        $this->view->title = 'Voucher của tôi';
         $userId = Yii::$app->user->identity->id;
         $dataUnused = Voucher::getListVoucherAppCustomer(1, $userId);
         $dataUsed = Voucher::getListVoucherAppCustomer(2, $userId);

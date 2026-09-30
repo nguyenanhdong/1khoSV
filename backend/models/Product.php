@@ -4,6 +4,7 @@ namespace backend\models;
 
 use Yii;
 use yii\helpers\ArrayHelper;
+use yii\db\Expression;
 
 class Product extends \yii\db\ActiveRecord
 {
@@ -107,6 +108,74 @@ class Product extends \yii\db\ActiveRecord
 
     public static function getProductByCategory($category_id = [], $type_get = 'popular', $limit = null, $offset = null){
         return self::queryProductApp($category_id, 0, $type_get, $limit, $offset);
+    }
+
+    /**
+     * Sản phẩm đang bán khớp từ khoá: mọi từ phải có trong tên (hoặc trùng mã).
+     * So sánh bỏ dấu: utf8mb4_unicode_ci bỏ qua dấu thanh và ê/ô/ơ/ư/ă/â, riêng đ phải đổi tay thành d
+     * (vietnamese_ci của cột coi các chữ này là chữ cái khác nên "phat dien" không khớp "phát điện").
+     */
+    private static function searchQuery($keyword, array $filter = [])
+    {
+        $keyword = trim(preg_replace('/\s+/u', ' ', (string)$keyword));
+        $query = self::find()->where(['status' => self::STATUS_ACTIVE, 'is_delete' => 0])->andWhere(['>', 'quantity_in_stock', 0]);
+        if (!empty($filter['agent_id'])) {
+            $query->andWhere(['agent_id' => (int)$filter['agent_id']]);
+        }
+        if (!empty($filter['category_ids'])) {
+            $query->andWhere(['category_id' => array_map('intval', (array)$filter['category_ids'])]);
+        }
+        if ($keyword === '') {
+            return $query;
+        }
+        $folded = new Expression("REPLACE(REPLACE(`name`, 'đ', 'd'), 'Đ', 'D') COLLATE utf8mb4_unicode_ci");
+        $nameMatch = ['and'];
+        foreach (array_slice(explode(' ', str_replace(['đ', 'Đ'], ['d', 'D'], $keyword)), 0, 8) as $word) {
+            $nameMatch[] = ['like', $folded, $word];
+        }
+        return $query->andWhere(['or', $nameMatch, ['code' => $keyword]]);
+    }
+
+    /** @param array $filter agent_id (shop), category_ids */
+    public static function searchProducts($keyword, $type_get = 'popular', $limit = null, $offset = null, array $filter = [])
+    {
+        $sorts = [
+            'popular'      => ['view_count' => SORT_DESC, 'id' => SORT_DESC],
+            'best-selling' => ['quantity_sold' => SORT_DESC, 'id' => SORT_DESC],
+            'new'          => ['create_at' => SORT_DESC, 'id' => SORT_DESC],
+            'price_asc'    => ['price_discount' => SORT_ASC, 'id' => SORT_DESC],
+            'price_desc'   => ['price_discount' => SORT_DESC, 'id' => SORT_DESC],
+        ];
+        $query = self::searchQuery($keyword, $filter)->orderBy($sorts[$type_get] ?? $sorts['popular']);
+        if (!is_null($limit)) {
+            $query->limit($limit);
+        }
+        if (!is_null($offset)) {
+            $query->offset($offset);
+        }
+        $result = $query->asArray()->all();
+        return $result ? self::getItemApp($result) : [];
+    }
+
+    public static function countSearchProducts($keyword, array $filter = [])
+    {
+        return (int)self::searchQuery($keyword, $filter)->count();
+    }
+
+    /** Điểm đánh giá trung bình của shop (bình quân theo số lượt đánh giá của các sản phẩm). */
+    public static function agentRating($agentId)
+    {
+        $row = self::find()->select(['total' => 'SUM(total_rate)', 'score' => 'SUM(star * total_rate)'])
+            ->where(['agent_id' => (int)$agentId, 'status' => self::STATUS_ACTIVE, 'is_delete' => 0])->asArray()->one();
+        $total = (int)($row['total'] ?? 0);
+        return ['total' => $total, 'star' => $total > 0 ? round($row['score'] / $total, 1) : 0];
+    }
+
+    /** Số sản phẩm đang bán thuộc các chuyên mục (cùng điều kiện với getProductByCategory). */
+    public static function countByCategory($category_id = [])
+    {
+        return (int)self::find()->where(['status' => self::STATUS_ACTIVE])->andWhere(['>', 'quantity_in_stock', 0])
+            ->andFilterWhere(['in', 'category_id', $category_id])->count();
     }
 
     public static function getProductByAgent($category_id = [], $agent_id = 0, $type_get = 'popular', $limit = null, $offset = null){

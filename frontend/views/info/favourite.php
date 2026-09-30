@@ -1,6 +1,7 @@
 <?php
 
 use yii\helpers\Url;
+use frontend\controllers\HelperController;
 use yii\web\View;
 use backend\models\Config;
 use yii\widgets\Breadcrumbs;
@@ -62,12 +63,7 @@ use backend\controllers\CommonController;
                                 <div class="item_shop_right d-flex flex-column">
                                     <div class="btn_item">
                                         <div class="action_viewd">
-                                            <div class=" position-relative check_heart">
-                                                <input type="checkbox" class="checkbox_heart"> 
-                                                <label for="heart">
-                                                </label>
-                                                <!-- <img src="/images/icon/heart-active.svg" alt=""> -->
-                                            </div>
+                                            <button type="button" class="btn_favourite btn_favourite_sm active" data-product="<?= (int)$row['id'] ?>" data-remove-card="1" title="Bỏ yêu thích"><img src="/images/icon/heart-active.svg" alt=""></button>
                                             <a target="_blank" href="<?= Url::to(['/product/detail', 'id' => $row['id']]) ?>" class="btn_action btn-blue flex-center">Xem chi tiết</a>
                                             <!-- <button class="btn_action btn-orange flex-center">Mua ngay</button> -->
                                         </div>

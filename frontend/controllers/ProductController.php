@@ -2,7 +2,6 @@
 namespace frontend\controllers;
 
 use backend\controllers\ApiNewController;
-use backend\models\Advertisement;
 use backend\models\Agent;
 use backend\models\Category;
 use backend\models\Product;
@@ -18,16 +17,127 @@ use yii\web\Controller;
  */
 class ProductController extends Controller
 {
-    //Chi tiết sản phẩm
-    public function actionDetail($id){
-        $product = Product::getProductDetail($id);
-        if(!Yii::$app->user->isGuest){
-            UserViewProduct::saveViewProduct(Yii::$app->user->identity->id, $id);
+    const SEARCH_PAGE_SIZE = 20;
+    const SEARCH_SORTS = ['popular', 'best-selling', 'new', 'price_asc', 'price_desc'];
+
+    private static function keyword($value)
+    {
+        return mb_substr(trim((string)$value), 0, 100);
+    }
+
+    /** Gợi ý khi gõ ở ô tìm kiếm header (GET q) */
+    public function actionSuggest()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $q = self::keyword(Yii::$app->request->get('q'));
+        if (mb_strlen($q) < 2) {
+            return ['items' => [], 'total' => 0];
         }
-        $this->view->title = 'Chi tiết sản phẩm';
-        return $this->render('detail-product',[
-            'product' => $product
+        $items = array_map(function ($row) {
+            return [
+                'id'       => (int)$row['id'],
+                'name'     => $row['name'],
+                'image'    => $row['image'],
+                'price'    => HelperController::formatPrice($row['price']),
+                'priceOld' => $row['percent_discount'] > 0 ? HelperController::formatPrice($row['price_old']) : null,
+                'url'      => Url::to(['/product/detail', 'id' => $row['id']]),
+            ];
+        }, Product::searchProducts($q, 'popular', 8));
+        return ['items' => $items, 'total' => Product::countSearchProducts($q), 'moreUrl' => Url::to(['/product/search', 'q' => $q])];
+    }
+
+    /** Trang kết quả tìm kiếm */
+    public function actionSearch($q = '')
+    {
+        $q = self::keyword($q);
+        return $this->render('search', [
+            'q'        => $q,
+            'total'    => Product::countSearchProducts($q),
+            'products' => Product::searchProducts($q, 'popular', self::SEARCH_PAGE_SIZE, 0),
+            'pageSize' => self::SEARCH_PAGE_SIZE,
         ]);
+    }
+
+    /** Ajax: đổi sắp xếp / Xem thêm trên trang kết quả tìm kiếm */
+    public function actionGetProductSearch()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $request = Yii::$app->request;
+        $q = self::keyword($request->get('q'));
+        $sort = in_array($request->get('sort'), self::SEARCH_SORTS, true) ? $request->get('sort') : 'popular';
+        $page = max(0, (int)$request->get('page', 0));
+        $offset = $page * self::SEARCH_PAGE_SIZE;
+        $products = Product::searchProducts($q, $sort, self::SEARCH_PAGE_SIZE, $offset);
+        $html = '';
+        foreach ($products as $row) {
+            $html .= $this->renderPartial('_item', ['prod' => $row]);
+        }
+        return ['data' => $html, 'hasMore' => $offset + count($products) < Product::countSearchProducts($q)];
+    }
+
+    //Chi tiết sản phẩm
+    public function behaviors()
+    {
+        return [
+            'login' => [
+                'class' => \frontend\components\LoginRequired::class,
+                'only'  => ['toggle-favourite', 'toggle-follow', 'get-product-review', 'get-product-seen', 'get-product-favourite'],
+            ],
+        ];
+    }
+
+    public function actionDetail($id){
+        $userId = Yii::$app->user->isGuest ? 0 : (int)Yii::$app->user->id;
+        $product = Product::getProductDetail((int)$id, $userId);
+        if (!$product) {
+            throw new \yii\web\NotFoundHttpException('Sản phẩm không tồn tại hoặc đã ngừng bán');
+        }
+        if ($userId) {
+            UserViewProduct::saveViewProduct($userId, $id);
+        }
+        $model = Product::findOne((int)$id);
+        $categories = [];
+        if ($model && $model->category_id) {
+            $cat = Category::findOne(['id' => $model->category_id, 'is_delete' => 0, 'status' => 1]);
+            $parent = $cat && $cat->parent_id ? Category::findOne(['id' => $cat->parent_id, 'is_delete' => 0, 'status' => 1]) : null;
+            if ($parent) {
+                $categories[] = ['name' => $parent->name, 'url' => ['/category/index', 'cate_parent_id' => $parent->id]];
+                $categories[] = ['name' => $cat->name, 'url' => ['/category/index', 'cate_parent_id' => $parent->id, 'cate_child_id' => $cat->id]];
+            } elseif ($cat) {
+                $categories[] = ['name' => $cat->name, 'url' => ['/category/index', 'cate_parent_id' => $cat->id]];
+            }
+        }
+        $this->view->title = $product['product_info']['name'] . ' - 1Kho';
+        $this->view->registerMetaTag(['property' => 'og:image', 'content' => $product['product_info']['images'][0] ?? '']);
+        return $this->render('detail-product',[
+            'product'    => $product,
+            'categories' => $categories,
+        ]);
+    }
+
+    /** Thả tim / bỏ thích sản phẩm (ajax) */
+    public function actionToggleFavourite()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $productId = (int)Yii::$app->request->post('productId');
+        if (!Product::find()->where(['id' => $productId, 'status' => Product::STATUS_ACTIVE])->exists()) {
+            return ['status' => false, 'message' => 'Sản phẩm không tồn tại'];
+        }
+        $liked = UserFavouriteProduct::toggleFavourites(Yii::$app->user->id, $productId);
+        return ['status' => true, 'liked' => $liked, 'message' => $liked ? 'Đã thêm vào Sản phẩm yêu thích' : 'Đã bỏ khỏi Sản phẩm yêu thích'];
+    }
+
+    /** Theo dõi / bỏ theo dõi shop (ajax) */
+    public function actionToggleFollow()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $agent = Agent::findOne((int)Yii::$app->request->post('agentId'));
+        if (!$agent) {
+            return ['status' => false, 'message' => 'Shop không tồn tại'];
+        }
+        $following = \backend\models\UserFollowAgent::toggleFollowAgent(Yii::$app->user->id, $agent->id);
+        $agent->updateCounters(['follow_count' => $following ? 1 : ($agent->follow_count > 0 ? -1 : 0)]);
+        return ['status' => true, 'following' => $following, 'total' => (int)$agent->follow_count];
     }
 
     //lấy giá sản phẩm khi chọn phân loại
@@ -280,8 +390,7 @@ class ProductController extends Controller
                                 <div class="item_shop_right d-flex flex-column">
                                     <div class="btn_item">
                                         <div class="action_viewd">
-                                            <div class=" position-relative check_heart">
-                                            </div>
+                                            <button type="button" class="btn_favourite btn_favourite_sm '. (UserFavouriteProduct::checkStatusUserFavourites($userId, $row['id']) ? 'active' : '') .'" data-product="'. (int)$row['id'] .'" title="Yêu thích"><img src="/images/icon/'. (UserFavouriteProduct::checkStatusUserFavourites($userId, $row['id']) ? 'heart-active' : 'heart-inactive') .'.svg" alt=""></button>
                                             <a target="_blank" href="'. Url::to(['/product/detail', 'id' => $row['id']]) .'" class="btn_action btn-blue flex-center">Xem chi tiết</a>
                                         </div>
                                     </div>
@@ -341,8 +450,7 @@ class ProductController extends Controller
                                 <div class="item_shop_right d-flex flex-column">
                                     <div class="btn_item">
                                         <div class="action_viewd">
-                                            <div class=" position-relative check_heart">
-                                            </div>
+                                            <button type="button" class="btn_favourite btn_favourite_sm active" data-product="'. (int)$row['id'] .'" data-remove-card="1" title="Bỏ yêu thích"><img src="/images/icon/heart-active.svg" alt=""></button>
                                             <a target="_blank" href="'. Url::to(['/product/detail', 'id' => $row['id']]) .'" class="btn_action btn-blue flex-center">Xem chi tiết</a>
                                         </div>
                                     </div>
@@ -420,233 +528,48 @@ class ProductController extends Controller
     //Thông tin shop
     public function actionShop($id){
         $agentData = ApiNewController::AgentHome();
-        $this->view->title = 'Thông tin shop';
+        if (empty($agentData['data']['agentInfo'])) {
+            throw new \yii\web\NotFoundHttpException('Shop không tồn tại');
+        }
+        $data = $agentData['data'];
+        $userId = Yii::$app->user->isGuest ? 0 : (int)Yii::$app->user->id;
+        $this->view->title = $data['agentInfo']['name'] . ' - 1Kho';
         return $this->render('shop',[
-            'data' => isset($agentData['data']) ? $agentData['data'] : []
+            'data'      => $data,
+            'shopId'    => (int)$id,
+            'following' => $userId ? \backend\models\UserFollowAgent::checkUserFollowAgent($userId, (int)$id) : false,
+            'rating'    => Product::agentRating((int)$id),
+            'total'     => Product::countSearchProducts('', ['agent_id' => (int)$id]),
+            'pageSize'  => 10,
         ]);
     }
 
+    /** Ajax: sản phẩm của shop theo từ khoá / chuyên mục / sắp xếp / trang */
     public function actionGetProductShop()
     {
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-        $id                 = Yii::$app->request->post('shop_id', '');
-        $page               = !empty(Yii::$app->request->post('page')) ? Yii::$app->request->post('page') : 0;
-        $sort               = Yii::$app->request->post('sort', 'popular');
-        $response['data'] = '';
-        $response['checkLoadMore'] = false;
-        $response['append'] = false;
-
-        if (!empty($page)) {
-            $response['append'] = true;
+        $request = Yii::$app->request;
+        $shopId  = (int)$request->post('shop_id');
+        $page    = max(0, (int)$request->post('page', 0));
+        $sort    = in_array($request->post('sort'), self::SEARCH_SORTS, true) ? $request->post('sort') : 'popular';
+        $q       = self::keyword($request->post('q'));
+        $catId   = (int)$request->post('cate_id');
+        $filter  = ['agent_id' => $shopId ?: -1];
+        if ($catId > 0) {
+            $filter['category_ids'] = array_merge([$catId], array_map('intval', array_column(Category::getAllChildByParentId($catId), 'id')));
         }
-        
-        $limit = 10;
-        $offset = $page * $limit;
-
-        $listCateIdProd     = [];
-        $listProductTab     = Product::getProductByAgent($listCateIdProd, $id, $sort, $limit, $offset);
-        $offsetCheck = $limit + $offset;
-        $response['checkLoadMore'] = !empty(Product::getProductByAgent($listCateIdProd, $id, $sort, 1, $offsetCheck)) ? true : false;
-        $item = '';
-        if (!empty($listProductTab)) {
-            foreach ($listProductTab as $row) {
-                $url = Url::to(['/product/detail', 'id' => $row['id']]);
-                $item .= '<div class="product_item">
-                                <a href="' . $url . '">
-                                    <span class="prod_sale">' . $row['percent_discount'] . '% <br> OFF</span>
-                                    <img class="prod_avatar" src="' . $row['image'] . '" alt="Image product">
-                                    <div class="prod_price_star">
-                                        <p class="prod_title line_2" title="' . $row['name'] . '">' . $row['name'] . '</p>
-                                        <div class="des_prod mt-2">
-                                            <span>' . HelperController::formatPrice($row['price']) . '</span>
-                                            <div class="flex-center">
-                                                <img src="/images/icon/star.svg" alt="">
-                                                <p class="product_star">' . $row['star'] . ' (' . $row['total_rate'] . ')</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>';
-            }
+        $limit   = 10;
+        $offset  = $page * $limit;
+        $rows    = Product::searchProducts($q, $sort, $limit, $offset, $filter);
+        $total   = Product::countSearchProducts($q, $filter);
+        $html    = '';
+        foreach ($rows as $row) {
+            $html .= $this->renderPartial('_item', ['prod' => $row]);
         }
-        $response['data'] = $item;
-        return $response;
-    }
-
-    //Giao vặt
-    public function actionDelivery(){
-        $this->view->title = 'Giao vặt';
-        $listCategory   = Category::getListCateApp(0, 8, 0);
-        $deliveryHot = Advertisement::getAdvertisementHome(null, 100, null, null, 1);
-
-        $productBuy = Advertisement::getAdvertisementHome(1, 20, 0, null, null);
-        $productSell = Advertisement::getAdvertisementHome(2, 20, 0, null, null);
-        // echo '<pre>';
-        // print_r($productBuy);
-        // echo '</pre>';die;
-        return $this->render('delivery',[
-            'listCategory' => $listCategory,
-            'deliveryHot' => $deliveryHot,
-            'productBuy' => $productBuy,
-            'productSell' => $productSell,
-
-        ]);
-    }
-
-    public function actionGetProductDelivery()
-    {
-        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-        $page               = !empty(Yii::$app->request->post('page')) ? Yii::$app->request->post('page') : 0;
-        $type               = Yii::$app->request->post('type', '');
-        $response['data'] = '';
-        $response['checkLoadMore'] = false;
-        
-        $limit = 20;
-        $offset = $page * $limit;
-        $data     = Advertisement::getAdvertisementHome($type, $limit, $offset);
-        $offsetCheck = $limit + $offset;
-        $response['checkLoadMore'] = !empty(Advertisement::getAdvertisementHome($type, 1, $offsetCheck)) ? true : false;
-        $item = '';
-        if (!empty($data)) {
-            foreach ($data as $row) {
-                $url = Url::to(['/product/detail', 'id' => $row['id']]);
-                $item .= '<div class="product_item">
-                                <a href="' . $url . '">
-                                    <span class="prod_sale">' . $row['percent_discount'] . '% <br> OFF</span>
-                                    <img class="prod_avatar" src="' . $row['image'] . '" alt="Image product">
-                                    <div class="prod_price_star">
-                                        <p class="prod_title line_2" title="' . $row['name'] . '">' . $row['name'] . '</p>
-                                        <div class="des_prod mt-2">
-                                            <span>' . HelperController::formatPrice($row['price']) . '</span>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>';
-            }
+        if ($html === '' && $page === 0) {
+            $html = '<div class="search_empty w-100">' . ($q !== '' ? 'Không tìm thấy sản phẩm phù hợp trong shop' : 'Shop chưa có sản phẩm') . '</div>';
         }
-        $response['data'] = $item;
-        return $response;
+        return ['data' => $html, 'append' => $page > 0, 'checkLoadMore' => $offset + count($rows) < $total, 'total' => $total];
     }
 
-    //Chi tiết giao vặt
-    public function actionDetailDelivery(){
-        $this->view->title = 'Chi tiết giao vặt';
-        return $this->render('detail-delivery');
-    }
-
-    //Đăng tin giao vặt
-    public function actionPostDelivery(){
-        $this->view->title = 'Đăng tin giao vặt';
-        $model = new Advertisement();
-        $formInfo = ApiNewController::AdvertisementFormInfo();
-        
-        if ($model->load(Yii::$app->request->post())) {
-            if(!empty($_FILES)){
-               $upload = $this->upload($_FILES);
-               if(!empty($upload) && !$upload['status']){
-                $model->addError('image', $upload['message']);
-                return $this->render('post-delivery', [
-                    'formInfo'  => $formInfo,
-                    'model' => $model
-                ]);
-               }
-               if(!empty($upload) && $upload['status']){
-                $model->image = !empty($upload['arrImage']) ? json_encode($upload['arrImage']) : '';
-                $model->video = !empty($upload['arrVideo']) ? json_encode($upload['arrVideo']) : '';
-               }
-               
-            }
-            if($model->validate()){
-                $model->user_id = Yii::$app->user->identity->id;
-                $model->phone = Yii::$app->user->identity->phone;
-                if($model->save()){
-                    Yii::$app->session->setFlash('success', 'Tạo tin thành công');
-                    return $this->redirect(['post-success-delivery']);
-                }
-            }
-        }
-        return $this->render('post-delivery', [
-            'formInfo'  => $formInfo,
-            'model' => $model
-        ]);
-    }
-
-    //Upload image, video
-    public static function upload($files){
-        if(!empty($files['Advertisement'])){
-            $count_video = 0;
-            $count_image = 0;
-            $maxSizeImage = 1048576;//1MB
-            $maxSizeVideo = 20971520;//20MB
-      
-            $allowed = ["jpg", "jpeg", "gif", "png", "mp4", "flv", "m4a", "mov"];
-            $allowed_video    = array("mp4", "flv", "m4a", "mov");
-            $allowed_image    = array("jpg", "jpeg", "gif", "png");
-            foreach($files['Advertisement']['type']['image'] as $key => $type_file){
-                $extFileType    =pathinfo($files['Advertisement']['name']['image'][$key], PATHINFO_EXTENSION);
-                if(!in_array($extFileType, $allowed) && !empty($type_file)) {
-                    return [
-                        'status' => false,
-                        'message'=> "Chỉ chấp nhận file video và file ảnh"
-                    ];
-                }
-                if(in_array($extFileType, $allowed_video) && !empty($type_file)) {
-                    $count_video++;
-                    if($files['Advertisement']['size']['image'][$key] > $maxSizeVideo){
-                        return [
-                            'status' => false,
-                            'message'=> "Dung lượng video quá lớn. Tối đa 20 MB"
-                        ];
-                    }
-                }elseif(in_array($extFileType, $allowed_image) && !empty($type_file)) {
-                    $count_image++;
-                    if($files['Advertisement']['size']['image'][$key] > $maxSizeImage){
-                        return [
-                            'status' => false,
-                            'message'=> "Dung lượng ảnh quá lớn. Tối đa 1 MB"
-                        ];
-                    }
-                }
-            }
-            if($count_video > 3 || $count_image > 8){
-                return [
-                    'status' => false,
-                    'message'=> "Chỉ chấp nhận tối đa 3 video và 8 hình ảnh"
-                ];
-            }
-            $arrVideo = [];
-            $arrImage = [];
-            foreach($files['Advertisement']['tmp_name']['image'] as $key => $file){
-                $extFileType    =pathinfo($files['Advertisement']['name']['image'][$key], PATHINFO_EXTENSION);
-                $type = 'image';
-                if($files['Advertisement']['type']['image'][$key] == 'video/mp4')
-                    $type = 'video';
-                $target_dir = $_SERVER['DOCUMENT_ROOT'];
-                $path_folder= DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . $type;
-                if( !is_dir($target_dir . $path_folder) ){
-                    mkdir($target_dir . $path_folder, 0777, true);
-                }
-                $file_name  = time() . '_' . preg_replace('/[^a-zA-Z0-9-.]+/', '_', $files['Advertisement']['name']['image'][$key]);
-                $path_file  = $path_folder . DIRECTORY_SEPARATOR . $file_name;
-                $orgpath    = $target_dir . $path_file;
-                if(in_array($extFileType, $allowed_video)) {
-                    $arrVideo[] = $path_file;
-                }
-                if(in_array($extFileType, $allowed_image)) {
-                    $arrImage[] = $path_file;
-                }
-                move_uploaded_file($file, $orgpath);
-            }
-            return [
-                'status' => true,
-                'arrVideo' => $arrVideo,
-                'arrImage' => $arrImage,
-            ];
-        }
-    }
-    //Đăng tin giao vặt thành công
-    public function actionPostSuccessDelivery(){
-        $this->view->title = 'Đăng tin giao vặt';
-        return $this->render('post-success-delivery');
-    }
 }

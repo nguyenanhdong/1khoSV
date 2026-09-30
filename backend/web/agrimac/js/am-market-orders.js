@@ -124,13 +124,17 @@
     function refundsHtml(refunds) {
         return refunds.map(function (r) {
             var color = r.status === 1 ? '#059669' : r.status === 2 ? '#ef4444' : '#f59e0b';
+            var actions = r.status === 0
+                ? '<div style="display:flex;gap:6px;margin-top:6px"><button type="button" class="am-btn-block" data-refund="approve" data-rid="' + r.id + '" style="background:#059669">✓ Đồng ý hoàn tiền</button>' +
+                  '<button type="button" class="am-btn-block" data-refund="reject" data-rid="' + r.id + '" style="background:#fff;color:#ef4444;border:1.5px solid #fecaca">✕ Từ chối</button></div>'
+                : '';
             return facts([
                 ['Yêu cầu #' + r.id, r.statusLabel, color],
                 ['Số tiền hoàn', vnd(r.amount), '#8b5cf6'],
                 ['Tình huống', r.situation], ['Lý do', r.reason], ['Ghi chú', r.note],
                 ['Lý do từ chối', r.rejectReason, '#ef4444'],
                 ['Thời gian yêu cầu', r.createdAt], ['Thời gian xử lý', r.processedAt]
-            ]);
+            ]) + actions;
         }).join('<div style="height:6px"></div>');
     }
 
@@ -207,6 +211,35 @@
         }).always(function () { detailReq = null; });
     }
 
+    function applyResult(data) {
+        state.detail = data.marketOrder;
+        if (data.counts) state.counts = data.counts;
+        renderDetail();
+        load(state.page);
+    }
+
+    function processRefund(rid, decision) {
+        var o = state.detail;
+        if (decision === 'approve') {
+            AM.confirm({
+                title: '✓ Đồng ý trả hàng / hoàn tiền?',
+                message: 'Đơn ' + AM.esc(o.code) + ' sẽ chuyển sang trạng thái "Hoàn tiền". Nhớ chuyển khoản hoàn tiền cho khách.',
+                okLabel: 'Đồng ý hoàn tiền',
+                okColor: '#059669',
+                onOk: function () { AM.api('market.refund', { refundId: rid, decision: 'approve' }).done(applyResult); }
+            });
+            return;
+        }
+        AM.form.open({
+            title: '✕ Từ chối yêu cầu hoàn tiền',
+            sub: 'Đơn ' + o.code,
+            width: 440,
+            submitLabel: 'Từ chối',
+            fields: [{ name: 'note', label: 'Lý do từ chối (khách sẽ thấy)', type: 'textarea', required: true, full: true }],
+            onSubmit: function (v) { return AM.api('market.refund', { refundId: rid, decision: 'reject', note: v.note }).done(applyResult); }
+        });
+    }
+
     function openStatusForm(o) {
         AM.form.open({
             title: '✎ Cập nhật trạng thái đơn ' + o.code,
@@ -260,7 +293,8 @@
         });
         $('#am-market-detail')
             .on('click', '[data-mclose]', function () { select(null); })
-            .on('click', '[data-mstatus-edit]', function () { if (state.detail) openStatusForm(state.detail); });
+            .on('click', '[data-mstatus-edit]', function () { if (state.detail) openStatusForm(state.detail); })
+            .on('click', '[data-refund]', function () { if (state.detail) processRefund(+$(this).data('rid'), $(this).data('refund')); });
 
         if (AM.query('scope') === 'market') {
             var id = parseInt(AM.query('id'), 10);

@@ -2,6 +2,8 @@
 return [
     'adminEmail' => 'admin@example.com',
     'urlDomain' => 'https://api.1kho.com.vn',
+    // Địa chỉ web 1Kho (frontend) để CMS mở nhanh trang vừa sửa, VD 'https://1kho.com.vn'. Để trống thì ẩn nút "Xem".
+    'frontendUrl' => '',
     'secretKeyJWT' => 'Qd7F9!qIY2@#k441JFN4^&svxHGEYBLP@_f5yUbl',
     'fireBase'   => [
         'customer' => [

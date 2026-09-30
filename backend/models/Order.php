@@ -307,6 +307,7 @@ class Order extends \yii\db\ActiveRecord
                 break;
             case self::STATUS_CONFIRM:
                 $status_name= "Đơn hàng đã xác nhận";
+                break;
             case self::STATUS_DELIVERING:
                 $status_name= "Đơn hàng đang giao";
                 break;
@@ -401,6 +402,7 @@ class Order extends \yii\db\ActiveRecord
                 switch($model->status){
                     case self::STATUS_CONFIRM:
                         $msg= "Đơn hàng đã xác nhận";
+                        break;
                     case self::STATUS_DELIVERING:
                         $msg= "Đơn hàng đang giao";
                         break;
@@ -423,17 +425,8 @@ class Order extends \yii\db\ActiveRecord
             ];
         }
 
-        $reason_cancel = "";
-        switch($type_cancel){
-            case 1:
-                $msg= "Khách hàng tự huỷ";
-            case 2:
-                $msg= "Đại lý huỷ";
-                break;
-            case 3:
-                $msg= "1KHO huỷ";
-                break;
-        }
+        $reasons = [1 => 'Khách hàng tự huỷ', 2 => 'Đại lý huỷ', 3 => '1KHO huỷ'];
+        $reason_cancel = $reasons[$type_cancel] ?? '';
 
         $model->status = self::STATUS_CANCEL;
         $model->type_cancel = $type_cancel;

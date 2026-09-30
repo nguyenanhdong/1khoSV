@@ -5,18 +5,26 @@ use yii\web\View;
 use backend\models\Config;
 use frontend\controllers\HelperController;
 use yii\widgets\Breadcrumbs;
-// echo '<pre>';
-// print_r($product);
-// echo '</pre>';die;
+use yii\helpers\Html;
+use frontend\components\SiteInfo;
+
+/* @var $categories array [['name', 'url'], ...] chuyên mục cha → con của sản phẩm */
+$info = $product['product_info'];
+$agent = $product['agent_info'];
+$shareUrl = Url::to(['/product/detail', 'id' => $info['id']], true);
+$crumbs = [];
+if ($agent) {
+    $crumbs[] = ['label' => $agent['name'], 'url' => ['/product/shop', 'id' => $agent['id']]];
+} elseif ($categories) {
+    $crumbs[] = ['label' => $categories[0]['name'], 'url' => $categories[0]['url']];
+}
+$crumbs[] = $info['name'];
 ?>
 <div class="container">
     <?php
     echo Breadcrumbs::widget([
         'homeLink' => ['label' => '', 'url' => '/'],
-        'links' => [
-            ['label' => $product['agent_info']['name'], 'url' => ['category/index', 'cate_parent_id' => $product['agent_info']['id']]],
-            $product['product_info']['name'],
-        ],
+        'links' => $crumbs,
     ]);
 
     ?>
@@ -32,7 +40,7 @@ use yii\widgets\Breadcrumbs;
                                         if(!empty($product['product_info']['images'])){
                                             foreach($product['product_info']['images'] as $img){
                                     ?>
-                                    <img src="<?= $img ?>" alt="shoe image">
+                                    <img src="<?= Html::encode($img) ?>" alt="<?= Html::encode($info['name']) ?>">
                                     <?php }} ?>
                                 </div>
                             </div>
@@ -44,8 +52,8 @@ use yii\widgets\Breadcrumbs;
                                             $i++;
                                 ?>
                                     <div class="img-item">
-                                        <a href="#" data-id="<?= $i ?>">
-                                            <img src="<?= $img ?>" alt="product image">
+                                        <a href="javascript:;" data-id="<?= $i ?>">
+                                            <img src="<?= Html::encode($img) ?>" alt="">
                                         </a>
                                     </div>
                                 <?php }} ?>
@@ -56,7 +64,13 @@ use yii\widgets\Breadcrumbs;
             </div>
             <div class="product_info_right">
                 <div class="product_description">
-                    <h1><?= $product['product_info']['name'] ?></h1>
+                    <div class="d-flex justify-content-between align-items-start" style="gap:12px">
+                        <h1><?= Html::encode($info['name']) ?></h1>
+                        <button type="button" class="btn_favourite <?= !empty($info['is_favourites']) ? 'active' : '' ?>" data-product="<?= (int)$info['id'] ?>"
+                                title="<?= !empty($info['is_favourites']) ? 'Bỏ yêu thích' : 'Thêm vào yêu thích' ?>" aria-pressed="<?= !empty($info['is_favourites']) ? 'true' : 'false' ?>">
+                            <img src="/images/icon/<?= !empty($info['is_favourites']) ? 'heart-active' : 'heart-inactive' ?>.svg" alt="Yêu thích">
+                        </button>
+                    </div>
                     <div class="product_rating flex-item-center">
                         <div class="rating_list flex-item-center">
                             <?php 
@@ -73,8 +87,8 @@ use yii\widgets\Breadcrumbs;
                         </div>
                     </div>
                     <div class="product_price flex-item-center">
-                        <span class="price_product"><?= HelperController::formatPrice($product['product_info']['price']) ?></span>
-                        <p>-<?= $product['product_info']['percent_discount'] ?>%</p>
+                        <span class="price_product"><?= HelperController::formatPrice($info['price']) ?></span>
+                        <?php if ($info['percent_discount'] > 0): ?><p>-<?= (int)$info['percent_discount'] ?>%</p><?php endif; ?>
                     </div>
                 </div>
                 <?php if(!empty($product['product_info']['classification_group'])){ ?>
@@ -102,62 +116,33 @@ use yii\widgets\Breadcrumbs;
                     </div>
                     <div class="add_cart">
                         <button id="add_cart" dt-type="add-cart" class="btn_action bg_blue flex-center"><img src="/images/icon/cart.svg" alt="">Thêm vào giỏ</button>
-                        <button class="btn_action bg_blue flex-center">Tư vấn</button>
+                        <a class="btn_action bg_blue flex-center" href="<?= SiteInfo::phone() !== '' ? SiteInfo::tel() : Url::to(['/site/contact']) ?>" title="<?= SiteInfo::phone() !== '' ? 'Gọi ' . Html::encode(SiteInfo::phone()) . ' để được tư vấn' : 'Liên hệ tư vấn' ?>">Tư vấn</a>
                     </div>
                 </div>
+                <?php if ($categories): ?>
                 <div class="category_tag_product">
                     <div class="group_cat_tag">
-                        <span>Category: </span>
+                        <span>Chuyên mục: </span>
                         <div>
-                            <a href="">Máy cày</a>
-                            <a href="">Máy xúc</a>
-                        </div>
-                    </div>
-                    <div class="group_cat_tag">
-                        <span>Tag: </span>
-                        <div>
-                            <a href="">Máy cày</a>
-                            <a href="">Công nông</a>
-                            <a href="">Máy xúc</a>
+                            <?php foreach ($categories as $cat): ?>
+                                <a href="<?= Url::to($cat['url']) ?>"><?= Html::encode($cat['name']) ?></a>
+                            <?php endforeach; ?>
                         </div>
                     </div>
                 </div>
+                <?php endif; ?>
             </div>
         </div>
         <div class="product_share">
             <span>Chia sẻ</span>
             <div>
-                <a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=<?= HelperController::getCurrentUrl() ?>"><img src="/images/icon/fb.svg" alt=""></a>
-                <a target="_blank" href="https://zalo.me/share?url=<?= HelperController::getCurrentUrl() ?>"><img src="/images/icon/zalo.svg" alt=""></a>
-                <!-- <a target="_blank" href=""><img src="/images/icon/mess.svg" alt=""></a> -->
-                <!-- <a target="_blank" href=""><img src="/images/icon/social.svg" alt=""></a> -->
+                <a target="_blank" rel="noopener" title="Chia sẻ Facebook" href="https://www.facebook.com/sharer/sharer.php?u=<?= rawurlencode($shareUrl) ?>"><img src="/images/icon/fb.svg" alt="Facebook"></a>
+                <a target="_blank" rel="noopener" title="Chia sẻ Zalo" href="https://sp.zalo.me/share_inline?url=<?= rawurlencode($shareUrl) ?>"><img src="/images/icon/zalo.svg" alt="Zalo"></a>
+                <a href="javascript:;" class="js_share" title="Chia sẻ / sao chép liên kết" data-url="<?= Html::encode($shareUrl) ?>" data-title="<?= Html::encode($info['name']) ?>"><img src="/images/icon/social.svg" alt="Chia sẻ"></a>
             </div>
         </div>
     </section>
 
-    <section class="shop_info">
-        <div class="shop_info_group">
-            <div class="info_desc flex-item-center">
-                <img src="<?= $product['agent_info']['avatar'] ?>" alt="">
-                <div class="text_rating">
-                    <a href="<?= Url::to(['/product/shop', 'id' => $product['agent_info']['id']]) ?>"><?= $product['agent_info']['name'] ?></a>
-                    <div class="rating_box flex-item-center">
-                        <!-- <div>
-                            <img src="/images/icon/star.svg" alt="">
-                            <img src="/images/icon/star.svg" alt="">
-                            <img src="/images/icon/star.svg" alt="">
-                            <img src="/images/icon/star.svg" alt="">
-                            <img src="/images/icon/star.svg" alt="">
-                        </div>
-                        <span>4.5/5.0 (200)</span>
-                        <span>•</span> -->
-                        <span><?= $product['agent_info']['total_follow'] ?> Người theo dõi</span>
-                    </div>
-                </div>
-            </div>
-            <button class="btn_follow btn_action">Theo dõi</button>
-        </div>
-    </section>
 
     <section class="product_description">
         <h2>Mô tả sản phẩm</h2>
@@ -170,24 +155,7 @@ use yii\widgets\Breadcrumbs;
         <section class="product_relate">
             <h2>Sản phẩm gợi ý</h2>
             <div class="product_list">
-                <?php foreach($product['product_suggest'] as $row) { ?>
-                    <div class="product_item">
-                        <a href="<?= Url::to(['/product/detail', 'id' => $row['id']]) ?>">
-                            <span class="prod_sale"><?= $row['percent_discount'] ?>% <br> OFF</span>
-                            <img class="prod_avatar" src="<?= $row['image'] ?>" alt="">
-                            <div class="prod_price_star">
-                                <p class="prod_title line_2" title="<?= $row['name'] ?>"><?= $row['name'] ?></p>
-                                <div class="des_prod mt-2">
-                                    <span><?= HelperController::formatPrice($row['price']) ?></span>
-                                    <div class="flex-center">
-                                        <img src="/images/icon/star.svg" alt="Star">
-                                        <p class="product_star"><?= $row['star'] ?> (<?= $row['total_rate'] ?>)</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-                <?php } ?>
+                <?php foreach ($product['product_suggest'] as $row) { if ((int)$row['id'] !== (int)$info['id']) echo $this->render('_item', ['prod' => $row]); } ?>
             </div>
         </section>
     <?php } ?>

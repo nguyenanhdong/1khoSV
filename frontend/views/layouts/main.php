@@ -17,7 +17,7 @@ AppAsset::register($this);
 ?>
 <?php $this->beginPage() ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
     <head>  
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" />
@@ -26,11 +26,10 @@ AppAsset::register($this);
         <link data-optimized="2" rel="stylesheet" href="/css/layout.css">
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-        <link rel="icon" type="image/png" href="/images/icon/logo-fa.svg" sizes="50x50">
+        <link rel="icon" type="image/svg+xml" href="/images/icon/k.svg">
         <meta property="og:locale" content="vi_VN" />
         <meta property="og:type" content="website" />
         <link rel="stylesheet" href="/css/azuremediaplayer.min.css" />
-        <script src="/resoure/sdk.js" async="" crossorigin="anonymous"></script>
         
         <link href="/css/sweetalert.css" rel="stylesheet">
         <link href="/css/slick-theme.css" rel="stylesheet">
@@ -38,12 +37,14 @@ AppAsset::register($this);
         <link href="/js/toastr/toastr.min.css" rel="stylesheet">
         <link href="/css/site.css" rel="stylesheet">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
-        <script src="/js/jquery.min.js" defer></script>
+        <?php /* không defer: các script của Yii (yii.js, ActiveForm) chèn cuối body chạy ngay và cần jQuery sẵn */ ?>
+        <script src="/js/jquery.min.js"></script>
         <script src="/js/bootstrap.min.js" defer></script>
         <script src="/js/sweetalert2.js" defer></script>
         <script src="/js/slick.min.js" defer></script>
         <script src="/js/toastr/toastr.min.js" defer></script>
-        <script src="/js/script.js" defer></script> 
+        <script src="/js/script.js?v=<?= @filemtime(Yii::getAlias('@webroot/js/script.js')) ?>" defer></script>
+        <script src="/js/search.js?v=<?= @filemtime(Yii::getAlias('@webroot/js/search.js')) ?>" defer></script>
 
         <script>
             (function (html) {
@@ -70,7 +71,7 @@ AppAsset::register($this);
 
         <!-- Google / Search Engine Tags -->
         <html prefix="og: http://ogp.me/ns#">
-        <meta itemprop="name" content="website abe">
+        <meta itemprop="name" content="1Kho">
         
         <!-- Facebook Meta Tags -->
         <meta property="og:type" content="article">
@@ -81,7 +82,7 @@ AppAsset::register($this);
         <meta name="twitter:card" content="">
         <meta name="twitter:title" content="<?= Html::encode($this->title) ?>">
         <meta name="twitter:description" content="">
-        <meta name="twitter:image" content="/images/icon/logo-fa.svg">
+        <meta name="twitter:image" content="/images/icon/logo.svg">
 
 
         <title><?= Html::encode($this->title) ?></title>
@@ -131,6 +132,16 @@ AppAsset::register($this);
             <?= $content ?>
         </div>
         <?= $this->render('footer') ?>
+        <?php $flashes = array_filter(['success' => Yii::$app->session->getFlash('success'), 'error' => Yii::$app->session->getFlash('error')]); ?>
+        <?php if ($flashes): ?>
+        <script>
+            window.addEventListener('load', function () {
+                <?php foreach ($flashes as $type => $msg): ?>
+                if (window.toastr) toastr[<?= json_encode($type) ?>](<?= json_encode(is_array($msg) ? implode(' ', $msg) : (string)$msg) ?>);
+                <?php endforeach; ?>
+            });
+        </script>
+        <?php endif; ?>
     <?php $this->endBody() ?>
 </html>
 <?php $this->endPage() ?>

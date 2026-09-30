@@ -61,7 +61,7 @@ use frontend\controllers\HelperController;
                                     <div class="btn_item">
                                         <div class="action_form not_purchased">
                                             <a href="<?= Url::to(['/info/order-detail', 'id' => $row['order_id']]) ?>" class="btn_action btn-blue flex-center">Xem chi tiết</a>
-                                            <!-- <button class="btn_action btn-orange flex-center">Mua hàng</button> -->
+                                            <a href="<?= Url::to(['/product/detail', 'id' => $row['product_id']]) ?>" class="btn_action btn-orange flex-center">Mua thêm</a>
                                         </div>
                                     </div>
                                 </div>

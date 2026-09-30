@@ -16,12 +16,15 @@ use yii\web\Controller;
  */
 class CartController extends Controller
 {
+    public function behaviors()
+    {
+        return ['login' => ['class' => \frontend\components\LoginRequired::class]];
+    }
+
+    /** Giỏ hàng lưu trong $_SESSION['list_product']: luôn mở session trước khi đọc/ghi */
     public function beforeAction($action)
     {
-        if (Yii::$app->user->isGuest) {
-            $this->redirect(['/site/login']);
-            return false; 
-        }
+        Yii::$app->session->open();
         return parent::beforeAction($action);
     }
     //Giỏ hàng
@@ -163,18 +166,16 @@ class CartController extends Controller
 
         $price_voucher          = $dataVoucher['price'] == "0" ? "" : $dataVoucher['price'];
 
-        $total_price_order      = ($price_order + $fee_ship) - $price_deduct;
-
-        $bank_payment           = Config::getConfigApp("BANK_PAYMENT");
+        $total_price_order      = max(0, ($price_order + $fee_ship) - $price_deduct);
 
         $dataRes                = [
             'price_voucher'     => $price_voucher,
+            'voucher_deduct'    => (int)$price_deduct,
+            'voucher_valid'     => $voucherId > 0 ? $dataVoucher['price_org'] > 0 : null,
             'fee_ship'          => $fee_ship,
-            'wallet_point'      => $user->wallet_point,
             'price_order'       => $price_order,
             'total_price_order' => $total_price_order,
             'delivery_address'  => $delivery_address,
-            'bank_payment'      => $bank_payment
         ];
         return $dataRes;
     }
@@ -225,18 +226,43 @@ class CartController extends Controller
         return $dataRes;
     }
 
+    /** Mua lại: thêm các sản phẩm (còn bán) của một đơn cũ vào giỏ hàng */
+    public function actionReorder($id)
+    {
+        $order = Order::findOne(['id' => (int)$id, 'user_id' => Yii::$app->user->id]);
+        if (!$order) {
+            throw new \yii\web\NotFoundHttpException('Không tìm thấy đơn hàng');
+        }
+        $added = 0;
+        foreach (\backend\models\OrderProduct::find()->where(['order_id' => $order->id])->all() as $line) {
+            $active = Product::find()->where(['id' => $line->product_id, 'status' => Product::STATUS_ACTIVE])->andWhere(['>', 'quantity_in_stock', 0])->exists();
+            if ($active) {
+                $_SESSION['list_product'][$line->product_id] = ['classification_id' => $line->product_classification_id, 'qty' => max(1, (int)$line->quantity)];
+                $added++;
+            }
+        }
+        Yii::$app->session->setFlash($added ? 'success' : 'error', $added ? 'Đã thêm sản phẩm của đơn #' . $order->id . ' vào giỏ hàng' : 'Sản phẩm của đơn này hiện không còn bán');
+        return $this->redirect(['/cart/index']);
+    }
+
     //function dat hang
     public function actionOrder(){
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
-        $delivery_address_id    = Yii::$app->request->post('delivery_address_id');
-        $type_payment           = Yii::$app->request->post('type_payment');
-        $use_wallet_payment     = Yii::$app->request->post('use_wallet_payment');
-        $voucher_id             = Yii::$app->request->post('voucher_id');
-        $arr_product_order      = Yii::$app->request->post('arr_product_id');
+        $delivery_address_id    = (int)Yii::$app->request->post('delivery_address_id');
+        $type_payment           = (int)Yii::$app->request->post('type_payment');
+        $voucher_id             = (int)Yii::$app->request->post('voucher_id');
+        $arr_product_order      = (array)Yii::$app->request->post('arr_product_id', []);
         $user                   = Yii::$app->user->identity;
         $session = Yii::$app->session;
-        $listProductCart = $session->get('list_product');
+        $listProductCart = (array)$session->get('list_product', []);
+
+        if (empty($arr_product_order) || empty($listProductCart)) {
+            return ['status' => false, 'msg' => 'Vui lòng chọn sản phẩm cần đặt hàng'];
+        }
+        if (!in_array($type_payment, [1, 2], true)) {
+            return ['status' => false, 'msg' => 'Vui lòng chọn phương thức thanh toán'];
+        }
 
         $product_combination = [];
         foreach($listProductCart as $product_id => $row){
@@ -247,11 +273,14 @@ class CartController extends Controller
                 ];
             }
         }
+        if (empty($product_combination)) {
+            return ['status' => false, 'msg' => 'Sản phẩm đã chọn không còn trong giỏ hàng, vui lòng tải lại trang'];
+        }
 
         $params = [
             'delivery_address_id' => $delivery_address_id,
             'type_payment' => $type_payment,
-            'use_wallet_payment' => $use_wallet_payment,
+            'use_wallet_payment' => 0,
             'voucher_id' => $voucher_id,
             'product_combination' => $product_combination,
         ];

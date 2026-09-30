@@ -7,17 +7,17 @@ use yii\widgets\Breadcrumbs;
 use backend\controllers\CommonController;
 use backend\models\Agent;
 use frontend\controllers\HelperController;
-// echo '<pre>';
-// print_r(Agent::getInfoAgent(1)['name']);
-// echo '</pre>';die;
+/** "Dùng ngay": voucher của shop → mở shop để chọn sản phẩm; voucher 1Kho → giỏ hàng (chọn voucher ở bước thanh toán) */
+$useUrl = function ($row) {
+    return !empty($row['agent_id']) && Agent::getInfoAgent($row['agent_id']) ? Url::to(['/product/shop', 'id' => $row['agent_id']]) : Url::to(['/cart/index']);
+};
 ?>
 <div class="container">
     <?php
     echo Breadcrumbs::widget([
         'homeLink' => ['label' => '', 'url' => '/'],
         'links' => [
-            // ['label' => '   Sample Post', 'url' => ['post/edit', 'id' => 1]],
-            'Ví voucher ',
+            'Voucher của tôi',
         ],
     ]);
 
@@ -42,7 +42,7 @@ use frontend\controllers\HelperController;
                         <div class="voucher_desc">
                             <span><?= $row['name'] ?></span>
                             <p><?= $row['desc'] ?></p>
-                            <a href="">Dùng ngay</a>
+                            <a href="<?= $useUrl($row) ?>">Dùng ngay</a>
                         </div>
                         <div class="tooltips">
                             <img class="show_detail_voucher" src="/images/icon/i.svg" alt="">
@@ -54,7 +54,7 @@ use frontend\controllers\HelperController;
                                     <div class="voucher_desc">
                                         <span><?= $row['name'] ?></span>
                                         <p><?= $row['desc'] ?></p>
-                                        <a href="">Dùng ngay</a>
+                                        <a href="<?= $useUrl($row) ?>">Dùng ngay</a>
                                     </div>
                                 </div>
                                 <div class="info_voucher">
@@ -79,7 +79,9 @@ use frontend\controllers\HelperController;
                             </div>
                         </div>
                     </div>
-                <?php }} ?>
+                <?php }} else { ?>
+                    <p class="text-center color-gray p-4">Bạn chưa có voucher nào. Voucher sẽ xuất hiện khi 1Kho hoặc shop tặng cho bạn.</p>
+                <?php } ?>
             </div>
             <div class="voucher_list" id="used">
             <?php
@@ -93,7 +95,7 @@ use frontend\controllers\HelperController;
                         <div class="voucher_desc">
                             <span><?= $row['name'] ?></span>
                             <p><?= $row['desc'] ?></p>
-                            <!-- <a href="">Dùng ngay</a> -->
+                            
                         </div>
                         <div class="tooltips">
                             <img class="show_detail_voucher" src="/images/icon/i.svg" alt="">
@@ -105,7 +107,7 @@ use frontend\controllers\HelperController;
                                     <div class="voucher_desc">
                                         <span><?= $row['name'] ?></span>
                                         <p><?= $row['desc'] ?></p>
-                                        <!-- <a href="">Dùng ngay</a> -->
+                                        
                                     </div>
                                 </div>
                                 <div class="info_voucher">

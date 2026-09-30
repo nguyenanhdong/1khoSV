@@ -2,6 +2,9 @@
 
 use backend\models\NotifyUser;
 use yii\helpers\Url;
+use yii\helpers\Html;
+use backend\models\Category;
+use frontend\components\SiteInfo;
 
 $controller = Yii::$app->controller->id;
 $action = Yii::$app->controller->action->id;
@@ -10,7 +13,6 @@ $show_search = true;
 $not_show_search = [
     'voucher/index',
     'category/index',
-    'product/index',
     'product/shop',
     'cart/index',
     'info/profile',
@@ -21,10 +23,8 @@ $not_show_search = [
     'info/review',
     'info/favourite',
     'info/return',
-    'info/acc-points',
-    'site/return-policy',
-    'site/guarantee',
-    'site/privacy-policy',
+    'site/page',
+    'site/contact',
     'category/index-sale',
 ];
 $not_show_menu = [
@@ -39,6 +39,7 @@ if (in_array($controller . '/' . $action, $not_show_search)) {
 }
 
 $allCategory = ['data' => \backend\models\Category::getListCateHeader()];
+$searchQ = $controller . '/' . $action === 'product/search' ? (string)Yii::$app->request->get('q', '') : '';
 
 $isGuest = Yii::$app->user->isGuest;
 
@@ -59,17 +60,14 @@ if(!$isGuest)
                         <img src="/images/icon/logo.svg" alt="">
                     </a>
                 </div>
-                <div class="header_search">
-                    <input type="text" placeholder="Tìm kiếm sản phẩm">
-                    <button>
+                <form class="header_search js_search" action="<?= Url::to(['/product/search']) ?>" method="get" autocomplete="off" role="search">
+                    <input type="text" name="q" value="<?= \yii\helpers\Html::encode($searchQ) ?>" placeholder="Tìm kiếm sản phẩm" maxlength="100" aria-label="Tìm kiếm sản phẩm">
+                    <button type="submit" aria-label="Tìm kiếm">
                         <img src="/images/icon/search.svg" alt="">
                     </button>
-                </div>
+                    <div class="search_suggest" hidden></div>
+                </form>
                 <div class="header_action">
-                    <!-- <a href="<?= Url::to(['/product/delivery']) ?>">
-                        <img src="/images/icon/gv-icon.svg" alt="">
-                        <p>Rao vặt</p>
-                    </a> -->
                     <div class="noti_gr position-relative">
                         <a class="toggle_noti" href="<?= $isGuest ? Url::to(['/site/login']) : 'javascript:;' ?>">
                             <img src="/images/icon/noti-icon.svg" alt="">
@@ -105,7 +103,7 @@ if(!$isGuest)
                                         <div class="notification_detail" id="noti_detail_<?= $row['id'] ?>">
                                             <div class="btn_action_noti_detail d-flex justify-content-between">
                                                 <i class="far fa-arrow-left hide_noti_detail"></i>
-                                                <i class="fal fa-trash-alt remove_noti"></i>
+                                                <i class="fal fa-trash-alt remove_noti" data-id="<?= (int)$row['id'] ?>" title="Xoá thông báo"></i>
                                             </div>
                                             <div class="content_noti_detail">
                                                 <h4><?= $orderDetail['title'] ?></h4>
@@ -117,10 +115,6 @@ if(!$isGuest)
                             </div>
                         </div>
                     </div>
-                    <!-- <a href="<?= Url::to(['/voucher/index']) ?>">
-                        <img src="/images/icon/vi-icon.svg" alt="">
-                        <p>Ví</p>
-                    </a> -->
                     <?php if($isGuest){ ?>
                         <a href="<?= Url::to(['/site/login']) ?>">
                             <img src="/images/icon/user-icon.svg" alt="">
@@ -149,9 +143,6 @@ if(!$isGuest)
                 <img class="logo" src="/images/icon/logo.svg" alt="">
             </a>
             <div class="header_mobi_icon">
-                <a href="<?= Url::to(['/voucher/index']) ?>">
-                    <img src="/images/icon/vi-icon.svg" alt="">
-                </a>
                 <div class="noti_gr position-relative">
                     <a class="toggle_noti" href="<?= $isGuest ? Url::to(['/site/login']) : 'javascript:;' ?>">
                         <img src="/images/icon/noti-icon.svg" alt="">
@@ -186,7 +177,7 @@ if(!$isGuest)
                                     <div class="notification_detail" id="noti_detail_<?= $row['id'] ?>">
                                         <div class="btn_action_noti_detail d-flex justify-content-between">
                                             <i class="far fa-arrow-left hide_noti_detail"></i>
-                                            <i class="fal fa-trash-alt remove_noti"></i>
+                                            <i class="fal fa-trash-alt remove_noti" data-id="<?= (int)$row['id'] ?>" title="Xoá thông báo"></i>
                                         </div>
                                         <div class="content_noti_detail">
                                             <h4><?= $orderDetail['title'] ?></h4>
@@ -211,28 +202,31 @@ if(!$isGuest)
                         foreach($allCategory['data'] as $cat){
                 ?>
                 <li>
-                    <a href="<?= Url::to(['/category/index', 'cate_parent_id' => $cat['id']]) ?>"><?= $cat['name'] ?></a>
+                    <a href="<?= Url::to(['/category/index', 'cate_parent_id' => $cat['id']]) ?>"><?= Html::encode($cat['name']) ?></a>
                 </li>
                 <?php }} ?>
             </ul>
+            <?php if (SiteInfo::phone() !== ''): ?>
             <div class="hotline">
-                <a href="">
+                <a href="<?= SiteInfo::tel() ?>">
                     <img src="/images/icon/phone-menu.svg" alt="">
-                    0888.333.215
+                    <?= Html::encode(SiteInfo::phone()) ?>
                 </a>
             </div>
+            <?php endif; ?>
         </div>
         <div class="overlay"></div>
     </div>
     <?php if ($show_search) { ?>
         <div class="header_search_mobi d-block d-lg-none">
             <div class="header_search_gr">
-                <div class="position-relative">
+                <form class="position-relative js_search" action="<?= Url::to(['/product/search']) ?>" method="get" autocomplete="off" role="search">
                     <div class="icon_search_mb">
                         <img src="/images/icon/k.svg" alt="">
                     </div>
-                    <input type="text" placeholder="Tìm kiếm sản phẩm...">
-                </div>
+                    <input type="search" name="q" value="<?= \yii\helpers\Html::encode($searchQ) ?>" placeholder="Tìm kiếm sản phẩm..." maxlength="100" aria-label="Tìm kiếm sản phẩm">
+                    <div class="search_suggest" hidden></div>
+                </form>
                 <div class="cart_mobi flex-center">
                     <a href="<?= Url::to(['/cart/index']) ?>">
                         <img src="/images/icon/cart-icon.svg" alt="">
@@ -249,11 +243,19 @@ if(!$isGuest)
                     if(!empty($allCategory['data'])){
                         foreach($allCategory['data'] as $cat){
                 ?>
-                <li>
+                <?php $children = Category::getAllChildByParentId($cat['id']); ?>
+                <li class="<?= $children ? 'has_sub' : '' ?>">
                     <a href="<?= Url::to(['category/index', 'cate_parent_id' => $cat['id']]) ?>">
-                        <?= $cat['name'] ?>
-                        <i class="far fa-angle-down"></i>
+                        <?= Html::encode($cat['name']) ?>
+                        <?php if ($children): ?><i class="far fa-angle-down"></i><?php endif; ?>
                     </a>
+                    <?php if ($children): ?>
+                    <ul class="header_submenu">
+                        <?php foreach ($children as $child): ?>
+                            <li><a href="<?= Url::to(['category/index', 'cate_parent_id' => $cat['id'], 'cate_child_id' => $child['id']]) ?>"><?= Html::encode($child['name']) ?></a></li>
+                        <?php endforeach; ?>
+                    </ul>
+                    <?php endif; ?>
                 </li>
                 <?php }} ?>
                 </ul>
@@ -269,13 +271,13 @@ if(!$isGuest)
             </a>
         </div>
         <div class="item_bot">
-            <a class="text_bot product_item <?= $controller . '/' . $action == 'category/index' ? 'active' : '' ?>" href="<?= Url::to(['/category/index']) ?>">
+            <a class="text_bot product_item <?= in_array($controller . '/' . $action, ['category/index', 'product/search'], true) ? 'active' : '' ?>" href="<?= Url::to(['/product/search']) ?>">
                 Sản phẩm
             </a>
         </div>
         <div class="item_bot">
-            <a class="text_bot cart_item <?= $controller . '/' . $action == 'product/delivery' ? 'active' : '' ?>" href="<?= Url::to(['/product/delivery']) ?>">
-                Rao vặt
+            <a class="text_bot cart_item <?= $controller == 'cart' ? 'active' : '' ?>" href="<?= Url::to(['/cart/index']) ?>">
+                Giỏ hàng
             </a>
         </div>
         <div class="item_bot">

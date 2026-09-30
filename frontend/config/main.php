@@ -17,18 +17,6 @@ return [
     'controllerNamespace' => 'frontend\controllers',
     'defaultRoute' => 'site',
     'components' => [
-        'authClientCollection' => [
-            'class' => 'yii\authclient\Collection',
-            'clients' => [
-                'facebook' => [
-                    'class' => 'yii\authclient\clients\Facebook',
-                    'clientId' => '1637958006659754',
-                    'clientSecret' => '96c8ca607a4fa49e3fe1da82008767a2',
-                    'attributeNames' => ['name', 'email', 'first_name', 'last_name'],
-                    'authUrl' => 'https://www.facebook.com/dialog/oauth?display=popup',
-                ],
-            ],
-        ],
         'assetManager' => [
             'bundles' => [
                 'yii\web\JqueryAsset' => [
@@ -91,21 +79,15 @@ return [
             'showScriptName' => false,
             'rules' => [
                 '/'                => '/site/index',
-                'dang-ky' =>'/site/signup',
                 'dang-nhap' =>'/site/login',
+                'dang-ky' =>'/site/login',
                 'dang-xuat' => '/site/logout',
                 // 'danh-muc-khoa-hoc/<slug>' => '/category/index',
                 // 'danh-muc-khoa-hoc' => '/category/index',   
-                'gioi-thieu'=>'/site/about',
-                // '<slug>-<id>' => '/category/index-news',
                 'lien-he' => '/site/contact',
-                'san-pham/tag/<slug-tag>-<tag>' => '/product/index',
-                'san-pham/chuyen-muc/<slug>-<cat>' => '/product/index',
-                'san-pham' => '/product/index',
-                'chi-tiet-san-pham/<slug>-<id>' => '/product/detail',
-                'tin-tuc' => '/news/home-new',
-                'chuyen-muc/<slug>' => '/news/index',
-                '/<slug>-<id>' => '/news/detail',
+                'san-pham' => '/product/search',
+                'tim-kiem' => '/product/search',
+                '<slug:(gioi-thieu|huong-dan-mua-hang|thanh-toan|van-chuyen|chinh-sach-doi-tra|chinh-sach-bao-hanh|chinh-sach-bao-mat|dieu-khoan|tuyen-dung)>' => '/site/page',
                 // 'chi-tiet-san-pham-<id>' => '/product/detail',
 
 

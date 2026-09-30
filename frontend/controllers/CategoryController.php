@@ -17,73 +17,61 @@ use yii\web\Controller;
  */
 class CategoryController extends Controller
 {
-    public function actionIndex($cate_parent_id)
+    public function actionIndex($cate_parent_id = 0, $cate_child_id = 0)
     {
+        if (!(int)$cate_parent_id) {
+            return $this->redirect(['/product/search']);
+        }
         $category = ApiNewController::CategoryDetail();
+        if (empty($category['data']['info'])) {
+            throw new \yii\web\NotFoundHttpException('Chuyên mục không tồn tại hoặc đã ngừng hiển thị');
+        }
+        $data = $category['data'];
+        $childIds = array_column($data['cate_child'] ?? [], 'id');
+        $activeChild = in_array((int)$cate_child_id, array_map('intval', $childIds), true) ? (int)$cate_child_id : 0;
+        $this->view->title = $data['info']['name'];
         return $this->render('index', [
-            'category' => isset($category['data']) ? $category['data'] : []
+            'category'    => $data,
+            'activeChild' => $activeChild,
+            'total'       => Product::countByCategory($activeChild ? [$activeChild] : ($childIds ?: [-1])),
         ]);
     }
     public function actionGetProductCategory()
     {
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-        $cate_parent_id = Yii::$app->request->post('cate_parent_id', '');
-        $cate_child_id      = Yii::$app->request->post('cate_child_id', '');
-        $page               = !empty(Yii::$app->request->post('page')) ? Yii::$app->request->post('page') : 0;
-        $sort               = Yii::$app->request->post('sort', 'popular');
-        $response['data'] = '';
-        $response['checkLoadMore'] = false;
-        $response['append'] = false;
+        $request        = Yii::$app->request;
+        $cate_parent_id = (int)$request->post('cate_parent_id', 0);
+        $cate_child_id  = (int)$request->post('cate_child_id', 0);
+        $page           = max(0, (int)$request->post('page', 0));
+        $sort           = (string)$request->post('sort', 'popular');
+        $limit          = 10;
+        $offset         = $page * $limit;
 
-        if (!empty($page)) {
-            $response['append'] = true;
-        }
-        
-        $limit = 10;
-        $offset = $page * $limit;
-
-        if (!empty($cate_parent_id)) {
-            $listCateChild  = Category::getAllChildByParentId($cate_parent_id);
-            $listCateIdProd = [-1];
-            if (!empty($listCateChild)) {
-                $listCateIdProd = ArrayHelper::map($listCateChild, 'id', 'id');
-            }
-        }
-
-        if (!empty($cate_child_id)) {
+        $listCateIdProd = [-1];
+        if ($cate_child_id > 0) {
             $listCateIdProd = [$cate_child_id];
-        }
-  
-        $listProduct    = Product::getProductByCategory($listCateIdProd, $sort, $limit, $offset);
-        $offsetCheck = $limit + $offset + 1;
-        $checkLoadMore = !empty(Product::getProductByCategory($listCateIdProd, $sort, 1, $offsetCheck)) ? true : false;
-
-        $item = '';
-        if (!empty($listProduct)) {
-            foreach ($listProduct as $row) {
-                $url = Url::to(['/product/detail', 'id' => $row['id']]);
-                $item .= '<div class="product_item">
-                                <a href="' . $url . '">
-                                    <span class="prod_sale">' . $row['percent_discount'] . '% <br> OFF</span>
-                                    <img class="prod_avatar" src="' . $row['image'] . '" alt="Image product">
-                                    <div class="prod_price_star">
-                                        <p class="prod_title line_2" title="' . $row['name'] . '">' . $row['name'] . '</p>
-                                        <div class="des_prod mt-2">
-                                            <span>' . HelperController::formatPrice($row['price']) . '</span>
-                                            <div class="flex-center">
-                                                <img src="/images/icon/star.svg" alt="">
-                                                <p class="product_star">' . $row['star'] . ' (' . $row['total_rate'] . ')</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>';
+        } elseif ($cate_parent_id > 0) {
+            $listCateChild = Category::getAllChildByParentId($cate_parent_id);
+            if (!empty($listCateChild)) {
+                $listCateIdProd = ArrayHelper::getColumn($listCateChild, 'id');
             }
         }
-        $response['data'] = $item;
-        $response['checkLoadMore'] = $checkLoadMore;
 
-        return $response;
+        $listProduct = Product::getProductByCategory($listCateIdProd, $sort, $limit, $offset);
+        $total       = Product::countByCategory($listCateIdProd);
+        $item = '';
+        foreach ($listProduct as $row) {
+            $item .= $this->renderPartial('@frontend/views/product/_item', ['prod' => $row]);
+        }
+        if ($item === '' && $page === 0) {
+            $item = '<div class="search_empty w-100">Chưa có sản phẩm trong chuyên mục này</div>';
+        }
+        return [
+            'data'          => $item,
+            'append'        => $page > 0,
+            'checkLoadMore' => $offset + count($listProduct) < $total,
+            'total'         => $total,
+        ];
     }
     public function actionGetProductCategoryChild()
     {

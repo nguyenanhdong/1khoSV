@@ -18,19 +18,19 @@ use yii\web\Controller;
  */
 class InfoController extends Controller
 {
-    public function beforeAction($action)
+    public function behaviors()
     {
-        if (Yii::$app->user->isGuest) {
-            $this->redirect(['/site/login']);
-            return false; 
-        }
-        return parent::beforeAction($action);
+        return ['login' => ['class' => \frontend\components\LoginRequired::class]];
     }
-    //Ví tích điểm
-    public function actionAccPoints(){
-        $this->view->title = 'Ví tích điểm';
-        return $this->render('accumulate-points');
+    /** Xoá (ẩn) một thông báo của người dùng */
+    public function actionRemoveNotify()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $id = (int)Yii::$app->request->post('id');
+        $done = \backend\models\NotifyUser::updateAll(['is_delete' => 1], ['id' => $id, 'user_id' => Yii::$app->user->id, 'is_delete' => 0]);
+        return $done ? ['status' => true] : ['status' => false, 'message' => 'Thông báo không tồn tại'];
     }
+
 
     //thông tin cá nhân
     public function actionAccInfo(){
@@ -95,7 +95,7 @@ class InfoController extends Controller
                     $class_not_purchased = 'not_purchased';
                     if($row['status'] == 3){
                         $class_not_purchased = '';
-                        $btn_action = '<a href="'. Url::to(['/product/detail', 'id' => $row['product_id']]) .'" class="btn_action btn-orange flex-center">Mua lại</a>';
+                        $btn_action = '<a href="'. Url::to(['/cart/reorder', 'id' => $row['order_id']]) .'" class="btn_action btn-orange flex-center">Mua lại</a>';
                     }
                     $star = '';
                     for($i = 0; $i < $row['star']; $i++){
@@ -209,11 +209,52 @@ class InfoController extends Controller
     //Lịch sử mua hàng Chi tiết đơn hàng
     public function actionOrderDetail($id){
         $userId = Yii::$app->user->identity->id;
-        $data = Order::getOrderDetail($id, $userId);
-        $this->view->title = 'Chi tiết đơn hàng';
+        $data = Order::getOrderDetail((int)$id, $userId);
+        if (!$data) {
+            throw new \yii\web\NotFoundHttpException('Không tìm thấy đơn hàng');
+        }
+        $order = Order::findOne((int)$id);
+        $refund = \backend\models\OrderRefund::findOne(['order_id' => (int)$id, 'user_id' => $userId]);
+        $this->view->title = 'Chi tiết đơn hàng #' . (int)$id;
         return $this->render('order-detail',[
-            'data' => $data
+            'data'    => $data,
+            'order'   => $order,
+            'refund'  => $refund,
+            'reasons' => array_values((array)\backend\models\Config::getConfigApp('LIST_REASON_REFUN')),
         ]);
+    }
+
+    /** Khách huỷ đơn đang chờ xác nhận */
+    public function actionCancelOrder()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $result = Order::cancelOrder((int)Yii::$app->request->post('id'), Yii::$app->user->id, 1);
+        return ['status' => (bool)$result['status'], 'message' => $result['status'] ? 'Đã huỷ đơn hàng' : ($result['message'] ?: 'Không huỷ được đơn hàng')];
+    }
+
+    /** Gửi yêu cầu trả hàng / hoàn tiền cho đơn đã mua (trong hạn 10 ngày) */
+    public function actionRefundRequest()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $request = Yii::$app->request;
+        $reasons = array_values((array)\backend\models\Config::getConfigApp('LIST_REASON_REFUN'));
+        $reason = trim((string)$request->post('reason'));
+        $situation = (int)$request->post('situation');
+        $note = mb_substr(trim((string)$request->post('note')), 0, 400);
+        $errors = [];
+        if (!in_array($reason, $reasons, true)) {
+            $errors['reason'] = 'Vui lòng chọn lý do';
+        }
+        if (!in_array($situation, [1, 2], true)) {
+            $errors['situation'] = 'Vui lòng chọn tình huống đang gặp';
+        }
+        if ($errors) {
+            return ['status' => false, 'message' => reset($errors), 'errors' => $errors];
+        }
+        $result = \backend\models\OrderRefund::createRefundOrder(Yii::$app->user->id, [
+            'order_id' => (int)$request->post('id'), 'reason_refund' => $reason, 'note_refund' => $note, 'type_situation' => $situation,
+        ]);
+        return ['status' => (bool)$result['status'], 'message' => $result['message'] ?: 'Không gửi được yêu cầu'];
     } 
     //sản phẩm yêu thích 
     public function actionFavourite(){
@@ -243,12 +284,42 @@ class InfoController extends Controller
     //mời bạn bè
     public function actionInviteFriend(){
         $this->view->title = 'Mời bạn bè';
-        return $this->render('invite-friend');
-    } 
-    // Giới thiệu
+        $user = Users::findOne(Yii::$app->user->id);
+        if (empty($user->referral_code)) {
+            do {
+                $code = random_int(100000, 999999);
+            } while (Users::find()->where(['referral_code' => $code])->exists());
+            $user->referral_code = $code;
+            $user->save(false);
+        }
+        return $this->render('invite-friend', ['code' => (string)$user->referral_code]);
+    }
+    // Giới thiệu → trang nội dung chung (sửa trong CMS)
     public function actionIntroduce(){
-        $this->view->title = 'Giới thiệu';
-        return $this->render('introduce');
+        return $this->redirect(['/site/page', 'slug' => 'gioi-thieu']);
+    }
+
+    /**
+     * Xoá tài khoản theo yêu cầu người dùng: khoá tài khoản và gỡ số điện thoại / liên kết Google, Facebook
+     * để số đó có thể đăng ký lại từ đầu. Đơn hàng cũ được giữ lại cho đối soát.
+     */
+    public function actionDeleteAccount()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        if (!Yii::$app->request->isPost || Yii::$app->request->post('confirm') !== 'XOA') {
+            return ['status' => false, 'message' => 'Vui lòng xác nhận xoá tài khoản'];
+        }
+        $user = Users::findOne(Yii::$app->user->id);
+        $user->status   = 0;
+        $user->phone    = null;
+        $user->gg_id    = null;
+        $user->fb_id    = null;
+        $user->apple_id = null;
+        $user->device_id = null;
+        $user->save(false);
+        Yii::$app->session->remove('list_product');
+        Yii::$app->user->logout();
+        return ['status' => true, 'message' => 'Tài khoản của bạn đã được xoá'];
     }
     // Đánh giá
     public function actionReview(){
@@ -400,7 +471,14 @@ class InfoController extends Controller
     // Trả hàng hoàn tiền
     public function actionReturn(){
         $this->view->title = 'Trả hàng hoàn tiền';
-        return $this->render('return');
+        $refunds = (new \yii\db\Query())
+            ->select(['r.*', 'product_name' => 'p.name', 'product_image' => 'p.image', 'order_total' => 'o.total_price'])
+            ->from(['r' => 'order_refund'])
+            ->innerJoin(['o' => 'order'], 'o.id = r.order_id')
+            ->leftJoin(['op' => 'order_product'], 'op.order_id = o.id')
+            ->leftJoin(['p' => 'product'], 'p.id = op.product_id')
+            ->where(['r.user_id' => Yii::$app->user->id])->groupBy('r.id')->orderBy(['r.id' => SORT_DESC])->all();
+        return $this->render('return', ['refunds' => $refunds]);
     }
     // Tài khoản
     public function actionProfile(){
