@@ -39,7 +39,12 @@ $controller = Yii::$app->controller->id;
                         'attribute' => 'image',
                         'format' => 'raw',
                         'value' => function ($model) {
-                            return '<img class="img-grid" src="' . $model->image . '"/>';
+                            $images = explode(';', $model->image);
+                            $firstImage = !empty($images[0]) ? $images[0] : '';
+
+                            return $firstImage 
+                                ? '<img class="img-grid" src="' . $firstImage . '"/>' 
+                                : '';
                         },
                         'contentOptions' => array('style' => 'width:200px')
                     ],
