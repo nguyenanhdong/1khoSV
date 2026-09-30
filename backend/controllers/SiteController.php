@@ -78,6 +78,8 @@ class SiteController extends Controller
      */
     public function actionIndex()
     {
+        return $this->redirect(['/agrimac/dashboard']);
+
         $date_start    = date('Y-m-d', strtotime(' - 6 day', time()));
         $date_end      = date('Y-m-d');
         // if( isset($_POST['ajax']) ){
@@ -202,6 +204,7 @@ class SiteController extends Controller
         $model = new LoginForm();
         $model->login_backend = 1;
         if ($model->load(Yii::$app->request->post()) && $model->login()) {
+            Yii::$app->db->createCommand()->update('employee', ['last_login' => date('Y-m-d H:i:s')], ['id' => Yii::$app->user->id])->execute();
             Yii::$app->user->identity->save();
             if( isset($_GET['return']) && !empty($_GET['return']) )
                 return $this->redirect($_GET['return']);

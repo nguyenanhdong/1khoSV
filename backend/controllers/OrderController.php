@@ -44,33 +44,15 @@ class OrderController extends Controller
      * Lists all CategoryTags models.
      * @return mixed
      */
+    /** Đơn sàn nay quản lý ở tab "Đơn sàn 1kho" của trang AgriMac Đơn hàng. */
     public function actionIndex()
     {
-        $searchModel = new OrderSearch();
-        
-        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
-  
-
-        return $this->render('index', [
-            'dataProvider' => $dataProvider,
-            'searchModel' => $searchModel,
-        ]);
+        return $this->redirect(['/agrimac/orders', 'scope' => 'market']);
     }
 
-   
     public function actionUpdate($id)
     {
-        $model = $this->findModel($id);
-        
-        if($model->load(Yii::$app->request->post()) && $model->validate())
-        {
-            $model->save(false);
-            Yii::$app->session->setFlash('message', "Cập nhật đơn hàng thành công");
-            return $this->redirect(['index']);
-        }
-        return $this->render('update', [
-            'model' => $model,
-        ]);
+        return $this->redirect(['/agrimac/orders', 'scope' => 'market', 'id' => (int)$id]);
     }
 
     public function actionUpdateStatus() {

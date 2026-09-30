@@ -7,6 +7,10 @@ use backend\models\AuthItem;
 class UAccess extends \yii\base\Behavior
 {
 	public $actionAllowed = ['/site/login', '/site/logout', '/site/test', '/site/error','/api/*','/uploads/*','/img/*'];
+	/** Route khách chưa đăng nhập được vào (trang khách quét QR kích hoạt bảo hành). */
+	public $guestAllowed = ['/agrimac/activate'];
+	/** Controller nhân viên AgriMac không phải Admin được vào. */
+	public $agrimacAllowed = ['agrimac', 'site'];
     public function events(){
         return [
             \yii\base\Module::EVENT_BEFORE_ACTION => 'checkAccess'
@@ -24,6 +28,12 @@ class UAccess extends \yii\base\Behavior
         $listActionAllow= $this->actionAllowed;
 
         if( !Yii::$app->user->isGuest ){
+            // Nhân viên AgriMac (Sale, Kho, Giao hàng...) chỉ dùng các trang AgriMac; trang sàn 1kho dành cho Admin
+            if( !in_array($controller, $this->agrimacAllowed, true) && !\backend\components\AgrimacAuth::isSuperAdmin()
+                && \backend\components\AgrimacAuth::realRole() !== null && !\backend\components\AgrimacAuth::canUseLegacy() ){
+                Yii::$app->getResponse()->redirect(['/agrimac/dashboard'])->send();
+                die();
+            }
             if( Yii::$app->user->identity->is_admin != 1 ){
                 if( Yii::$app->session->hasFlash('actionsAllow') ){
                     $listActionAllow= json_decode(Yii::$app->session->getFlash('actionsAllow'),true);
@@ -59,7 +69,7 @@ class UAccess extends \yii\base\Behavior
                 // throw new \yii\web\HttpException(403, 'Rất tiếc! Bạn không đủ quyền thực hiện thao tác này.');
             }
         }else{
-            if( $roleAction != '/site/login' && strpos($roleAction,'/api/') === false && strpos($roleAction,'/process-work/') === false ){
+            if( $roleAction != '/site/login' && !in_array($roleAction, $this->guestAllowed, true) && strpos($roleAction,'/api/') === false && strpos($roleAction,'/process-work/') === false ){
                 if (Yii::$app->request->url != "/")
                     Yii::$app->user->loginUrl = ['site/login', 'return' => Yii::$app->request->url];
                 else

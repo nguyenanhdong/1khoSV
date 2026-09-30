@@ -25,8 +25,35 @@ class Category extends \yii\db\ActiveRecord
     {
         return [
             [['name'],'required','message'=>'Nhập {attribute}'],
-            [['sort_order', 'show_in_header','show_in_home','home_position'], 'safe'],
+            [['name'], 'trim'],
+            [['name', 'image'], 'string', 'max' => 255],
+            [['sort_order', 'home_position'], 'integer', 'min' => 0, 'message' => '{attribute} phải là số'],
+            [['sort_order', 'home_position'], 'default', 'value' => null],
+            [['show_in_header', 'show_in_home'], 'in', 'range' => [0, 1, '0', '1']],
+            [['parent_id'], 'default', 'value' => 0],
+            [['parent_id'], 'integer'],
+            [['parent_id'], 'validateParent'],
         ];
+    }
+
+    /** Chuyên mục chỉ có 2 cấp: cha phải là chuyên mục cấp 1 còn hoạt động, và chuyên mục đang có con thì không được làm con. */
+    public function validateParent($attribute)
+    {
+        $parentId = (int)$this->parent_id;
+        if ($parentId === 0) {
+            return;
+        }
+        if (!$this->isNewRecord && $parentId === (int)$this->id) {
+            $this->addError($attribute, 'Không thể chọn chính chuyên mục này làm cha');
+            return;
+        }
+        if (!self::find()->where(['id' => $parentId, 'parent_id' => 0, 'is_delete' => 0])->exists()) {
+            $this->addError($attribute, 'Chuyên mục cha không hợp lệ');
+            return;
+        }
+        if (!$this->isNewRecord && self::find()->where(['parent_id' => $this->id, 'is_delete' => 0])->exists()) {
+            $this->addError($attribute, 'Chuyên mục này đang có chuyên mục con nên phải là cấp 1');
+        }
     }
     
     /**
@@ -101,6 +128,16 @@ class Category extends \yii\db\ActiveRecord
         $domain     = Yii::$app->params['urlDomain'];
         $listCategoryChild = self::find()->select(['id', 'name', new Expression("concat('$domain',image) as image")])->where(['parent_id' => $parent_id, 'is_delete' => 0, 'status' => self::STATUS_ACTIVE])->asArray()->all();
         return $listCategoryChild;
+    }
+
+    const HEADER_MENU_LIMIT = 8;
+
+    /** Chuyên mục cấp 1 bật "Hiển thị menu header" (sắp theo thứ tự hiển thị chuyên mục cha) cho menu web. */
+    public static function getListCateHeader($limit = self::HEADER_MENU_LIMIT){
+        return self::find()->select(['id', 'name'])
+            ->where(['parent_id' => 0, 'is_delete' => 0, 'status' => self::STATUS_ACTIVE, 'show_in_header' => 1])
+            ->orderBy(new Expression('home_position IS NULL, home_position, id'))
+            ->limit($limit)->asArray()->all();
     }
 
     public static function getListCateAppByAgent($agent_id = 0, $limit = null, $offset = null){

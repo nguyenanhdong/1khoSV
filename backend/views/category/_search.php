@@ -36,7 +36,7 @@ use yii\widgets\ActiveForm;
                 <div class="col-lg-3">
                     <div class="form-group">
                         <?= Html::submitButton('<i class="fal fa-search"></i> Tìm kiếm', ['class' => 'btn btn-primary']) ?>
-                        <?= Html::a('<i class="fal fa-plus"></i> Thêm', ['create'], ['class' => 'btn btn-success']) ?>
+                        <button type="button" class="btn btn-success" data-cat-open><i class="fal fa-plus"></i> Thêm</button>
                     </div>
                 </div>
             </div>

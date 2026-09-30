@@ -13,6 +13,7 @@ use yii\widgets\ActiveForm;
 if (!empty($model->product_id)) {
     $model->product_id = array_filter(explode(';', $model->product_id));
 }
+$listProductByVoucher = Product::getAllProductByVoucher();
 ?>
 
 <div class="category-tags-form">

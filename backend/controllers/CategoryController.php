@@ -85,6 +85,30 @@ class CategoryController extends Controller
         ]);
     }
 
+    /** Lưu từ popup trên trang danh sách: trả JSON, lỗi theo từng ô. */
+    public function actionSave($id = null)
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        if (!Yii::$app->request->isPost) {
+            Yii::$app->response->statusCode = 405;
+            return ['status' => false, 'message' => 'Phương thức không hợp lệ'];
+        }
+        $model = $id ? Category::findOne(['id' => (int)$id, 'is_delete' => 0]) : new Category();
+        if ($model === null) {
+            return ['status' => false, 'message' => 'Chuyên mục không tồn tại hoặc đã bị xóa'];
+        }
+        $isNew = $model->isNewRecord;
+        $model->load(Yii::$app->request->post(), '');
+        if (!$model->validate()) {
+            return ['status' => false, 'message' => 'Dữ liệu chưa hợp lệ', 'errors' => array_map('reset', $model->getErrors())];
+        }
+        if (!$model->save(false)) {
+            return ['status' => false, 'message' => 'Không lưu được chuyên mục, vui lòng thử lại'];
+        }
+        Yii::$app->session->setFlash('success', ($isNew ? 'Tạo' : 'Cập nhật') . ' chuyên mục "' . \yii\helpers\Html::encode($model->name) . '" thành công');
+        return ['status' => true, 'id' => $model->id];
+    }
+
     public function actionDelete($id)
     {
         $model = Category::findOne($id);

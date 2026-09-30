@@ -1,6 +1,5 @@
 <?php
 
-use backend\controllers\ApiNewController;
 use backend\models\NotifyUser;
 use yii\helpers\Url;
 
@@ -39,7 +38,7 @@ if (in_array($controller . '/' . $action, $not_show_search)) {
     $show_search = false;
 }
 
-$allCategory = ApiNewController::AllCategory();
+$allCategory = ['data' => \backend\models\Category::getListCateHeader()];
 
 $isGuest = Yii::$app->user->isGuest;
 
@@ -67,10 +66,10 @@ if(!$isGuest)
                     </button>
                 </div>
                 <div class="header_action">
-                    <a href="<?= Url::to(['/product/delivery']) ?>">
+                    <!-- <a href="<?= Url::to(['/product/delivery']) ?>">
                         <img src="/images/icon/gv-icon.svg" alt="">
                         <p>Rao vặt</p>
-                    </a>
+                    </a> -->
                     <div class="noti_gr position-relative">
                         <a class="toggle_noti" href="<?= $isGuest ? Url::to(['/site/login']) : 'javascript:;' ?>">
                             <img src="/images/icon/noti-icon.svg" alt="">
@@ -118,10 +117,10 @@ if(!$isGuest)
                             </div>
                         </div>
                     </div>
-                    <a href="<?= Url::to(['/voucher/index']) ?>">
+                    <!-- <a href="<?= Url::to(['/voucher/index']) ?>">
                         <img src="/images/icon/vi-icon.svg" alt="">
                         <p>Ví</p>
-                    </a>
+                    </a> -->
                     <?php if($isGuest){ ?>
                         <a href="<?= Url::to(['/site/login']) ?>">
                             <img src="/images/icon/user-icon.svg" alt="">

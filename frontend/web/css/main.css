@@ -209,6 +209,9 @@ h6 {
   align-items: center;
   gap: 40px;
 }
+#header .header_menu ul a {
+  white-space: nowrap;
+}
 #header .header_menu ul i {
   color: #0091ff;
   font-size: 15px;

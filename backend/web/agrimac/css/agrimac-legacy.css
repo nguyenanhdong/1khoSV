@@ -1,0 +1,117 @@
+/* Giao diện AgriMac cho các trang quản trị sàn 1kho (Bootstrap/SmartAdmin bên trong .am-legacy). */
+
+body.am-legacy-body { font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif; background: #f0f2f5; color: #1a2035; font-size: 13px; overflow: hidden; }
+body.am-legacy-body .am-sidebar a, body.am-legacy-body .am-sidebar a:hover { text-decoration: none; }
+body.am-legacy-body .am-nav-item { color: rgba(255,255,255,0.55); }
+body.am-legacy-body .am-nav-item.active, body.am-legacy-body .am-nav-item.active:hover { color: #fbbf24; }
+body.am-legacy-body .am-brand-title, body.am-legacy-body .am-brand:hover .am-brand-title { color: #fff; }
+body.am-legacy-body .am-topbar-title { color: #1a2035; }
+body.am-legacy-body .am-role-select option { background: #0f2027; }
+
+.am-legacy { color: #1a2035; font-size: 13px; }
+.am-legacy a { color: #0369a1; }
+.am-legacy a:hover { color: #075985; }
+.am-legacy h1, .am-legacy h2, .am-legacy h3, .am-legacy h4, .am-legacy h5 { color: #1a2035; font-weight: 800; }
+.am-legacy p { margin-bottom: .75rem; }
+.am-legacy ul, .am-legacy ol { padding-left: 1.25rem; }
+.am-legacy .pagination, .am-legacy .breadcrumb, .am-legacy .nav, .am-legacy .select2-results, .am-legacy .dropdown-menu { padding-left: 0; }
+
+/* Breadcrumb gọn */
+.am-legacy .page-breadcrumb { background: transparent; padding: 0; margin: 0 0 12px; font-size: 11px; }
+.am-legacy .breadcrumb-item + .breadcrumb-item::before { color: #9ca3af; }
+.am-legacy .breadcrumb-item.active { color: #6b7280; }
+.am-legacy .subheader { margin-bottom: 14px; }
+.am-legacy .subheader-title { font-size: 16px; font-weight: 800; color: #1a2035; }
+.am-legacy .subheader-title small { color: #9ca3af; font-size: 12px; }
+
+/* Card / Panel → am-card */
+.am-legacy .card, .am-legacy .panel { background: #fff; border: none; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 14px; overflow: hidden; }
+.am-legacy .card-header, .am-legacy .panel-hdr { background: #fff; border-bottom: 1px solid #f3f4f6; padding: 12px 16px; min-height: 0; }
+.am-legacy .panel-hdr h2, .am-legacy .card-title { font-size: 14px; font-weight: 800; color: #1a2035; margin: 0; }
+.am-legacy .card-body, .am-legacy .panel-content { padding: 16px; }
+.am-legacy .panel-container { border: none; }
+.am-legacy .mb-g { margin-bottom: 14px !important; }
+
+/* Bảng (GridView) → am-table */
+.am-legacy .table { font-size: 13px; color: #1a2035; margin-bottom: 0; border-collapse: collapse; }
+.am-legacy .table thead th, .am-legacy .table th { background: #f8fafc; color: #6b7280; font-size: 11px; font-weight: 600; border: none; border-bottom: 1px solid #e5e7eb; padding: 10px 13px; white-space: nowrap; vertical-align: middle; }
+.am-legacy .table thead th a { color: #6b7280; }
+.am-legacy .table td { border: none; border-bottom: 1px solid #f3f4f6; padding: 10px 13px; vertical-align: middle; }
+.am-legacy .table-bordered, .am-legacy .table-bordered td, .am-legacy .table-bordered th { border-left: none; border-right: none; border-top: none; }
+.am-legacy .table-striped tbody tr:nth-of-type(odd) { background: #fff; }
+.am-legacy .table-striped tbody tr:nth-of-type(even) { background: #fafafa; }
+.am-legacy .table-hover tbody tr:hover, .am-legacy .table tbody tr:hover { background: #fffbeb; }
+.am-legacy .summary { font-size: 12px; color: #6b7280; margin-bottom: 10px; }
+.am-legacy .img-grid { max-width: 140px; max-height: 70px; border-radius: 8px; object-fit: cover; }
+.am-legacy .table-responsive { border-radius: 12px; }
+
+/* Phân trang */
+.am-legacy .page-navigation { margin-top: 12px; }
+.am-legacy .pagination { gap: 4px; margin: 0; flex-wrap: wrap; }
+.am-legacy .pagination li a, .am-legacy .pagination li span, .am-legacy .page-link { border: 1.5px solid #e5e7eb !important; border-radius: 8px !important; color: #374151; font-size: 12px; font-weight: 700; padding: 5px 11px; background: #fff; display: inline-block; }
+.am-legacy .pagination li.active a, .am-legacy .pagination li.active span, .am-legacy .page-item.active .page-link { background: #0f2027; border-color: #0f2027 !important; color: #fbbf24; }
+.am-legacy .pagination li.disabled span { color: #d1d5db; }
+
+/* Nút */
+.am-legacy .btn { border-radius: 8px; font-weight: 700; font-size: 12px; padding: 7px 14px; border: none; box-shadow: none; transition: opacity .15s; }
+.am-legacy .btn:hover { opacity: .88; }
+.am-legacy .btn-sm, .am-legacy .btn-xs { padding: 4px 10px; font-size: 11px; }
+.am-legacy .btn-primary, .am-legacy .btn-info { background: #0f2027; color: #fbbf24; }
+.am-legacy .btn-primary:hover, .am-legacy .btn-info:hover, .am-legacy .btn-primary:focus, .am-legacy .btn-info:focus { background: #0f2027; color: #fbbf24; }
+.am-legacy .btn-success { background: #059669; color: #fff; }
+.am-legacy .btn-danger { background: #fee2e2; color: #ef4444; }
+.am-legacy .btn-warning { background: #f59e0b; color: #0f2027; }
+.am-legacy .btn-default, .am-legacy .btn-secondary, .am-legacy .btn-light, .am-legacy .btn_cancel { background: #f1f5f9; color: #374151; border: 1.5px solid #e5e7eb; }
+.am-legacy .btn-outline-primary, .am-legacy .btn-outline-info { background: #fff; color: #0f2027; border: 1.5px solid #e5e7eb; }
+.am-legacy .table .btn, .am-legacy .table a.btn { margin: 1px; }
+.am-legacy .table a[title], .am-legacy .table a .fal { font-size: 14px; }
+
+/* Form → am-input */
+.am-legacy label, .am-legacy .control-label, .am-legacy .form-label, .am-legacy .lab_select { font-size: 12px; font-weight: 700; color: #374151; margin-bottom: 5px; }
+.am-legacy .form-group { margin-bottom: 12px; }
+.am-legacy .form-control, .am-legacy select.form-control, .am-legacy textarea.form-control { border: 1.5px solid #e5e7eb; border-radius: 8px; font-size: 13px; padding: 7px 10px; height: auto; min-height: 36px; background: #fff; color: #1a2035; box-shadow: none; }
+.am-legacy .form-control:focus { border-color: #f59e0b; box-shadow: 0 0 0 3px rgba(245,158,11,0.15); }
+.am-legacy .form-control[readonly], .am-legacy .form-control:disabled { background: #f8fafc; color: #6b7280; }
+.am-legacy .has-error .form-control, .am-legacy .is-invalid { border-color: #ef4444; background: #fff5f5; }
+.am-legacy .help-block, .am-legacy .invalid-feedback, .am-legacy .error-message { font-size: 11px; color: #ef4444; font-weight: 600; margin-top: 3px; }
+.am-legacy .custom-control-label { font-weight: 400; }
+.am-legacy .input-group-text { border: 1.5px solid #e5e7eb; background: #f8fafc; border-radius: 8px; font-size: 12px; }
+
+/* select2 */
+.am-legacy .select2-container .select2-choice, .am-legacy .select2-container-multi .select2-choices { border: 1.5px solid #e5e7eb !important; border-radius: 8px !important; background: #fff !important; min-height: 36px; box-shadow: none !important; }
+.am-legacy .select2-container .select2-choice { line-height: 32px; height: 36px; }
+
+/* Thông báo */
+.am-legacy .alert { border: none; border-radius: 10px; font-size: 12px; font-weight: 600; padding: 11px 16px; margin-bottom: 14px; }
+.am-legacy .alert-success, .am-legacy .alert-info { background: #d1fae5; color: #047857; }
+.am-legacy .alert-danger { background: #fee2e2; color: #b91c1c; }
+.am-legacy .alert-warning { background: #fef3c7; color: #b45309; }
+
+/* Badge / nhãn trạng thái */
+.am-legacy .badge { border-radius: 20px; padding: 3px 9px; font-size: 11px; font-weight: 700; }
+.am-legacy .badge-success { background: #d1fae5; color: #059669; }
+.am-legacy .badge-danger { background: #fee2e2; color: #ef4444; }
+.am-legacy .badge-warning { background: #fef3c7; color: #b45309; }
+.am-legacy .badge-info, .am-legacy .badge-primary { background: #dbeafe; color: #2563eb; }
+.am-legacy .badge-secondary { background: #f1f5f9; color: #6b7280; }
+
+/* Upload ảnh cũ */
+.am-legacy .img-preview { border-radius: 8px; }
+.am-legacy .fileinput-button { border-radius: 8px; }
+.am-legacy .modal-content { border: none; border-radius: 14px; overflow: hidden; }
+.am-legacy .modal-header { background: linear-gradient(135deg, #0f2027, #1a3a4a); color: #fff; border: none; }
+.am-legacy .modal-header .close, .am-legacy .modal-title { color: #fff; }
+.am-legacy .subheader { display: none; }
+
+/* Popup thêm/sửa chuyên mục sàn (gắn vào body nên không nằm trong .am-legacy) */
+#am-cat-modal { font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif; color: #1a2035; }
+#am-cat-modal .am-field label { font-size: 12px; font-weight: 700; color: #374151; margin-bottom: 5px; }
+#am-cat-modal .am-input { font-size: 13px; min-height: 36px; }
+#am-cat-modal .am-input:focus { border-color: #f59e0b; box-shadow: 0 0 0 3px rgba(245,158,11,0.15); }
+#am-cat-modal .am-cat-check { display: flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer; margin-top: 22px; }
+#am-cat-modal .am-cat-check input { width: 16px; height: 16px; accent-color: #0f2027; }
+#am-cat-modal .am-btn-ghost { background: #f1f5f9; color: #374151; border: 1.5px solid #e5e7eb; }
+#am-cat-modal .am-btn:disabled { opacity: .5; cursor: not-allowed; }
+#am-cat-modal .am-cat-img { display: flex; gap: 14px; align-items: flex-start; }
+#am-cat-modal .am-cat-img img { width: 120px; height: 90px; object-fit: cover; border-radius: 10px; border: 1.5px solid #e5e7eb; }
+#am-cat-modal label.am-btn { color: #fbbf24; font-size: 11px; }

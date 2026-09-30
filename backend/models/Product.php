@@ -31,6 +31,15 @@ class Product extends \yii\db\ActiveRecord
     /**
      * @inheritdoc
      */
+    /** Mọi sản phẩm tạo mới (trang sàn 1kho hoặc AgriMac) đều có mã SP + id 5 chữ số. */
+    public function afterSave($insert, $changedAttributes)
+    {
+        parent::afterSave($insert, $changedAttributes);
+        if ($insert && empty($this->code)) {
+            $this->updateAttributes(['code' => 'SP' . str_pad((string)$this->id, 5, '0', STR_PAD_LEFT)]);
+        }
+    }
+
     public function attributeLabels()
     {
         return [
