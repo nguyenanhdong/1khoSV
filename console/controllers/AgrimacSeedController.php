@@ -211,6 +211,10 @@ class AgrimacSeedController extends Controller
                 'delivery_id' => $this->id('employee', $o['delivery']), 'invoice_no' => $o['invoiceNo'] ?? null,
                 'invoice_date' => !empty($o['invoiceNo']) ? $o['date'] : null, 'ordered_at' => $o['date'] . ' 09:00:00',
                 'delivered_at' => isset($o['deliveredAt']) ? $o['deliveredAt'] . ' 16:00:00' : null,
+                // Đơn đã giao trong dữ liệu demo: đã ghi nợ cả đơn (nằm trong số dư công nợ đầu kỳ của đại lý)
+                'debt_mode' => $o['status'] === 'delivered' && $o['type'] === 'new' ? 'full' : null,
+                'debt_amount' => $o['status'] === 'delivered' && $o['type'] === 'new' ? $total : 0,
+                'debt_recorded' => $o['status'] === 'delivered' && $o['type'] === 'new' ? $total : 0,
                 'receiver_name' => $o['receiver'] ?? null,
             ]);
             $this->ids['order'][$o['id']] = $id;

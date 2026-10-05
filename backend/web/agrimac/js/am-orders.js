@@ -128,7 +128,8 @@
                 '<div style="font-size:10px;color:#9ca3af">' + AM.esc(dealer.province) + '</div></td>' +
                 '<td style="font-size:12px">' + AM.esc(o.product) + '</td>' +
                 '<td style="text-align:center;font-weight:700">' + o.qty + '</td>' +
-                '<td><span style="font-weight:700;color:#059669">' + (o.total > 0 ? AM.money(o.total) : '—') + '</span></td>' +
+                '<td><span style="font-weight:700;color:#059669">' + (o.total > 0 ? AM.money(o.total) : '—') + '</span>' +
+                (function (b) { return b ? '<div style="margin-top:2px">' + AM.badge(b.label, b.color, b.bg, 9) + '</div>' : ''; })(AM.debtBadge(o)) + '</td>' +
                 '<td><span style="font-weight:600;color:#6b7280;font-size:12px">' +
                 (pf.cost > 0 ? AM.money(pf.cost) : '<span style="color:#d1d5db">Chưa có BOM</span>') + '</span></td>' +
                 '<td>' + (pf.profit !== null
@@ -148,7 +149,7 @@
         var html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:14px">' +
             AM.info('🏪', 'Đại lý', AM.shortDealer(dealer.name)) + AM.info('🚜', 'Sản phẩm', o.product) +
             AM.info('📦', 'Số lượng', o.qty + ' chiếc') + AM.info('💵', 'Doanh thu', o.total > 0 ? AM.money(o.total) : 'BH — miễn phí') +
-            '</div>' + renderFacts(o) +
+            '</div>' + renderFacts(o) + renderDebtBox(o) +
             (o.status === 'cancelled'
                 ? '<div style="background:#f8fafc;border:1.5px solid #e5e7eb;border-radius:10px;padding:12px 14px;font-size:12px;color:#374151">' +
                   '<div style="font-weight:800;color:#6b7280;margin-bottom:4px">✕ ĐƠN ĐÃ HUỶ</div>' + AM.esc(o.cancelReason || '') +
@@ -414,6 +415,23 @@
         }).join('') + '</div>';
     }
 
+    function renderDebtBox(o) {
+        if (o.type !== 'new' || o.status === 'cancelled') return '';
+        var modes = AM.data.debtModes || {}, chosen = !!o.debtMode;
+        var rows = chosen
+            ? [['Hình thức', modes[o.debtMode] || o.debtMode, '#1a2035'], ['Đã trả', AM.money(o.paid) + (o.paid > 0 && o.paidMethod ? ' · ' + o.paidMethod : ''), '#059669'], ['Còn nợ', AM.money(o.debt), o.debt > 0 ? '#ef4444' : '#059669']]
+            : [['Hình thức', 'Chưa chọn — giao xong sẽ ghi nợ cả đơn', '#6b7280']];
+        if (o.debtNote) rows.push(['Ghi chú', o.debtNote, '#374151']);
+        if (chosen && o.status !== 'delivered') rows.push(['', 'Ghi vào công nợ đại lý khi giao xong', '#9ca3af']);
+        return '<div style="background:#fff;border:1.5px solid ' + (chosen && o.debt > 0 ? '#fecaca' : '#e5e7eb') + ';border-radius:10px;padding:8px 12px;margin-bottom:12px">' +
+            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span class="am-label">💰 THANH TOÁN / CÔNG NỢ</span>' +
+            (AM.canEditDebt() ? '<button type="button" class="am-btn am-btn-sm" data-action="edit-debt">✎ ' + (chosen ? 'Sửa' : 'Chọn') + '</button>' : '') + '</div>' +
+            rows.map(function (r) {
+                return '<div style="display:flex;gap:8px;padding:3px 0;font-size:11px"><span style="color:#9ca3af;min-width:72px">' + r[0] + '</span>' +
+                    '<span style="font-weight:700;color:' + r[2] + ';word-break:break-word">' + AM.esc(r[1]) + '</span></div>';
+            }).join('') + '</div>';
+    }
+
     function openApproveForm(o) {
         var dealer = AM.dealer(o.dealerId), isNew = o.type === 'new';
         var over = dealer && isNew && creditInfo(dealer, o.total).over;
@@ -476,6 +494,8 @@
     function openDeliverForm(o) {
         var dealer = AM.dealer(o.dealerId), isNew = o.type === 'new';
         var comSale = Math.round(o.total * RATES.sale / 100), comDeli = Math.round(o.total * RATES.delivery / 100);
+        var debtOnDeliver = !o.debtMode || o.debtMode === 'full' ? o.total : o.debt;
+        var debtLabel = (AM.data.debtModes || {})[o.debtMode || 'full'] || '';
         AM.form.open({
             title: '✓ Xác nhận đã giao — ' + o.id,
             sub: (dealer ? dealer.name + ' · ' : '') + (o.exportCode ? 'Phiếu ' + o.exportCode : ''),
@@ -493,7 +513,8 @@
                 if (!isNew) { api.preview(''); return; }
                 api.preview('<div style="background:#f8fafc;border-radius:8px;padding:10px 14px;font-size:12px;color:#374151;line-height:1.8">' +
                     '<div class="am-label" style="margin-bottom:2px">KHI HOÀN THÀNH SẼ GHI NHẬN</div>' +
-                    '💰 Công nợ ' + AM.esc(dealer ? AM.shortDealer(dealer.name) : '') + ': <b>' + AM.money(dealer ? dealer.debt : 0) + '</b> → <b style="color:#ef4444">' + AM.money((dealer ? dealer.debt : 0) + o.total) + '</b><br>' +
+                    '💰 Ghi nợ ' + AM.money(debtOnDeliver) + ' (' + AM.esc(debtLabel) + ') · công nợ ' + AM.esc(dealer ? AM.shortDealer(dealer.name) : '') + ': <b>' + AM.money(dealer ? dealer.debt : 0) + '</b> → <b style="color:#ef4444">' + AM.money((dealer ? dealer.debt : 0) + debtOnDeliver) + '</b><br>' +
+                    '<span style="color:#6b7280">Muốn đổi hình thức thanh toán: đóng form này, bấm "Sửa" ở mục Thanh toán / công nợ.</span><br>' +
                     '👔 HH Sale ' + AM.esc(o.sale) + ' (' + RATES.sale + '%): <b style="color:#7c3aed">' + AM.money(comSale) + '</b><br>' +
                     '🚚 HH giao hàng ' + AM.esc(o.delivery || '') + ' (' + RATES.delivery + '%): <b style="color:#0891b2">' + AM.money(comDeli) + '</b></div>');
             },
@@ -573,6 +594,9 @@
                 });
             })
             .on('click', '[data-action="cancel-order"]', function () { openCancelForm(findOrder(state.selected)); })
+            .on('click', '[data-action="edit-debt"]', function () {
+                AM.debtForm(findOrder(state.selected), function (data) { applyOrder(data); render(); });
+            })
             .on('click', '[data-bom="default"]', function () {
                 var o = findOrder(state.selected), def = AM.data.defaultBoms[o.product];
                 if (def) setBom(o.id, def.map(function (b) { return { id: b.id, qty: b.qty }; }));

@@ -63,8 +63,24 @@
         return d.history.filter(function (h) { return h.order.toLowerCase().indexOf(q) >= 0; }).map(function (h) {
             return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f3f4f6;font-size:12px">' +
                 '<div><div style="font-weight:600">' + AM.esc(h.order) + '</div><div style="font-size:11px;color:#9ca3af">' + AM.esc(h.date) + '</div></div>' +
-                '<span style="font-weight:700;color:' + (h.payment ? '#2563eb' : '#059669') + '">' + (h.payment ? '−' : '') + AM.money(h.val) + '</span></div>';
+                '<span style="font-weight:700;color:' + (h.kind === 'debit_reverse' ? '#d97706' : h.payment ? '#2563eb' : '#059669') + '">' + (h.payment ? '−' : '+') + AM.money(h.val) + '</span></div>';
         }).join('') || '<div style="font-size:12px;color:#9ca3af;padding:6px 0">Không có giao dịch phù hợp</div>';
+    }
+
+    var STATUS = AM.data.orderStatus || {};
+
+    function orderRows(d) {
+        var list = d.orders || [];
+        if (!list.length) return '<div style="font-size:12px;color:#9ca3af;padding:6px 0">Chưa có đơn hàng</div>';
+        return list.map(function (o) {
+            var b = AM.debtBadge($.extend({ type: 'new' }, o)), st = STATUS[o.status] || {};
+            return '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f3f4f6;font-size:12px">' +
+                '<div style="min-width:0"><div style="font-weight:700">' + AM.esc(o.id) + ' <span style="font-size:10px;color:' + (st.color || '#6b7280') + '">· ' + AM.esc(st.label || o.status) + '</span></div>' +
+                '<div style="font-size:11px;color:#9ca3af;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + AM.esc(o.product || '') + ' · ' + AM.esc(o.date || '') + ' · ' + AM.money(o.total) + '</div></div>' +
+                '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">' + (b ? AM.badge(b.label, b.color, b.bg, 10) : '') +
+                (AM.canEditDebt() ? '<button type="button" class="am-btn am-btn-sm" data-debt-order="' + AM.esc(o.id) + '" title="Sửa thanh toán / công nợ">✎</button>' : '') +
+                '</div></div>';
+        }).join('');
     }
 
     function renderDetail() {
@@ -83,7 +99,9 @@
             '<div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:12px"><span>Dư nợ hiện tại:</span><span style="font-weight:800;color:' + (over ? '#ef4444' : '#1a2035') + '">' + AM.money(d.debt) + '</span></div>' +
             '<div style="background:#e5e7eb;border-radius:4px;height:7px;overflow:hidden;margin-bottom:4px"><div style="width:' + Math.min(pct, 100) + '%;height:100%;background:' + (over ? '#ef4444' : '#3b82f6') + ';border-radius:4px"></div></div>' +
             '<div style="font-size:10px;color:#9ca3af">' + pct + '% hạn mức đã dùng</div></div>' +
-            '<div style="font-size:11px;font-weight:700;color:#6b7280;margin-bottom:8px">LỊCH SỬ MUA HÀNG & THANH TOÁN</div>' +
+            '<div style="font-size:11px;font-weight:700;color:#6b7280;margin-bottom:4px">ĐƠN HÀNG & CÔNG NỢ THEO ĐƠN</div>' +
+            '<div style="margin-bottom:14px;max-height:260px;overflow:auto">' + orderRows(d) + '</div>' +
+            '<div style="font-size:11px;font-weight:700;color:#6b7280;margin-bottom:8px">LỊCH SỬ CÔNG NỢ & THANH TOÁN</div>' +
             '<input id="am-history-search" class="am-input" value="' + AM.esc(state.search) + '" placeholder="🔍 Tìm kiếm đơn hàng..." style="padding:7px 10px;margin-bottom:10px">' +
             '<div id="am-history-list">' + historyRows(d) + '</div>' +
             '<div style="margin-top:12px;display:flex;gap:7px">' +
@@ -197,6 +215,15 @@
         $('#am-dealer-detail')
             .on('click', '[data-action="edit-dealer"]', function () { openDealerForm(byId(state.selected)); })
             .on('click', '[data-action="collect"]:not([disabled])', function () { openCollectForm(byId(state.selected)); })
+            .on('click', '[data-debt-order]', function () {
+                var d = byId(state.selected), code = $(this).data('debt-order');
+                var o = (d.orders || []).filter(function (x) { return x.id === code; })[0];
+                if (!o) return;
+                AM.debtForm($.extend({ type: 'new', dealerId: d.id }, o), function (data) {
+                    if (data.dealer) upsertDealer(data.dealer);
+                    render();
+                });
+            })
             .on('click', '[data-action="order"]', function () {
                 window.location.href = AM.url('orders', { new: 1, dealer: state.selected });
             })

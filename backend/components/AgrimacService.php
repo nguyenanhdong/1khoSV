@@ -41,6 +41,7 @@ class AgrimacService
         'order.export'         => ['exportOrder', ['orders'], ['admin', 'kt_xuatkho']],
         'order.deliver'        => ['deliverOrder', ['orders'], ['admin', 'delivery']],
         'order.cancel'         => ['cancelOrder', ['orders'], ['admin', 'kt_banhang', 'sale']],
+        'order.debt'           => ['saveOrderDebt', ['orders', 'dealers'], ['admin', 'kt_banhang', 'kt_congno']],
         'market.status'        => ['setMarketOrderStatus', ['orders'], ['admin']],
         'market.refund'        => ['processMarketRefund', ['orders'], ['admin']],
         'warranty.activate'    => ['activateWarranty', ['warranty'], null],
@@ -786,7 +787,8 @@ class AgrimacService
         $this->fail($errors);
 
         $dealer = (new Query())->from('dealer')->where(['id' => $o['dealer_id']])->one($this->db);
-        $over = $o['type'] === 'new' && $dealer['current_debt'] + $o['total_amount'] > $dealer['credit_limit'];
+        $plannedDebt = $o['debt_mode'] !== null ? (int)$o['debt_amount'] : (int)$o['total_amount'];
+        $over = $o['type'] === 'new' && $dealer['current_debt'] + $plannedDebt > $dealer['credit_limit'];
         $this->setOrderStatus($o, 'confirmed', [
             'invoice_no' => $invoice ?: null, 'invoice_date' => $invoiceDate, 'approved_by' => $this->userId, 'note' => $this->str($d, 'note', 500) ?: null,
         ], $over ? 'Duyệt khi đại lý vượt hạn mức công nợ' : null);
@@ -933,6 +935,77 @@ class AgrimacService
         return $s;
     }
 
+    /**
+     * Đưa số nợ đã ghi sổ của đơn về $newDebt: chỉ ghi phần chênh lệch vào sổ công nợ
+     * (debit = tăng, debit_reverse = giảm) và cập nhật dư nợ đại lý. Trả về chênh lệch đã ghi.
+     */
+    private function applyOrderDebt(array $o, $newDebt, $note)
+    {
+        $delta = (int)$newDebt - (int)$o['debt_recorded'];
+        if ($delta !== 0) {
+            $dealer = (new Query())->from('dealer')->where(['id' => $o['dealer_id']])->one($this->db);
+            $after = (int)$dealer['current_debt'] + $delta;
+            $this->insert('dealer_ledger', [
+                'dealer_id' => $dealer['id'], 'type' => $delta > 0 ? 'debit' : 'debit_reverse', 'amount' => abs($delta),
+                'balance_after' => $after, 'order_id' => $o['id'], 'note' => $note, 'created_by' => $this->userId,
+            ]);
+            $this->update('dealer', ['current_debt' => $after], ['id' => $dealer['id']]);
+        }
+        $this->update('dealer_order', ['debt_recorded' => (int)$newDebt], ['id' => $o['id']]);
+        return $delta;
+    }
+
+    /** Chọn / sửa thanh toán – công nợ của đơn đại lý (mọi trạng thái trừ đã huỷ). */
+    private function saveOrderDebt(array $d)
+    {
+        $o = $this->loadOrder($d['id'] ?? '', ['pending', 'confirmed', 'assembling', 'assembled', 'delivering', 'delivered']);
+        if ($o['type'] !== 'new') {
+            throw new Invalid([], 'Đơn bảo hành không phát sinh công nợ');
+        }
+        $total = (int)$o['total_amount'];
+        $mode = (string)($d['mode'] ?? '');
+        $method = $this->str($d, 'paidMethod', 30);
+        $note = $this->str($d, 'note', 300);
+        $errors = [];
+        if (!isset(D::DEBT_MODES[$mode])) {
+            $errors['mode'] = 'Vui lòng chọn hình thức thanh toán';
+        }
+        $debt = $mode === 'full' ? $total : 0;
+        if ($mode === 'partial') {
+            $debt = $this->int($d, 'debtAmount');
+            if ($debt === null || $debt === false || $debt <= 0) {
+                $errors['debtAmount'] = 'Vui lòng nhập số tiền còn nợ';
+            } elseif ($debt >= $total) {
+                $errors['debtAmount'] = 'Số nợ phải nhỏ hơn giá trị đơn (' . D::money($total) . '). Nợ toàn bộ thì chọn "Ghi nợ cả đơn"';
+            }
+        }
+        if (in_array($mode, ['partial', 'paid'], true) && !in_array($method, D::PAID_METHODS, true)) {
+            $errors['paidMethod'] = 'Vui lòng chọn hình thức đã trả';
+        }
+        $this->fail($errors);
+
+        $this->update('dealer_order', [
+            'debt_mode' => $mode, 'debt_amount' => $debt, 'paid_method' => $mode === 'full' ? null : $method, 'debt_note' => $note ?: null,
+            'debt_updated_at' => date('Y-m-d H:i:s'), 'debt_updated_by' => $this->userId,
+        ], ['id' => $o['id']]);
+        // Đơn chưa giao: nợ chỉ ghi sổ khi giao xong (deliverOrder), lúc này chỉ lưu lựa chọn
+        $delta = 0;
+        if ($o['status'] === 'delivered') {
+            $delta = $this->applyOrderDebt($o, $debt, 'Sửa công nợ đơn ' . $o['code'] . ' · ' . D::DEBT_MODES[$mode] . ($note ? ' · ' . $note : ''));
+        }
+        $this->insert('dealer_order_log', [
+            'order_id' => $o['id'], 'from_status' => $o['status'], 'to_status' => $o['status'], 'employee_id' => $this->userId,
+            'note' => 'Công nợ: ' . D::DEBT_MODES[$mode] . ' · nợ ' . D::money($debt) . ($mode !== 'full' ? ' · đã trả ' . D::money($total - $debt) . ' (' . $method . ')' : ''),
+        ]);
+        $msg = '✓ Đơn ' . $o['code'] . ': ' . D::DEBT_MODES[$mode] . ($debt > 0 ? ' · nợ ' . D::money($debt) : '');
+        if ($o['status'] !== 'delivered') {
+            $msg .= ' · ghi vào công nợ khi giao xong';
+        } elseif ($delta !== 0) {
+            $msg .= ' · dư nợ đại lý ' . ($delta > 0 ? '+' : '−') . D::money(abs($delta));
+        }
+        return $this->orderResult($msg, $o['code']);
+    }
+
     private function deliverOrder(array $d)
     {
         $o = $this->loadOrder($d['id'] ?? '', ['delivering']);
@@ -945,13 +1018,13 @@ class AgrimacService
         $this->fail($errors);
 
         if ($o['type'] === 'new') {
-            $dealer = (new Query())->from('dealer')->where(['id' => $o['dealer_id']])->one($this->db);
-            $after = (int)$dealer['current_debt'] + (int)$o['total_amount'];
-            $this->insert('dealer_ledger', [
-                'dealer_id' => $dealer['id'], 'type' => 'debit', 'amount' => $o['total_amount'], 'balance_after' => $after,
-                'order_id' => $o['id'], 'note' => 'Giao đơn ' . $o['code'], 'created_by' => $this->userId,
-            ]);
-            $this->update('dealer', ['current_debt' => $after, 'total_purchase' => new Expression('total_purchase + ' . (int)$o['total_amount'])], ['id' => $dealer['id']]);
+            // Chưa chọn hình thức thanh toán → ghi nợ cả đơn như trước đây
+            $mode = $o['debt_mode'] ?: 'full';
+            $total = (int)$o['total_amount'];
+            $debt = $mode === 'full' ? $total : ($mode === 'paid' ? 0 : min($total, (int)$o['debt_amount']));
+            $this->update('dealer_order', ['debt_mode' => $mode, 'debt_amount' => $debt], ['id' => $o['id']]);
+            $this->applyOrderDebt($o, $debt, 'Giao đơn ' . $o['code'] . ($mode !== 'full' ? ' · ' . D::DEBT_MODES[$mode] : ''));
+            $this->update('dealer', ['total_purchase' => new Expression('total_purchase + ' . $total)], ['id' => $o['dealer_id']]);
             foreach (['sale' => $o['sale_id'], 'delivery' => $o['delivery_id']] as $role => $empId) {
                 if (!$empId) {
                     continue;
@@ -967,7 +1040,7 @@ class AgrimacService
             'receiver_name' => $this->str($d, 'receiver'), 'receiver_phone' => $this->str($d, 'receiverPhone', 30) ?: null,
             'delivered_at' => $date . ' ' . date('H:i:s'), 'delivery_note' => $this->str($d, 'note', 500) ?: $o['delivery_note'],
         ]);
-        return $this->orderResult('✓ Đơn ' . $o['code'] . ' hoàn thành' . ($o['type'] === 'new' ? ' · ghi nợ ' . D::money($o['total_amount']) : ''), $o['code']);
+        return $this->orderResult('✓ Đơn ' . $o['code'] . ' hoàn thành' . ($o['type'] === 'new' ? ($debt > 0 ? ' · ghi nợ ' . D::money($debt) : ' · đã thanh toán đủ') : ''), $o['code']);
     }
 
     private function cancelOrder(array $d)

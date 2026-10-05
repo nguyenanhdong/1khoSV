@@ -83,6 +83,10 @@ class AgrimacData
         return $role === 'admin';
     }
 
+    /** Thanh toán / công nợ của đơn đại lý (dealer_order.debt_mode) */
+    const DEBT_MODES = ['full' => 'Ghi nợ cả đơn', 'partial' => 'Nợ một phần', 'paid' => 'Đã thanh toán đủ'];
+    const PAID_METHODS = ['Tiền mặt', 'Chuyển khoản'];
+
     /** % hoa hồng trên doanh thu đơn hoàn thành (khớp config COMMISSION_RATE_SALE / _DELIVERY). */
     const COMMISSION_RATES = ['sale' => 1, 'delivery' => 0.3];
 

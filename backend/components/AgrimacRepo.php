@@ -374,22 +374,54 @@ class AgrimacRepo
     public static function dealers()
     {
         return self::once('dealers', function () {
+            // Lịch sử công nợ lấy từ sổ (dealer_ledger): debit/adjust tăng nợ, credit (thu tiền) & debit_reverse giảm nợ
             $history = [];
-            $orders = (new Query())->select(['o.dealer_id', 'o.code', 'o.total_amount', 'at' => 'COALESCE(o.delivered_at, o.ordered_at)'])
-                ->from('dealer_order o')->where(['o.status' => 'delivered', 'o.type' => 'new'])->all();
-            foreach ($orders as $o) {
-                $history[$o['dealer_id']][] = ['ts' => strtotime($o['at']), 'order' => $o['code'], 'val' => (int)$o['total_amount'], 'payment' => false];
-            }
-            $payments = (new Query())->from('dealer_ledger')->where(['type' => 'credit'])->all();
-            foreach ($payments as $l) {
+            $ledgerOrders = [];
+            $ledger = (new Query())->select(['l.*', 'order_code' => 'o.code'])->from('dealer_ledger l')
+                ->leftJoin('dealer_order o', 'o.id = l.order_id')->orderBy(['l.id' => SORT_ASC])->all();
+            foreach ($ledger as $l) {
+                if ($l['order_id']) {
+                    $ledgerOrders[$l['order_id']] = true;
+                }
+                switch ($l['type']) {
+                    case 'credit':
+                        $label = 'Thu tiền · ' . $l['method'] . ($l['note'] ? ' · ' . $l['note'] : '');
+                        break;
+                    case 'debit_reverse':
+                        $label = 'Giảm nợ · ' . ($l['note'] ?: $l['order_code']);
+                        break;
+                    case 'debit':
+                        $label = $l['note'] ?: ('Ghi nợ ' . $l['order_code']);
+                        break;
+                    default:
+                        $label = $l['note'] ?: 'Điều chỉnh công nợ';
+                }
                 $history[$l['dealer_id']][] = [
-                    'ts' => strtotime($l['created_at']), 'order' => 'Thu tiền · ' . $l['method'] . ($l['note'] ? ' · ' . $l['note'] : ''),
-                    'val' => (int)$l['amount'], 'payment' => true,
+                    'ts' => strtotime($l['created_at']), 'order' => $label, 'val' => (int)$l['amount'],
+                    'payment' => in_array($l['type'], ['credit', 'debit_reverse'], true), 'kind' => $l['type'],
+                ];
+            }
+            // Đơn đại lý (để xem / sửa công nợ từ trang Đại lý)
+            $dealerOrders = [];
+            $orderRows = (new Query())->select(['o.id', 'o.dealer_id', 'o.code', 'o.status', 'o.total_amount', 'o.debt_mode', 'o.debt_amount', 'o.debt_recorded', 'o.paid_method', 'o.debt_note',
+                'at' => 'COALESCE(o.delivered_at, o.ordered_at)', 'product' => 'p.name'])
+                ->from('dealer_order o')->leftJoin('dealer_order_item i', 'i.order_id = o.id')->leftJoin('product p', 'p.id = i.product_id')
+                ->where(['o.type' => 'new'])->andWhere(['<>', 'o.status', 'cancelled'])->orderBy(['o.id' => SORT_DESC])->all();
+            foreach ($orderRows as $o) {
+                // Đơn đã giao trước khi có sổ công nợ theo đơn (dữ liệu cũ) vẫn hiện trong lịch sử
+                if ($o['status'] === 'delivered' && !isset($ledgerOrders[$o['id']]) && (int)$o['debt_recorded'] > 0) {
+                    $history[$o['dealer_id']][] = ['ts' => strtotime($o['at']), 'order' => $o['code'], 'val' => (int)$o['debt_recorded'], 'payment' => false, 'kind' => 'debit'];
+                }
+                $dealerOrders[$o['dealer_id']][] = [
+                    'id' => $o['code'], 'product' => $o['product'], 'status' => $o['status'], 'date' => self::vnDate($o['at']),
+                    'total' => (int)$o['total_amount'], 'debtMode' => $o['debt_mode'], 'debt' => (int)$o['debt_amount'], 'debtRecorded' => (int)$o['debt_recorded'],
+                    'paid' => $o['debt_mode'] !== null ? (int)$o['total_amount'] - (int)$o['debt_amount'] : 0,
+                    'paidMethod' => $o['paid_method'], 'debtNote' => $o['debt_note'],
                 ];
             }
             $rows = (new Query())->select(['d.*', 'province' => 'pr.province_name'])->from('dealer d')
                 ->leftJoin('province pr', 'pr.id = d.province_id')->where(['d.status' => 1])->orderBy('d.code')->all();
-            return array_map(function ($d) use ($history) {
+            return array_map(function ($d) use ($history, $dealerOrders) {
                 $h = $history[$d['id']] ?? [];
                 usort($h, function ($a, $b) {
                     return $b['ts'] - $a['ts'];
@@ -399,8 +431,9 @@ class AgrimacRepo
                     'level' => D::DEALER_LEVEL_CODES[$d['level']], 'limit' => (int)$d['credit_limit'], 'debt' => (int)$d['current_debt'],
                     'total' => (int)$d['total_purchase'], 'taxCode' => $d['tax_code'], 'address' => $d['address'],
                     'history' => array_map(function ($x) {
-                        return ['date' => date('d/m', $x['ts']), 'order' => $x['order'], 'val' => $x['val'], 'payment' => $x['payment']];
+                        return ['date' => date('d/m', $x['ts']), 'order' => $x['order'], 'val' => $x['val'], 'payment' => $x['payment'], 'kind' => $x['kind']];
                     }, $h),
+                    'orders' => $dealerOrders[$d['id']] ?? [],
                 ];
             }, $rows);
         });
@@ -483,6 +516,9 @@ class AgrimacRepo
                     'exportCode' => $exports[$o['id']] ?? null, 'serials' => $serials[$o['id']] ?? [],
                     'receiver' => $o['receiver_name'], 'receiverPhone' => $o['receiver_phone'], 'deliveredAt' => self::vnDate($o['delivered_at']),
                     'note' => $o['note'], 'assemblyNote' => $o['assembly_note'], 'cancelReason' => $o['cancel_reason'], 'cancelledAt' => self::vnDate($o['cancelled_at']),
+                    'debtMode' => $o['debt_mode'], 'debt' => (int)$o['debt_amount'], 'debtRecorded' => (int)$o['debt_recorded'],
+                    'paid' => $o['debt_mode'] !== null ? (int)$o['total_amount'] - (int)$o['debt_amount'] : 0,
+                    'paidMethod' => $o['paid_method'], 'debtNote' => $o['debt_note'], 'debtUpdatedAt' => self::vnDate($o['debt_updated_at'], true),
                 ];
             }, $rows);
         });
@@ -627,6 +663,8 @@ class AgrimacRepo
             'pages'       => array_keys(D::menuFor($role)),
             'staff'       => self::staff(),
             'orderStatus' => D::ORDER_STATUS,
+            'debtModes'   => D::DEBT_MODES,
+            'paidMethods' => D::PAID_METHODS,
             'leadSale'    => AgrimacAuth::leadSaleScope() !== null ? trim((string)(Yii::$app->user->identity->fullname ?? '')) : null,
             'commission'  => D::COMMISSION_RATES,
             'leadStages'  => D::LEAD_STAGES,

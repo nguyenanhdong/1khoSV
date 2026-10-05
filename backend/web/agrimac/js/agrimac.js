@@ -406,6 +406,71 @@
         }
     };
 
+    /* ---------- Thanh toán / công nợ của đơn đại lý (dùng ở trang Đơn hàng và Đại lý) ---------- */
+    AM.canEditDebt = function () { return AM.can('admin', 'kt_banhang', 'kt_congno'); };
+
+    /** Nhãn ngắn trạng thái thanh toán của đơn: {label, color, bg} */
+    AM.debtBadge = function (o) {
+        if (o.type === 'warranty' || o.status === 'cancelled') return null;
+        if (!o.debtMode) return { label: 'Chưa chọn TT', color: '#6b7280', bg: '#f1f5f9' };
+        if (o.debtMode === 'paid') return { label: 'Đã thanh toán', color: '#059669', bg: '#d1fae5' };
+        return { label: 'Nợ ' + AM.money(o.debt), color: '#ef4444', bg: '#fee2e2' };
+    };
+
+    AM.debtForm = function (o, onSaved) {
+        var modes = AM.data.debtModes || {}, methods = AM.data.paidMethods || [];
+        var dealer = AM.dealer(o.dealerId);
+        var delivered = o.status === 'delivered';
+        AM.form.open({
+            title: '💰 Thanh toán / công nợ — ' + o.id,
+            sub: (dealer ? dealer.name + ' · ' : '') + 'Giá trị đơn ' + AM.money(o.total),
+            width: 520,
+            submitLabel: '💾 Lưu công nợ',
+            fields: [
+                { name: 'mode', label: 'Hình thức thanh toán', type: 'select', required: true, full: true, placeholder: '— Chọn —',
+                  options: $.map(modes, function (label, key) { return [[key, label]]; }) },
+                { name: 'debtAmount', label: 'Số tiền còn nợ (đ)', type: 'number', min: 1, required: true, hint: 'Phần còn lại coi như đại lý đã trả' },
+                { name: 'paidMethod', label: 'Đã trả bằng', type: 'select', required: true, placeholder: '— Chọn —', options: methods.map(function (m) { return [m, m]; }) },
+                { name: 'note', label: 'Ghi chú', type: 'textarea', full: true, placeholder: 'VD: Đại lý trả trước 200tr, hẹn trả phần còn lại cuối tháng' }
+            ],
+            values: { mode: o.debtMode || 'full', debtAmount: o.debtMode === 'partial' ? o.debt : '', paidMethod: o.paidMethod || '', note: o.debtNote || '' },
+            onChange: function (api) {
+                var mode = api.get('mode');
+                api.toggle('debtAmount', mode === 'partial');
+                api.toggle('paidMethod', mode === 'partial' || mode === 'paid');
+                var debt = mode === 'full' ? o.total : mode === 'paid' ? 0 : Math.max(0, +api.get('debtAmount') || 0);
+                var paid = Math.max(0, o.total - debt);
+                var delta = delivered ? debt - (o.debtRecorded || 0) : 0;
+                var cur = dealer ? dealer.debt : 0;
+                var html = '<div style="background:#f8fafc;border-radius:8px;padding:10px 14px;font-size:12px;color:#374151;line-height:1.8">' +
+                    '<div style="display:flex;justify-content:space-between"><span>Giá trị đơn</span><b>' + AM.money(o.total) + '</b></div>' +
+                    '<div style="display:flex;justify-content:space-between"><span>Đại lý đã trả</span><b style="color:#059669">' + AM.money(paid) + '</b></div>' +
+                    '<div style="display:flex;justify-content:space-between"><span>Ghi nợ</span><b style="color:#ef4444">' + AM.money(debt) + '</b></div>';
+                if (dealer) {
+                    html += delivered
+                        ? '<div style="border-top:1px dashed #e5e7eb;margin-top:6px;padding-top:6px">Dư nợ ' + AM.esc(AM.shortDealer(dealer.name)) + ': <b>' + AM.money(cur) + '</b> → <b style="color:' + (cur + delta > dealer.limit ? '#ef4444' : '#1a2035') + '">' + AM.money(cur + delta) + '</b>' +
+                          (delta ? ' (' + (delta > 0 ? '+' : '−') + AM.money(Math.abs(delta)) + ')' : ' (không đổi)') + '</div>'
+                        : '<div style="border-top:1px dashed #e5e7eb;margin-top:6px;padding-top:6px;color:#6b7280">Đơn chưa giao: số nợ sẽ được ghi vào công nợ đại lý khi giao xong.</div>';
+                }
+                api.preview(html + '</div>');
+            },
+            validate: function (v) {
+                var e = {};
+                if (v.mode === 'partial') {
+                    var amt = +v.debtAmount;
+                    if (!(amt > 0)) e.debtAmount = 'Vui lòng nhập số tiền còn nợ';
+                    else if (amt >= o.total) e.debtAmount = 'Số nợ phải nhỏ hơn giá trị đơn. Nợ toàn bộ thì chọn "Ghi nợ cả đơn"';
+                }
+                return e;
+            },
+            onSubmit: function (v) {
+                return AM.api('order.debt', { id: o.id, mode: v.mode, debtAmount: v.debtAmount, paidMethod: v.paidMethod, note: v.note }).done(function (data) {
+                    if (onSaved) onSaved(data);
+                });
+            }
+        });
+    };
+
     AM.confirm = function (opts) {
         var $m = ensureModal('am-confirm');
         $m.find('.am-modal-dialog').css('width', (opts.width || 440) + 'px').html(
