@@ -326,3 +326,26 @@
         overflow-x: hidden;
     }
 }
+/* Toastr: lớp .toast của Bootstrap (nền trắng mờ + blur) đè lên toastr → chữ trắng khó đọc trên header xanh */
+#toast-container.toast-top-right { top: 90px; right: 16px; }
+#toast-container > div.toast {
+    opacity: 1;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border: 0;
+    color: #fff;
+    font-size: 14px;
+    line-height: 1.45;
+    max-width: none;
+    box-shadow: 0 6px 20px rgba(15, 23, 42, .25);
+}
+#toast-container > div.toast:hover { box-shadow: 0 8px 24px rgba(15, 23, 42, .3); }
+#toast-container > .toast-success { background-color: #16a34a; }
+#toast-container > .toast-error { background-color: #dc2626; }
+#toast-container > .toast-info { background-color: #2563eb; }
+#toast-container > .toast-warning { background-color: #ea580c; }
+#toast-container .toast-message { color: #fff; }
+@media (max-width: 575px) {
+    #toast-container.toast-top-right { top: 70px; left: 12px; right: 12px; }
+    #toast-container.toast-top-right > div { width: auto; }
+}

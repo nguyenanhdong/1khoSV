@@ -35,6 +35,57 @@ class ProductClassificationCombination extends \yii\db\ActiveRecord
         ];
     }
 
+    /** Tiền tố id dòng giỏ hàng của sản phẩm không có phân loại: "p{product_id}" */
+    const PLAIN_PREFIX = 'p';
+
+    /** Id dòng giỏ hàng: id phân loại, hoặc "p{product_id}" nếu sản phẩm không có phân loại */
+    public static function lineId($product_id, $classification_id)
+    {
+        return !empty($classification_id) ? $classification_id : self::PLAIN_PREFIX . (int)$product_id;
+    }
+
+    /**
+     * Đọc các dòng đặt hàng [['id' => ..., 'quantity' => ...]] thành dòng giá.
+     * id số = phân loại sản phẩm (như app gửi); id "p{product_id}" = sản phẩm không phân loại, giá = giá khuyến mãi nếu có, ngược lại giá gốc.
+     * Mỗi dòng trả về: id, product_id, price, name, weight, agent_id, price_origin (+ các cột của bảng phân loại nếu có).
+     */
+    public static function resolveLines($product_combination)
+    {
+        $comboIds = [];
+        $productIds = [];
+        foreach ((array)$product_combination as $line) {
+            $id = (string)($line['id'] ?? '');
+            if ($id !== '' && $id[0] === self::PLAIN_PREFIX && ctype_digit(substr($id, 1))) {
+                $productIds[] = (int)substr($id, 1);
+            } elseif (ctype_digit($id)) {
+                $comboIds[] = (int)$id;
+            }
+        }
+        $rows = [];
+        if ($comboIds) {
+            $rows = self::find()->select('A.*, B.name, B.weight, B.agent_id, B.price as price_origin')
+                ->from(self::tableName() . ' A')
+                ->leftJoin(Product::tableName() . ' B', 'A.product_id = B.id')
+                ->where(['in', 'A.id', $comboIds])->asArray()->all();
+        }
+        if ($productIds) {
+            $products = Product::find()->select(['id', 'name', 'price', 'price_discount', 'weight', 'agent_id'])
+                ->where(['id' => $productIds, 'status' => Product::STATUS_ACTIVE])
+                ->andWhere(['or', ['is_delete' => 0], ['is_delete' => null]])
+                // Sản phẩm đã có phân loại thì bắt buộc đặt theo phân loại
+                ->andWhere(['not exists', self::find()->from(self::tableName() . ' C')->where('C.product_id = product.id')])
+                ->asArray()->all();
+            foreach ($products as $p) {
+                $rows[] = [
+                    'id' => self::PLAIN_PREFIX . $p['id'], 'product_id' => $p['id'], 'classification_id' => '',
+                    'price' => $p['price_discount'] ? $p['price_discount'] : $p['price'], 'price_discount' => 0,
+                    'name' => $p['name'], 'weight' => $p['weight'], 'agent_id' => $p['agent_id'], 'price_origin' => $p['price'],
+                ];
+            }
+        }
+        return $rows;
+    }
+
     public static function _combinationsData($arrays, $i = 0) {
         if (!isset($arrays[$i])) {
             return array();

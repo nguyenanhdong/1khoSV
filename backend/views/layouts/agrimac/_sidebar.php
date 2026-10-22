@@ -42,7 +42,8 @@ $lastLogin = !empty($identity->last_login) ? date('H:i d/m', strtotime($identity
             <span><?= Html::encode($item['label']) ?></span>
         </a>
     <?php };
-    $canLegacy = AgrimacAuth::canUseLegacy();
+    // Quản trị website (banner, chuyên mục sàn, voucher, thông báo, nội dung) chỉ thuộc vai trò CEO
+    $canLegacy = AgrimacAuth::canUseLegacy() && $role === 'admin';
     $agrimacMenu = D::menuFor($role);
     ?>
     <nav class="am-nav">
@@ -59,6 +60,7 @@ $lastLogin = !empty($identity->last_login) ? date('H:i d/m', strtotime($identity
         <?php endforeach; ?>
 
         <?php if ($canLegacy): ?>
+            <div class="am-nav-group">QUẢN TRỊ WEBSITE</div>
             <?php foreach (D::LEGACY_MENU as $controller => $item): ?>
                 <?php if (empty($item['before']) || !isset($agrimacMenu[$item['before']])) $legacyItem($controller, $item); ?>
             <?php endforeach; ?>

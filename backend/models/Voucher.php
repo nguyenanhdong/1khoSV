@@ -142,8 +142,7 @@ class Voucher extends \yii\db\ActiveRecord
         if( empty($listVoucher) )
             return [];
 
-        $listCombinationId = ArrayHelper::map($product_combination, 'id', 'id');
-        $resultCombination = ProductClassificationCombination::find()->where(['in', 'id', $listCombinationId])->asArray()->all();
+        $resultCombination = ProductClassificationCombination::resolveLines($product_combination);
         
         if( empty($resultCombination) )
             return [];
@@ -205,8 +204,7 @@ class Voucher extends \yii\db\ActiveRecord
     public static function calculatePriceVoucherUse($user_id, $product_combination, $voucher_current_id, $getProductApplyVoucher = false){
         $dataReturn         = ["price" => "0", "price_org" => 0, "price_type" => 1];
 
-        $listCombinationId  = ArrayHelper::map($product_combination, 'id', 'id');
-        $resultCombination  = ProductClassificationCombination::find()->where(['in', 'id', $listCombinationId])->asArray()->all();
+        $resultCombination  = ProductClassificationCombination::resolveLines($product_combination);
         
         if( empty($resultCombination) )
             return $dataReturn;

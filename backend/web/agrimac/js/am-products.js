@@ -77,7 +77,8 @@
                 '<div style="font-weight:800;font-size:12px;margin-bottom:3px;line-height:1.3">' + AM.esc(p.name) + '</div>' +
                 '<div style="font-size:10px;color:#9ca3af;margin-bottom:4px">#' + AM.esc(p.id) + ' · ' + AM.esc(cat ? cat.name.split('(')[0].trim() : '—') + '</div>' +
                 '<div style="font-size:10px;color:#6b7280;margin-bottom:6px">' + AM.esc(specsOf(p)) + '</div>' +
-                '<div style="font-size:13px;font-weight:800;color:#059669;margin-bottom:3px">' + AM.money(p.price) + '</div>' +
+                '<div style="font-size:13px;font-weight:800;color:#059669;margin-bottom:3px">' + AM.money(p.price) + ' <span style="font-size:10px;color:#9ca3af;font-weight:600">/' + AM.esc(p.unit || 'Cái') + '</span></div>' +
+                (p.dealerPrice ? '<div style="font-size:10px;color:#6b7280;margin-bottom:3px">Giá đại lý: <b style="color:#0369a1">' + AM.money(p.dealerPrice) + '</b></div>' : '') +
                 '<div style="font-size:10px;color:#9ca3af;margin-bottom:' + (canAssemble(p) ? 3 : 8) + 'px">Vốn: ' + AM.money(p.cost) + ' · NCC: ' + AM.esc(sup ? sup.name.split(' ')[0] : '—') + '</div>' +
                 (canAssemble(p) ? '<div style="font-size:10px;margin-bottom:8px;color:' + ((boms[p.name] || []).length ? '#0369a1' : '#f59e0b') + '">🔩 ' +
                     ((boms[p.name] || []).length ? 'BOM ' + boms[p.name].length + ' linh kiện · ' + AM.money(bomCost(boms[p.name])) + '/máy' : 'Chưa khai báo BOM') + '</div>' : '') +
@@ -313,7 +314,7 @@
         $('#am-pm-sub').text(p ? 'Tồn kho hiện tại: ' + p.stock + ' chiếc (thay đổi qua phiếu kho)' : 'Tồn kho ban đầu = 0, tăng khi tạo phiếu nhập kho hoặc hoàn tất lắp ráp');
         $('#am-pm-submit').text(p ? '💾 Cập nhật' : '💾 Lưu sản phẩm');
         if (p) {
-            $.each(['name', 'catId', 'sourceType', 'supId', 'price', 'cost', 'hp', 'drive', 'weight', 'minStock', 'description'], function (_, k) {
+            $.each(['name', 'catId', 'sourceType', 'supId', 'price', 'dealerPrice', 'cost', 'unit', 'weight', 'minStock', 'description'], function (_, k) {
                 $f.find('[name="' + k + '"]').val(p[k] === undefined || p[k] === null ? '' : p[k]);
             });
             $f.find('[name="code"]').val(p.id);
@@ -321,6 +322,7 @@
             $f.find('[name="code"]').val('');
             $f.find('[name="catId"]').val(state.cat !== 'all' ? state.cat : '');
             $f.find('[name="minStock"]').val(3);
+            $f.find('[name="unit"]').val('Cái');
         }
         renderPreview();
         openModal('#am-product-modal');
@@ -328,7 +330,7 @@
 
     function renderPreview() {
         var d = readForm($('#am-product-form')), price = +d.price || 0, cost = +d.cost || 0, html = '';
-        var specs = specsOf({ hp: d.hp, drive: d.drive, weight: d.weight });
+        var specs = specsOf({ weight: d.weight });
         if (specs !== '—') {
             html += '<div style="font-size:11px;color:#6b7280;margin-bottom:6px">Thông số hiển thị: <b style="color:#374151">' + AM.esc(specs) + '</b></div>';
         }
@@ -350,7 +352,8 @@
         if (!d.catId) errors.catId = 'Vui lòng chọn danh mục';
         if (!(+d.price > 0)) errors.price = 'Giá bán phải lớn hơn 0';
         if (d.sourceType === 'import' && !d.supId) errors.supId = 'Hàng nhập nguyên chiếc cần chọn nhà cung cấp';
-        $.each(['cost', 'hp', 'weight', 'minStock'], function (_, k) {
+        if (d.dealerPrice !== '' && +d.dealerPrice > +d.price && +d.price > 0) errors.dealerPrice = 'Giá đại lý đang cao hơn giá bán lẻ';
+        $.each(['cost', 'dealerPrice', 'weight', 'minStock'], function (_, k) {
             if (d[k] !== '' && (isNaN(+d[k]) || +d[k] < 0 || Math.floor(+d[k]) !== +d[k])) errors[k] = 'Phải là số nguyên không âm';
         });
         return errors;

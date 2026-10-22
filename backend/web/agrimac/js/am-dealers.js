@@ -8,7 +8,7 @@
 
     var canManage = function () { return AM.can('admin', 'sale'); };
     var canCollect = function () { return AM.can('admin', 'kt_congno'); };
-    var canOrder = function () { return AM.canOpen('orders') && AM.can('admin', 'sale', 'kt_banhang'); };
+    var canOrder = function () { return AM.canOpen('orders') && AM.can('admin', 'sale'); };
 
     function byId(id) {
         return dealers.filter(function (d) { return d.id === id; })[0] || null;

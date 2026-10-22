@@ -36,7 +36,7 @@ $this->registerJsVar('AM_DATA', R::clientConfig($role), View::POS_HEAD);
         <header class="am-topbar">
             <div class="am-topbar-title"><?= $current['icon'] . ' ' . Html::encode($current['label']) ?></div>
             <div class="am-topbar-right">
-                <span class="am-pill" style="background:#fef3c7;color:#b45309"><?= Html::encode(D::PERIOD_LABEL) ?></span>
+                <span class="am-pill" style="background:#fef3c7;color:#b45309"><?= 'Tháng ' . date('n/Y') ?></span>
                 <span class="am-pill" style="background:<?= $roleInfo['color'] ?>22;color:<?= $roleInfo['color'] ?>"><?= $roleInfo['icon'] . ' ' . Html::encode($roleInfo['label']) ?></span>
             </div>
         </header>

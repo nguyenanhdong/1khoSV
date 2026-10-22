@@ -14,12 +14,11 @@ use backend\components\AgrimacData as D;
 use backend\components\AgrimacUi as Ui;
 
 $flow = [
-    ['🏪', 'Đại lý đặt hàng', '', '#dbeafe', '#3b82f6'],
-    ['💬', 'Sale tư vấn & duyệt BOM', 'Kinh doanh', '#ede9fe', '#8b5cf6'],
-    ['🧾', 'KT duyệt & xuất HĐ', 'KT Bán hàng', '#fef3c7', '#f59e0b'],
-    ['🔩', 'Lấy LK & lắp ráp', 'Bộ phận lắp ráp', '#e0f2fe', '#0ea5e9'],
-    ['🚚', 'Xuất kho & giao hàng', 'KT Xuất kho + NV GH', '#ffedd5', '#f97316'],
-    ['💰', 'Thu tiền & chốt CN', 'KT Công nợ', '#d1fae5', '#059669'],
+    ['💬', 'Tư vấn, tạo & duyệt đơn', 'Kinh doanh', '#ede9fe', '#8b5cf6'],
+    ['📤', 'Xuất kho / xuất linh kiện', 'Kế toán công nợ', '#dbeafe', '#3b82f6'],
+    ['🔩', 'Nhận LK → lắp → nhập kho', 'Bộ phận lắp ráp', '#e0f2fe', '#0ea5e9'],
+    ['🚛', 'Gửi nhà xe → khách nhận', 'NV giao hàng', '#ffedd5', '#f97316'],
+    ['💰', 'Công nợ & thu tiền', 'Kế toán công nợ', '#d1fae5', '#059669'],
 ];
 
 $pipelineTotal = array_sum(array_column($leads, 'value'));
@@ -29,8 +28,14 @@ $countStatus = function ($status) use ($orders) {
     }));
 };
 $revenue = array_sum(array_map(function ($o) {
-    return $o['status'] === 'delivered' ? $o['total'] : 0;
+    return $o['type'] === 'new' && $o['status'] === 'delivered' ? $o['total'] : 0;
 }, $orders));
+$countWhere = function (callable $fn) use ($orders) {
+    return count(array_filter($orders, $fn));
+};
+$waitWarehouse = $countWhere(function ($o) { return $o['status'] === 'confirmed'; });
+$waitShipping = $countWhere(function ($o) { return $o['type'] !== 'assembly' && in_array($o['status'], ['exported', 'shipping'], true); });
+$inAssembly = $countWhere(function ($o) { return $o['type'] === 'assembly' && in_array($o['status'], ['exported', 'received', 'assembling', 'assembled'], true); });
 $inProgress = count(array_filter($orders, function ($o) {
     return !in_array($o['status'], ['delivered', 'cancelled'], true);
 }));
@@ -64,9 +69,9 @@ $countWarranty = function ($status) use ($warranties) {
     </div>
 
     <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:11px;margin-bottom:16px">
-        <?= Ui::stat('💵', 'Doanh thu tháng', D::money($revenue), $countStatus('delivered') . ' đơn hoàn thành', '#10b981') ?>
+        <?= Ui::stat('💵', 'Doanh thu', D::money($revenue), $countWhere(function ($o) { return $o['type'] === 'new' && $o['status'] === 'delivered'; }) . ' đơn bán hoàn thành', '#10b981') ?>
         <?= Ui::stat('📋', 'Đơn đang xử lý', (string)$inProgress,
-            $countStatus('pending') . ' chờ duyệt · ' . ($countStatus('confirmed') + $countStatus('assembling') + $countStatus('assembled')) . ' đang lắp · ' . $countStatus('delivering') . ' đang giao', '#f59e0b') ?>
+            $countStatus('pending') . ' chờ duyệt · ' . $waitWarehouse . ' chờ kho · ' . $inAssembly . ' lắp ráp · ' . $waitShipping . ' chờ giao/đang chở', '#f59e0b') ?>
         <?= Ui::stat('💬', 'Pipeline CRM', count($leads) . ' lead', 'Giá trị: ' . D::money($pipelineTotal), '#8b5cf6') ?>
         <?= Ui::stat('🛡', 'Khiếu nại BH', (string)$openClaims, 'Đang xử lý', '#ef4444') ?>
         <?= Ui::stat('⚠', 'CN quá hạn mức', count($overLimit) . ' ĐL',
@@ -80,11 +85,11 @@ $countWarranty = function ($status) use ($warranties) {
                 <div class="am-list-row">
                     <div>
                         <div style="font-weight:700;font-size:12px"><?= Html::encode($o['id']) ?></div>
-                        <div style="font-size:11px;color:#6b7280"><?= Html::encode(D::shortDealerName($dealers[$o['dealerId']]['name'] ?? '')) ?></div>
+                        <div style="font-size:11px;color:#6b7280"><?= Html::encode(D::ORDER_TYPES[$o['type']]['short'] . ' · ' . ($o['customerType'] === 'dealer' ? D::shortDealerName($o['customer']) : $o['customer'])) ?></div>
                     </div>
                     <div style="text-align:right">
                         <div style="font-size:12px;font-weight:700;color:#059669"><?= D::money($o['total']) ?></div>
-                        <?= Ui::orderStatus($o['status']) ?>
+                        <?= Ui::orderStatus($o['status'], $o['type']) ?>
                     </div>
                 </div>
             <?php endforeach; ?>

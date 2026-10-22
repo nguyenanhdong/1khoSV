@@ -1,208 +1,181 @@
-/* AgriMac – Bộ phận lắp ráp: checklist nhận linh kiện theo BOM */
+/* 1Kho CMS – Bộ phận lắp ráp: nhận linh kiện → bắt đầu → xong (ghi giờ) → kế toán nhập kho */
 (function ($, AM) {
     'use strict';
 
     var orders = window.AM_ASM_ORDERS || [];
-    var state = { selected: orders.length ? orders[0].id : null, filter: 'all', busy: false };
-    var STATUS = {
-        assembling: { label: 'Đang lắp ráp', color: '#0ea5e9', bg: '#e0f2fe' },
-        assembled: { label: 'Lắp ráp xong', color: '#8b5cf6', bg: '#ede9fe' }
-    };
+    var FLOW = (AM.data.orderFlows || {}).assembly || {};
+    var STATUS = AM.data.orderStatus || {};
+    var STEPS = ['exported', 'received', 'assembling', 'assembled', 'delivered'];
+    var state = { selected: null, filter: 'active', busy: false };
 
     function findOrder(id) {
         return orders.filter(function (o) { return o.id === id; })[0] || null;
     }
 
-    function isPicked(orderId, partId) {
-        var o = findOrder(orderId), b = o && o.bom.filter(function (x) { return x.id === partId; })[0];
-        return !!(b && b.picked);
-    }
-
     function applyOrder(data) {
         var cur = findOrder(data.order.id);
+        if (!cur) return;
         Object.keys(cur).forEach(function (k) { delete cur[k]; });
         $.extend(cur, data.order);
     }
 
-    function call(op, payload) {
-        if (state.busy) return $.Deferred().reject({ handled: true }).promise();
+    function call(op, o) {
+        if (state.busy) return;
         state.busy = true;
-        return AM.api(op, $.extend({ id: state.selected }, payload)).done(function (data) {
+        AM.api(op, { id: o.id }).done(function (data) {
             if (data.order) applyOrder(data);
             render();
         }).always(function () { state.busy = false; });
     }
-    function pickedCount(o) { return o.bom.filter(function (b) { return isPicked(o.id, b.id); }).length; }
-    function progress(o) { return o.bom.length ? Math.round(pickedCount(o) / o.bom.length * 100) : 0; }
+
+    function elapsed(o) {
+        if (o.status === 'assembling' && o.startedTs) return Math.max(0, Math.round((Date.now() / 1000 - o.startedTs) / 60));
+        return o.assemblyMinutes;
+    }
+
+    function badge(o) {
+        var s = STATUS[o.status] || {};
+        return AM.badge(FLOW[o.status] || o.status, s.color || '#6b7280', s.bg || '#f1f5f9');
+    }
+
+    function filtered() {
+        if (state.filter === 'active') return orders.filter(function (o) { return o.status !== 'delivered'; });
+        if (state.filter === 'all') return orders;
+        return orders.filter(function (o) { return o.status === state.filter; });
+    }
 
     function renderSummary() {
         var html = '<div style="font-weight:800;font-size:15px;margin-bottom:8px">🔩 Xưởng lắp ráp</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
-        [['assembling', 'Đang lắp', '#0ea5e9'], ['assembled', 'Chờ xuất kho', '#8b5cf6']].forEach(function (s) {
-            var n = orders.filter(function (o) { return o.status === s[0]; }).length;
-            html += '<div style="background:rgba(255,255,255,0.08);border-radius:8px;padding:8px 10px;border-left:3px solid ' + s[2] + '">' +
-                '<div style="font-size:22px;font-weight:900;color:' + s[2] + '">' + n + '</div>' +
-                '<div style="font-size:10px;color:rgba(255,255,255,0.5);margin-top:1px">' + s[1] + '</div></div>';
+        [['exported', 'Chờ nhận LK'], ['received', 'Chờ bắt đầu'], ['assembling', 'Đang lắp'], ['assembled', 'Chờ nhập kho']].forEach(function (s) {
+            var n = orders.filter(function (o) { return o.status === s[0]; }).length, c = (STATUS[s[0]] || {}).color || '#fff';
+            html += '<div style="background:rgba(255,255,255,0.08);border-radius:8px;padding:8px 10px;border-left:3px solid ' + c + '">' +
+                '<div style="font-size:22px;font-weight:900;color:' + c + '">' + n + '</div><div style="font-size:10px;color:rgba(255,255,255,0.55)">' + s[1] + '</div></div>';
         });
         $('#am-asm-summary').html(html + '</div>');
-    }
-
-    function renderList() {
-        var list = state.filter === 'all' ? orders : orders.filter(function (o) { return o.status === state.filter; });
-        if (!list.length) {
-            $('#am-asm-list').html('<div class="am-empty" style="padding:32px"><div style="font-size:32px">🔩</div><div style="font-size:12px;margin-top:8px">Không có đơn nào</div></div>');
-            return;
-        }
-        $('#am-asm-list').html(list.map(function (o) {
-            var dealer = AM.dealer(o.dealerId) || {}, pct = progress(o), st = STATUS[o.status];
-            var html = '<div class="am-asm-card ' + (o.id === state.selected ? 'selected' : '') + '" data-id="' + o.id + '">' +
-                '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px"><div>' +
-                '<div style="display:flex;align-items:center;gap:5px"><span style="font-weight:800;font-size:13px;color:#1a2035">' + o.id + '</span>' +
-                (o.type === 'warranty' ? '<span style="font-size:9px;background:#fee2e2;color:#ef4444;padding:1px 5px;border-radius:4px;font-weight:700">BH</span>' : '') + '</div>' +
-                '<div style="font-size:11px;color:#6b7280;margin-top:1px">' + AM.esc(o.product) + ' × ' + o.qty + '</div></div>' +
-                '<span style="font-size:10px;background:' + st.bg + ';color:' + st.color + ';padding:3px 7px;border-radius:8px;font-weight:700">' + st.label + '</span></div>' +
-                '<div style="font-size:11px;color:#9ca3af;margin-bottom:8px">🏪 ' + AM.esc(AM.shortDealer(dealer.name)) + ' · Sale: ' + AM.esc(AM.lastWord(o.sale)) + '</div>';
-            if (o.bom.length) {
-                html += '<div><div style="display:flex;justify-content:space-between;font-size:10px;color:#9ca3af;margin-bottom:3px"><span>Nhận linh kiện</span>' +
-                    '<span style="font-weight:700;color:' + (pct === 100 ? '#059669' : '#0ea5e9') + '">' + pickedCount(o) + '/' + o.bom.length + ' (' + pct + '%)</span></div>' +
-                    '<div class="am-bar" style="height:5px"><div style="width:' + pct + '%;background:' + (pct === 100 ? '#10b981' : '#0ea5e9') + '"></div></div></div>';
-            } else {
-                html += '<div style="font-size:10px;color:#f59e0b;font-weight:600">⚠ Chưa có danh sách linh kiện</div>';
-            }
-            return html + '</div>';
+        var chips = [['active', 'Đang xử lý'], ['exported', 'Chờ nhận'], ['assembling', 'Đang lắp'], ['assembled', 'Chờ nhập kho'], ['delivered', 'Đã nhập kho']];
+        $('#am-asm-filters').html(chips.map(function (c) {
+            return '<button class="am-asm-filter ' + (state.filter === c[0] ? 'active' : '') + '" data-filter="' + c[0] + '">' + c[1] + '</button>';
         }).join(''));
     }
 
-    function groupByCategory(bom) {
-        var groups = {};
-        bom.forEach(function (b) {
-            var p = AM.part(b.id);
-            if (!p) return;
-            (groups[p.cat] = groups[p.cat] || []).push({ id: b.id, qty: b.qty, part: p });
-        });
-        return groups;
+    function renderList() {
+        var list = filtered();
+        if (!list.length) {
+            $('#am-asm-list').html('<div class="am-empty" style="padding:32px"><div style="font-size:32px">🔩</div><div style="font-size:12px;margin-top:8px">Không có đơn lắp ráp nào</div></div>');
+            return;
+        }
+        $('#am-asm-list').html(list.map(function (o) {
+            var m = elapsed(o);
+            return '<div class="am-asm-card ' + (o.id === state.selected ? 'selected' : '') + '" data-id="' + o.id + '">' +
+                '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">' +
+                '<span style="font-weight:800;font-size:13px">' + o.id + '</span>' + badge(o) + '</div>' +
+                '<div style="font-size:12px;color:#374151">' + o.items.map(function (i) { return AM.esc(i.name) + ' × ' + i.qty; }).join('<br>') + '</div>' +
+                (m !== null && m !== undefined ? '<div style="font-size:11px;color:#0ea5e9;font-weight:700;margin-top:6px" data-timer="' + o.id + '">⏱ ' + AM.formatMinutes(m) + (o.status === 'assembling' ? ' (đang chạy)' : '') + '</div>' : '') +
+                '</div>';
+        }).join(''));
+    }
+
+    function stepTime(o, k) {
+        return { exported: o.exportedAt, received: o.partsReceivedAt, assembling: o.startedAt, assembled: o.finishedAt, delivered: o.stockedAt }[k];
     }
 
     function renderDetail() {
         var o = findOrder(state.selected), $d = $('#am-asm-detail');
         if (!o) {
-            $d.html('<div class="am-card-lg" style="flex:1;display:flex;align-items:center;justify-content:center"><div class="am-empty">' +
-                '<div style="font-size:48px">🔩</div><div style="font-weight:700;font-size:15px;margin-top:12px;color:#9ca3af">Chọn đơn hàng để bắt đầu</div>' +
-                '<div style="font-size:12px;margin-top:6px">Danh sách linh kiện và checklist lắp ráp sẽ hiện ở đây</div></div></div>');
+            $d.html('<div class="am-card am-empty" style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column"><div style="font-size:40px">🔩</div>' +
+                '<div style="font-size:13px;margin-top:8px">Chọn một đơn lắp ráp bên trái</div></div>');
             return;
         }
-        var dealer = AM.dealer(o.dealerId) || {}, pct = progress(o), st = STATUS[o.status], assembling = o.status === 'assembling';
-        var html = '<div style="flex:1;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.08);display:flex;flex-direction:column">' +
-            '<div style="background:linear-gradient(90deg,#0f2027,#1a3a4a);padding:14px 20px;display:flex;justify-content:space-between;align-items:center"><div>' +
-            '<div style="display:flex;align-items:center;gap:8px"><span style="font-weight:900;font-size:16px;color:#fff">' + o.id + '</span>' +
-            (o.type === 'warranty' ? '<span style="font-size:10px;background:#fee2e2;color:#ef4444;padding:2px 7px;border-radius:6px;font-weight:700">BẢO HÀNH</span>' : '') +
-            '<span style="font-size:11px;background:' + st.bg + ';color:' + st.color + ';padding:3px 8px;border-radius:8px;font-weight:700">' + st.label + '</span></div>' +
-            '<div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:3px">' + AM.esc(dealer.name) + ' · ' + AM.esc(o.product) + ' × ' + o.qty + ' máy · Sale: ' + AM.esc(o.sale) + '</div></div>' +
-            '<div style="text-align:right"><div style="font-size:10px;color:rgba(255,255,255,0.4)">Tiến độ nhận LK</div>' +
-            '<div style="font-size:22px;font-weight:900;color:' + (pct === 100 ? '#4ade80' : '#fbbf24') + '">' + pct + '%</div></div></div>';
+        var cur = STEPS.indexOf(o.status), m = elapsed(o);
+        var steps = STEPS.map(function (k, i) {
+            var done = i <= cur, c = (STATUS[k] || {}).color || '#6b7280', t = stepTime(o, k);
+            return '<div style="flex:1;text-align:center;position:relative">' +
+                '<div class="am-step-dot" style="margin:0 auto 6px;background:' + (done ? c : '#f3f4f6') + ';color:' + (done ? '#fff' : '#d1d5db') + '">' + (done ? '✓' : i + 1) + '</div>' +
+                '<div style="font-size:11px;font-weight:' + (i === cur ? 800 : 500) + ';color:' + (done ? '#1a2035' : '#9ca3af') + '">' + AM.esc(FLOW[k] || k) + '</div>' +
+                '<div style="font-size:10px;color:#9ca3af;margin-top:2px">' + AM.esc(t || '') + '</div></div>';
+        }).join('');
 
-        var steps = [[pct > 0, '📥 Bắt đầu nhận LK'], [pct === 100, '✅ Đã nhận đủ LK'], [o.status === 'assembled', '🔩 Lắp ráp xong']];
-        html += '<div style="background:#f8fafc;padding:10px 20px;border-bottom:1px solid #e5e7eb"><div style="display:flex;align-items:center">';
-        steps.forEach(function (s, i) {
-            html += '<div style="display:flex;align-items:center;flex-shrink:0"><div style="display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;background:' +
-                (s[0] ? '#0ea5e9' : '#f3f4f6') + ';color:' + (s[0] ? '#fff' : '#9ca3af') + ';font-size:11px;font-weight:' + (s[0] ? 700 : 400) + ';transition:all .3s">' +
-                (s[0] ? '<span>✓</span>' : '') + s[1] + '</div>' +
-                (i < steps.length - 1 ? '<div style="font-size:12px;color:#d1d5db;padding:0 4px">→</div>' : '') + '</div>';
-        });
-        html += '<div style="margin-left:auto;display:flex;gap:8px">' +
-            '<button data-action="pick-all" style="padding:6px 13px;background:#f1f5f9;border:1px solid #e5e7eb;border-radius:8px;cursor:pointer;font-size:11px;font-weight:700;color:#374151">☑ Nhận tất cả</button>' +
-            (AM.can('admin', 'assembly') && assembling && pct === 100
-                ? '<button data-action="finish" style="padding:6px 14px;background:#8b5cf6;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:800;font-size:12px">✓ Hoàn tất lắp ráp</button>' : '') +
-            (o.status === 'assembled' ? '<span style="padding:6px 13px;background:#ede9fe;color:#8b5cf6;border-radius:8px;font-size:11px;font-weight:700">✓ Chờ KT xuất kho</span>' : '') +
-            '</div></div></div>';
+        var action = '';
+        if (o.status === 'exported' && AM.can('admin', 'assembly')) action = ['partsReceive', '📥 Nhận linh kiện', '#0891b2'];
+        else if (o.status === 'received' && AM.can('admin', 'assembly')) action = ['start', '▶ Bắt đầu lắp ráp', '#0ea5e9'];
+        else if (o.status === 'assembling' && AM.can('admin', 'assembly')) action = ['finish', '✓ Lắp ráp xong', '#8b5cf6'];
+        else if (o.status === 'assembled' && AM.can('admin', 'kt_congno')) action = ['stock', '📦 Nhập kho máy thành phẩm', '#059669'];
+        var waiting = { exported: 'Bộ phận lắp ráp nhận linh kiện', received: 'Bộ phận lắp ráp bắt đầu', assembling: 'Bộ phận lắp ráp hoàn tất', assembled: 'Kế toán công nợ nhập kho' }[o.status];
 
-        html += '<div style="flex:1;overflow:auto;padding:16px 20px">';
-        if (!o.bom.length) {
-            html += '<div class="am-empty" style="padding:40px"><div style="font-size:40px">📋</div>' +
-                '<div style="font-weight:700;margin-top:10px;font-size:14px">Chưa có danh sách linh kiện</div>' +
-                '<div style="font-size:12px;margin-top:6px">Sale chưa tạo BOM cho đơn này</div></div>';
-        } else {
-            html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">';
-            $.each(groupByCategory(o.bom), function (cat, items) {
-                var got = items.filter(function (b) { return isPicked(o.id, b.id); }).length;
-                html += '<div><div style="display:flex;align-items:center;gap:7px;margin-bottom:10px">' +
-                    '<div style="font-weight:800;font-size:13px;color:#1a2035">' + AM.esc(cat) + '</div>' +
-                    '<div style="font-size:10px;background:#f1f5f9;color:#6b7280;padding:2px 7px;border-radius:10px;font-weight:600">' + got + '/' + items.length + ' nhận</div></div>' +
-                    '<div style="display:flex;flex-direction:column;gap:7px">';
-                items.forEach(function (b) {
-                    var picked = isPicked(o.id, b.id), need = b.qty * o.qty, enough = b.part.stock >= need;
-                    html += '<div class="am-pick-item ' + (picked ? 'picked' : '') + '" data-part="' + b.id + '" style="cursor:' + (assembling ? 'pointer' : 'default') + ';opacity:' + (o.status === 'assembled' ? 0.85 : 1) + '">' +
-                        '<div class="am-check">' + (picked ? '<span style="color:#fff;font-size:13px;font-weight:900">✓</span>' : '') + '</div>' +
-                        '<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:' + (picked ? 600 : 500) + ';color:' + (picked ? '#059669' : '#1a2035') +
-                        ';text-decoration:' + (picked ? 'line-through' : 'none') + ';line-height:1.3">' + AM.esc(b.part.name) + '</div>' +
-                        '<div style="font-size:10px;color:#9ca3af;margin-top:2px">Kho tồn: <b style="color:' + (enough ? '#059669' : '#ef4444') + '">' + b.part.stock + '</b> ' + b.part.unit +
-                        (enough ? '' : '<span style="color:#ef4444;margin-left:4px">⚠ Không đủ!</span>') + '</div></div>' +
-                        '<div style="text-align:right;flex-shrink:0"><div style="font-size:13px;font-weight:800;color:' + (picked ? '#059669' : '#0ea5e9') + '">×' + need + '</div>' +
-                        '<div style="font-size:9px;color:#9ca3af">' + b.part.unit + '</div></div>' +
-                        '<div style="text-align:right;flex-shrink:0;min-width:56px"><div style="font-size:11px;font-weight:700;color:#6b7280">' + AM.money(b.part.cost * need) + '</div></div></div>';
-                });
-                html += '</div></div>';
-            });
-            html += '</div>';
-        }
-
-        html += '<div style="margin-top:18px;padding-top:16px;border-top:1px solid #f3f4f6">' +
-            '<div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:7px">📝 Ghi chú lắp ráp</div>' +
-            '<textarea id="am-asm-note" class="am-textarea" placeholder="Ghi chú kỹ thuật, vấn đề phát sinh, yêu cầu đặc biệt..." style="height:80px;padding:8px 10px;line-height:1.5">' +
-            AM.esc(o.assemblyNote || '') + '</textarea></div>';
-
-        if (o.bom.length) {
-            var totalQty = o.bom.reduce(function (s, b) { return s + b.qty * o.qty; }, 0);
-            var totalCost = o.bom.reduce(function (s, b) { var p = AM.part(b.id); return s + (p ? p.cost * b.qty * o.qty : 0); }, 0);
-            html += '<div style="margin-top:12px;background:#f8fafc;border-radius:10px;padding:12px 16px;display:flex;gap:16px">';
-            [['Tổng linh kiện', o.bom.length + ' loại', '#374151'], ['Tổng số lượng', totalQty + ' cái/bộ', '#374151'],
-             ['Đã nhận', pickedCount(o) + '/' + o.bom.length, '#0ea5e9'], ['Chi phí LK', AM.money(totalCost), '#059669']].forEach(function (s) {
-                html += '<div style="flex:1;text-align:center"><div style="font-size:10px;color:#9ca3af;margin-bottom:3px">' + s[0] + '</div>' +
-                    '<div style="font-size:13px;font-weight:800;color:' + s[2] + '">' + s[1] + '</div></div>';
-            });
-            html += '</div>';
-        }
-        $d.html(html + '</div></div>');
+        $d.html('<div class="am-card" style="flex:1;display:flex;flex-direction:column;overflow:hidden">' +
+            '<div style="padding:16px 18px;border-bottom:1px solid #f3f4f6;display:flex;justify-content:space-between;align-items:center">' +
+            '<div><div style="font-weight:900;font-size:17px">' + o.id + '</div><div style="font-size:11px;color:#9ca3af">Tạo ' + AM.esc(o.orderedAt || '') + ' · ' + AM.esc(o.sale || '') + '</div></div>' + badge(o) + '</div>' +
+            '<div style="padding:16px 18px;overflow:auto;flex:1">' +
+            '<div style="display:flex;gap:4px;margin-bottom:18px">' + steps + '</div>' +
+            (m !== null && m !== undefined ? '<div style="background:#e0f2fe;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:#0369a1;font-weight:700" data-timer-big="' + o.id + '">⏱ Thời gian lắp: ' + AM.formatMinutes(m) + (o.status === 'assembling' ? ' — đang lắp' : '') + '</div>' : '') +
+            '<div class="am-label" style="margin-bottom:6px">MÁY CẦN LẮP</div><table class="am-mini-table" style="margin-bottom:14px">' +
+            o.items.map(function (i) { return '<tr><td>🚜 ' + AM.esc(i.name) + '<div class="am-mini-sub">' + AM.esc(i.productId) + '</div></td><td class="r b">× ' + i.qty + ' ' + AM.esc(i.unit) + '</td></tr>'; }).join('') + '</table>' +
+            '<div class="am-label" style="margin-bottom:6px">LINH KIỆN ĐƯỢC XUẤT (' + o.parts.length + ' loại)</div>' +
+            '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">' + o.parts.map(function (p) {
+                return '<div class="am-pick-item ' + (p.picked ? 'picked' : '') + '"><div class="am-check">' + (p.picked ? '<span style="color:#fff;font-size:12px">✓</span>' : '') + '</div>' +
+                    '<div style="flex:1"><div style="font-size:12px;font-weight:700">' + AM.esc(p.name) + '</div><div style="font-size:10px;color:#9ca3af">' + AM.esc(p.id) + '</div></div>' +
+                    '<div style="font-weight:800;font-size:13px">× ' + p.qtyTotal + ' ' + AM.esc(p.unit || '') + '</div></div>';
+            }).join('') + '</div>' +
+            '<div class="am-label" style="margin-bottom:6px">GHI CHÚ LẮP RÁP</div>' +
+            '<textarea class="am-textarea" id="am-asm-note" style="height:70px"' + (AM.can('admin', 'assembly') && o.status !== 'delivered' ? '' : ' readonly') + ' placeholder="Vấn đề phát sinh, linh kiện lỗi...">' + AM.esc(o.assemblyNote || '') + '</textarea>' +
+            '</div>' +
+            '<div style="padding:12px 18px;border-top:1px solid #f3f4f6;display:flex;gap:8px">' +
+            (action ? '<button class="am-btn-block" data-asm-action="' + action[0] + '" style="background:' + action[2] + ';padding:12px;font-size:14px">' + action[1] + '</button>'
+                : (waiting ? '<div style="flex:1;font-size:12px;color:#6b7280;background:#f8fafc;border-radius:8px;padding:10px 12px">⏳ Đang chờ: <b>' + waiting + '</b></div>'
+                    : '<div style="flex:1;font-size:12px;color:#059669;font-weight:700;background:#f0fdf4;border-radius:8px;padding:10px 12px">✓ Đã nhập kho' + (o.importCode ? ' · phiếu ' + AM.esc(o.importCode) : '') + '</div>')) +
+            '</div></div>');
     }
 
     function render() {
+        if (!state.selected || !findOrder(state.selected)) {
+            var first = filtered()[0];
+            state.selected = first ? first.id : null;
+        }
         renderSummary();
         renderList();
         renderDetail();
     }
 
+    var CONFIRM = {
+        partsReceive: ['📥 Nhận linh kiện', 'Xác nhận đã nhận đủ linh kiện từ kho cho đơn này.', 'Đã nhận đủ', '#0891b2'],
+        start: ['▶ Bắt đầu lắp ráp', 'Hệ thống bắt đầu tính giờ lắp ráp.', 'Bắt đầu', '#0ea5e9'],
+        finish: ['✓ Lắp ráp xong', 'Dừng tính giờ và chuyển cho Kế toán công nợ nhập kho.', 'Đã lắp xong', '#8b5cf6'],
+        stock: ['📦 Nhập kho', 'Nhập máy thành phẩm vào kho để bán.', 'Nhập kho', '#059669']
+    };
+    var OPS = { partsReceive: 'order.partsReceive', start: 'order.start', finish: 'order.finish', stock: 'order.stock' };
+
     $(function () {
+        if (!$('#am-asm-list').length) return;
+        var focus = AM.query('order');
+        if (focus && findOrder(focus)) { state.selected = focus; state.filter = 'all'; }
         render();
+        // Đồng hồ thời gian lắp chạy theo phút
+        setInterval(function () {
+            orders.forEach(function (o) {
+                if (o.status !== 'assembling') return;
+                var m = elapsed(o);
+                $('[data-timer="' + o.id + '"]').text('⏱ ' + AM.formatMinutes(m) + ' (đang chạy)');
+                $('[data-timer-big="' + o.id + '"]').text('⏱ Thời gian lắp: ' + AM.formatMinutes(m) + ' — đang lắp');
+            });
+        }, 30000);
 
-        $('.am-asm-filter').on('click', function () {
-            $(this).addClass('active').siblings().removeClass('active');
+        $('#am-asm-filters').on('click', '[data-filter]', function () {
             state.filter = $(this).data('filter');
-            renderList();
+            state.selected = null;
+            render();
         });
-
         $('#am-asm-list').on('click', '.am-asm-card', function () {
             state.selected = $(this).data('id');
             render();
         });
-
         $('#am-asm-detail')
-            .on('click', '.am-pick-item', function () {
-                var o = findOrder(state.selected), part = $(this).data('part');
-                if (o.status !== 'assembling') return;
-                call('order.pick', { partId: part, picked: isPicked(o.id, part) ? 0 : 1 });
-            })
-            .on('click', '[data-action="pick-all"]', function () {
-                if (findOrder(state.selected).status !== 'assembling') return;
-                call('order.pick', { all: 1 });
-            })
-            .on('click', '[data-action="finish"]', function () {
-                call('order.assembled', {});
+            .on('click', '[data-asm-action]', function () {
+                var key = $(this).data('asm-action'), o = findOrder(state.selected), c = CONFIRM[key];
+                AM.confirm({ title: c[0] + ' — ' + o.id, message: c[1], okLabel: c[2], okColor: c[3], onOk: function () { call(OPS[key], o); } });
             })
             .on('change', '#am-asm-note', function () {
                 var o = findOrder(state.selected), note = this.value;
-                AM.api('order.assemblyNote', { id: o.id, note: note }).done(function () {
-                    o.assemblyNote = note;
-                    AM.toast('✓ Đã lưu ghi chú lắp ráp');
-                });
+                AM.api('order.assemblyNote', { id: o.id, note: note }).done(function () { o.assemblyNote = note; AM.toast('✓ Đã lưu ghi chú'); });
             });
     });
 })(jQuery, window.AM);

@@ -4,6 +4,7 @@ namespace frontend\controllers;
 use backend\models\Config;
 use backend\models\Order;
 use backend\models\Product;
+use backend\models\ProductClassificationCombination;
 use backend\models\UserDeliveryAddress;
 use backend\models\Voucher;
 use common\models\District;
@@ -55,11 +56,11 @@ class CartController extends Controller
                 }
                 //lay thong tin voucher
                 $productCombination[] = [
-                    'id' => $row['classification_id'],
+                    'id' => ProductClassificationCombination::lineId($productId, $row['classification_id']),
                     'quantity' => $row['qty']
                 ];
-                $dataVoucher        = Voucher::getListVoucherCustomerOrder($userId, $productCombination);
             }
+            $dataVoucher        = Voucher::getListVoucherCustomerOrder($userId, $productCombination);
         }
 
         //cap nhat dia chi giao hang
@@ -120,13 +121,25 @@ class CartController extends Controller
         $productId = Yii::$app->request->post('productId', '');
         $classificationId = Yii::$app->request->post('classificationId', '');
         $productQty = Yii::$app->request->post('productQty', 1);
-        $resStatus = 0;
-        if(!empty($productId)){
-            $_SESSION['list_product'][$productId]['classification_id'] = $classificationId;
-            $_SESSION['list_product'][$productId]['qty'] = $productQty;
-            $resStatus = 1;
+        $productId = (int)$productId;
+        $productQty = max(1, (int)$productQty);
+        $product = $productId ? Product::find()->where(['id' => $productId, 'status' => Product::STATUS_ACTIVE])->one() : null;
+        if (!$product) {
+            return 0;
         }
-        return $resStatus;
+        // Sản phẩm có phân loại thì phải chọn đúng một phân loại của chính sản phẩm đó
+        $hasClassification = ProductClassificationCombination::find()->where(['product_id' => $productId])->exists();
+        if ($hasClassification) {
+            if (!ProductClassificationCombination::find()->where(['id' => (int)$classificationId, 'product_id' => $productId])->exists()) {
+                return 0;
+            }
+            $classificationId = (int)$classificationId;
+        } else {
+            $classificationId = '';
+        }
+        $_SESSION['list_product'][$productId]['classification_id'] = $classificationId;
+        $_SESSION['list_product'][$productId]['qty'] = $productQty;
+        return 1;
     }
 
     //lấy thông tin order khi chọn sản phẩm thanh toán
@@ -142,7 +155,7 @@ class CartController extends Controller
                 foreach($listProductCart as $product_id => $row){
                     if(in_array($product_id, $listProductId)){
                         $productCombination[] = [
-                            'id' => $row['classification_id'],
+                            'id' => ProductClassificationCombination::lineId($product_id, $row['classification_id']),
                             'quantity' => $row['qty']
                         ];
                     }
@@ -184,7 +197,7 @@ class CartController extends Controller
     public function actionUpdateInfoProduct(){
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         $productId = Yii::$app->request->post('productId', '');
-        $qty = Yii::$app->request->post('qty', 1);
+        $qty = max(1, (int)Yii::$app->request->post('qty', 1));
 
         $session = Yii::$app->session;
         $listProductCart = $session->get('list_product');
@@ -197,7 +210,7 @@ class CartController extends Controller
                 if($product_id == $productId){
                     $qtyNew = $qty;
                     $productCombination[] = [
-                            'id' => $row['classification_id'],
+                            'id' => ProductClassificationCombination::lineId($product_id, $row['classification_id']),
                             'quantity' => $qtyNew
                         ];
                 }
@@ -268,7 +281,7 @@ class CartController extends Controller
         foreach($listProductCart as $product_id => $row){
             if(in_array($product_id, $arr_product_order)){
                 $product_combination[] = [
-                    'id' => $row['classification_id'],
+                    'id' => ProductClassificationCombination::lineId($product_id, $row['classification_id']),
                     'quantity' => $row['qty']
                 ];
             }

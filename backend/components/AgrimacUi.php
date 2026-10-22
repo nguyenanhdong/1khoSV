@@ -35,9 +35,9 @@ class AgrimacUi
         return $html . '</tr></thead>';
     }
 
-    public static function orderStatus($status)
+    public static function orderStatus($status, $type = null)
     {
-        $s = AgrimacData::ORDER_STATUS[$status];
-        return self::badge($s['label'], $s['color'], $s['bg']);
+        $s = AgrimacData::ORDER_STATUS[$status] ?? ['label' => $status, 'color' => '#6b7280', 'bg' => '#f1f5f9'];
+        return self::badge($type ? AgrimacData::orderStatusLabel($type, $status) : $s['label'], $s['color'], $s['bg']);
     }
 }

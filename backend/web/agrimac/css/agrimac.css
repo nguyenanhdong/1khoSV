@@ -231,3 +231,77 @@ body.am-login-body { margin: 0; min-height: 100vh; font-family: 'IBM Plex Sans',
 .am-cat-item.am-cat-child { padding-left: 28px; background: #fcfcfd; }
 .am-cat-item.am-cat-child .am-cat-name { font-size: 11px; }
 .am-market-compact .am-mcol-opt { display: none; }
+
+/* ---------- Đơn hàng: bảng dòng sản phẩm / linh kiện ---------- */
+.am-lines { width: 100%; border-collapse: collapse; font-size: 12px; }
+.am-lines th { text-align: left; font-size: 10px; font-weight: 700; color: #6b7280; padding: 4px 4px 6px; }
+.am-lines td { padding: 3px 4px; vertical-align: middle; }
+.am-lines .am-input { padding: 7px 8px; }
+.am-line-del { background: #fee2e2; border: none; color: #ef4444; border-radius: 6px; width: 26px; height: 26px; cursor: pointer; font-size: 11px; }
+.am-mini-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 4px; }
+.am-mini-table td { padding: 6px 4px; border-bottom: 1px solid #f3f4f6; vertical-align: top; }
+.am-mini-table td.r { text-align: right; white-space: nowrap; }
+.am-mini-table td.b { font-weight: 800; }
+.am-mini-table tr.tot td { border-bottom: none; border-top: 2px solid #e5e7eb; font-weight: 700; }
+.am-mini-sub { font-size: 10px; color: #9ca3af; }
+.am-cust { background: #f8fafc; border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; font-size: 12px; line-height: 1.7; color: #374151; }
+.am-facts { background: #fff; border: 1px solid #f3f4f6; border-radius: 10px; padding: 8px 12px; margin-bottom: 12px; }
+.am-facts > div { display: flex; gap: 8px; padding: 3px 0; font-size: 11px; }
+.am-facts span { color: #9ca3af; min-width: 96px; flex-shrink: 0; }
+.am-facts b { color: #374151; font-weight: 600; word-break: break-word; }
+.am-ship-imgs { display: flex; gap: 10px; flex-wrap: wrap; }
+.am-ship-img { position: relative; width: 120px; height: 90px; border-radius: 8px; overflow: hidden; border: 1.5px solid #e5e7eb; background: #f8fafc; }
+.am-ship-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.am-ship-img button { position: absolute; top: 4px; right: 4px; background: rgba(15,32,39,.75); color: #fff; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; font-size: 11px; }
+.am-ship-img span { position: absolute; left: 4px; bottom: 4px; background: rgba(15,32,39,.7); color: #fff; font-size: 10px; padding: 1px 6px; border-radius: 6px; }
+.am-ship-img-loading { display: flex; align-items: center; justify-content: center; height: 100%; font-size: 20px; }
+
+/* ---------- Báo cáo quản trị ---------- */
+.am-rp { display: flex; flex-direction: column; gap: 14px; }
+.am-rp-filter { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: #fff; border-radius: 12px; padding: 12px 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.am-rp-filter label { font-size: 12px; font-weight: 700; color: #374151; display: flex; gap: 6px; align-items: center; }
+.am-rp-filter .am-input { width: 150px; }
+.am-rp-presets { display: flex; gap: 6px; flex-wrap: wrap; }
+.am-rp-presets a { text-decoration: none; }
+.am-rp-presets a.active { border-color: #0f2027; background: #0f2027; color: #fbbf24; }
+.am-rp-period { font-size: 11px; color: #9ca3af; margin-left: auto; }
+.am-rp-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.am-rp-kpi { background: #fff; border-radius: 12px; padding: 14px 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.am-rp-kpi .l { font-size: 11px; font-weight: 700; color: #6b7280; }
+.am-rp-kpi .v { font-size: 22px; font-weight: 900; color: #1a2035; margin: 4px 0; }
+.am-rp-delta { font-size: 11px; color: #9ca3af; font-weight: 600; }
+.am-rp-delta.up { color: #059669; }
+.am-rp-delta.down { color: #ef4444; }
+.am-rp-grid2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px; }
+.am-rp-grid2 > .am-card:first-child:last-child { grid-column: 1 / -1; }
+@media (max-width: 1200px) { .am-rp-grid2 { grid-template-columns: 1fr; } }
+.am-rp-card { padding: 14px 16px; }
+.am-rp-title { font-size: 13px; font-weight: 800; color: #1a2035; margin-bottom: 10px; }
+.am-rp-sub { font-size: 11px; font-weight: 700; color: #6b7280; }
+.am-rp-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.am-rp-table th { text-align: left; font-size: 10px; font-weight: 700; color: #6b7280; padding: 6px 6px; border-bottom: 1px solid #e5e7eb; }
+.am-rp-table td { padding: 7px 6px; border-bottom: 1px solid #f3f4f6; color: #374151; }
+.am-rp-table .r { text-align: right; white-space: nowrap; }
+.am-rp-table .b { font-weight: 800; color: #1a2035; }
+.am-rp-barcell { display: flex; align-items: center; gap: 8px; min-width: 160px; }
+.am-rp-barcell span { font-weight: 700; white-space: nowrap; color: #1a2035; }
+.am-rp-bar { flex: 1; height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden; }
+.am-rp-bar span { display: block; height: 100%; background: #2a78d6; border-radius: 0 4px 4px 0; }
+.am-rp-chart { position: relative; }
+.am-rp-tip { position: absolute; display: none; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,0.12); padding: 8px 10px; font-size: 12px; color: #374151; pointer-events: none; min-width: 170px; }
+.am-rp-tip .h { font-weight: 800; color: #1a2035; margin-bottom: 4px; }
+.am-rp-tip i, .am-rp-legend i, .am-rp-chrow i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.am-rp-legend { display: flex; gap: 16px; font-size: 12px; color: #374151; margin-top: 4px; }
+.am-rp-stack { display: flex; gap: 2px; height: 14px; border-radius: 4px; overflow: hidden; margin-bottom: 10px; background: #fff; }
+.am-rp-stack span { display: block; height: 100%; }
+.am-rp-chrow { display: grid; grid-template-columns: 1fr auto 44px; gap: 8px; font-size: 12px; padding: 5px 0; border-bottom: 1px solid #f3f4f6; color: #374151; }
+.am-rp-chrow b { color: #1a2035; }
+.am-rp-chrow em { font-style: normal; color: #6b7280; text-align: right; }
+.am-rp-chrow.tot { font-weight: 800; border-bottom: none; }
+.am-rp-warn { font-size: 11px; color: #b91c1c; background: #fff5f5; border-radius: 6px; padding: 6px 9px; margin-top: 6px; }
+.am-rp-steps { display: flex; gap: 6px; flex-wrap: wrap; }
+.am-rp-step { flex: 1; min-width: 92px; background: #f8fafc; border-radius: 8px; padding: 7px 9px; text-decoration: none; color: #9ca3af; display: flex; flex-direction: column; }
+.am-rp-step b { font-size: 18px; color: #d1d5db; }
+.am-rp-step span { font-size: 10px; }
+.am-rp-step.has { background: #fff7ed; color: #9a3412; }
+.am-rp-step.has b { color: #ea580c; }

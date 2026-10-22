@@ -19,7 +19,7 @@ class AgrimacService
     const OPS = [
         'product.save'         => ['saveProduct', ['products', 'inventory'], null],
         'category.save'        => ['saveCategory', ['products'], null],
-        'bom.save'             => ['saveBom', ['products'], ['admin', 'kt_xuatkho', 'sale']],
+        'bom.save'             => ['saveBom', ['products'], ['admin', 'kt_congno', 'sale']],
         'part.save'            => ['savePart', ['inventory'], null],
         'stock.import'         => ['stockImport', ['inventory'], null],
         'stock.export'         => ['stockExport', ['inventory'], null],
@@ -31,17 +31,21 @@ class AgrimacService
         'lead.save'            => ['saveLead', ['crm'], null],
         'lead.stage'           => ['setLeadStage', ['crm'], null],
         'lead.note'            => ['addLeadNote', ['crm'], null],
-        'order.create'         => ['createOrder', ['orders'], ['admin', 'sale', 'kt_banhang']],
-        'order.approve'        => ['approveOrder', ['orders'], ['admin', 'kt_banhang']],
-        'order.bom'            => ['saveOrderBom', ['orders'], ['admin', 'sale']],
-        'order.send'           => ['sendToAssembly', ['orders'], ['admin', 'sale']],
-        'order.pick'           => ['pickPart', ['assembly'], ['admin', 'assembly', 'kt_xuatkho']],
+        // Kinh doanh tạo & duyệt đơn; Kế toán công nợ xuất / nhập kho; Lắp ráp nhận LK – bắt đầu – xong; Giao hàng gửi nhà xe
+        'order.create'         => ['createOrder', ['orders'], ['admin', 'sale']],
+        'order.approve'        => ['approveOrder', ['orders'], ['admin', 'sale']],
+        'order.export'         => ['exportOrder', ['orders', 'assembly'], ['admin', 'kt_congno']],
+        'order.ship'           => ['shipOrder', ['orders'], ['admin', 'delivery']],
+        'order.receive'        => ['receiveOrder', ['orders'], ['admin', 'delivery', 'sale']],
+        'order.partsReceive'   => ['receiveParts', ['assembly'], ['admin', 'assembly']],
+        'order.start'          => ['startAssembly', ['assembly'], ['admin', 'assembly']],
+        'order.finish'         => ['finishAssembly', ['assembly'], ['admin', 'assembly']],
+        'order.stock'          => ['stockAssembly', ['orders', 'assembly'], ['admin', 'kt_congno']],
         'order.assemblyNote'   => ['saveAssemblyNote', ['assembly'], ['admin', 'assembly']],
-        'order.assembled'      => ['finishAssembly', ['orders', 'assembly'], ['admin', 'assembly']],
-        'order.export'         => ['exportOrder', ['orders'], ['admin', 'kt_xuatkho']],
-        'order.deliver'        => ['deliverOrder', ['orders'], ['admin', 'delivery']],
-        'order.cancel'         => ['cancelOrder', ['orders'], ['admin', 'kt_banhang', 'sale']],
-        'order.debt'           => ['saveOrderDebt', ['orders', 'dealers'], ['admin', 'kt_banhang', 'kt_congno']],
+        'order.cancel'         => ['cancelOrder', ['orders'], ['admin', 'sale']],
+        'order.debt'           => ['saveOrderDebt', ['orders', 'dealers'], ['admin', 'sale', 'kt_congno']],
+        'carrier.save'         => ['saveCarrier', ['carriers', 'orders'], ['admin', 'kt_congno', 'delivery']],
+        'carrier.delete'       => ['deleteCarrier', ['carriers'], ['admin', 'kt_congno', 'delivery']],
         'market.status'        => ['setMarketOrderStatus', ['orders'], ['admin']],
         'market.refund'        => ['processMarketRefund', ['orders'], ['admin']],
         'warranty.activate'    => ['activateWarranty', ['warranty'], null],
@@ -52,6 +56,8 @@ class AgrimacService
     ];
 
     const IMAGE_PREFIX = '/uploads/images/product/';
+    /** Thư mục ảnh gửi hàng (đường dẫn web, không có / đầu) */
+    const SHIP_IMAGE_DIR = 'uploads/images/shipping';
 
     private $userId;
     private $role;
@@ -213,16 +219,19 @@ class AgrimacService
         if (!$id && $source === 'import' && !$supplierId) {
             $errors['supId'] = 'Hàng nhập nguyên chiếc cần chọn nhà cung cấp';
         }
-        $price = $this->positive($errors, $d, 'price', 'Giá bán');
+        $price = $this->positive($errors, $d, 'price', 'Giá bán lẻ');
+        $unit = in_array($d['unit'] ?? '', D::PRODUCT_UNITS, true) ? $d['unit'] : null;
+        if (!$unit) {
+            $errors['unit'] = 'Vui lòng chọn đơn vị tính';
+        }
         $nums = [];
-        foreach (['cost' => 'Giá vốn', 'hp' => 'Công suất', 'weight' => 'Trọng lượng', 'minStock' => 'Tồn tối thiểu'] as $k => $label) {
+        foreach (['cost' => 'Giá vốn', 'dealerPrice' => 'Giá đại lý', 'weight' => 'Trọng lượng', 'minStock' => 'Tồn tối thiểu'] as $k => $label) {
             $v = $this->int($d, $k);
             if ($v === false || ($v !== null && $v < 0)) {
                 $errors[$k] = $label . ' phải là số nguyên không âm';
             }
             $nums[$k] = $v === false ? null : $v;
         }
-        $drive = in_array($d['drive'] ?? '', ['2WD', '4WD'], true) ? $d['drive'] : null;
         $images = array_values(array_filter((array)($d['images'] ?? []), function ($u) {
             return is_string($u) && strpos($u, self::IMAGE_PREFIX) === 0 && !preg_match('/[;\s]|\.\./', $u);
         }));
@@ -231,10 +240,15 @@ class AgrimacService
         }
         $this->fail($errors);
 
-        $specs = implode(' · ', array_filter([$nums['hp'] ? $nums['hp'] . 'HP' : null, $drive, $nums['weight'] ? $nums['weight'] . 'kg' : null]));
+        // Công suất / hệ dẫn động không còn nhập ở CMS: giữ nguyên giá trị cũ trong DB
+        $old = $id ? (new Query())->select(['horsepower', 'drive_type'])->from('product')->where(['id' => $id])->one($this->db) : [];
+        $specs = implode(' · ', array_filter([
+            !empty($old['horsepower']) ? $old['horsepower'] . 'HP' : null, $old['drive_type'] ?? null, $nums['weight'] ? $nums['weight'] . 'kg' : null,
+        ]));
         $row = [
             'name' => $name, 'category_id' => $catId, 'supplier_id' => $supplierId, 'source_type' => $source, 'price' => $price,
-            'cost_price' => (int)$nums['cost'], 'horsepower' => $nums['hp'], 'drive_type' => $drive, 'weight' => $nums['weight'],
+            'price_dealer' => (int)$nums['dealerPrice'], 'unit' => $unit,
+            'cost_price' => (int)$nums['cost'], 'weight' => $nums['weight'],
             'specs' => $specs ?: ($this->str($d, 'specs') ?: null), 'min_stock' => $nums['minStock'] === null ? 3 : $nums['minStock'],
             'description' => $this->str($d, 'description', 65000), 'image' => implode(';', $images),
         ];
@@ -685,16 +699,22 @@ class AgrimacService
 
     /* ======================= Đơn hàng ======================= */
 
-    private function loadOrder($code, array $statuses)
+    /* ---------------- Đơn hàng: dùng chung ---------------- */
+
+    private function loadOrder($code, array $statuses, array $types = null)
     {
         $o = (new Query())->from('dealer_order')->where(['code' => (string)$code])->one($this->db);
         if (!$o) {
             throw new Invalid([], 'Đơn hàng không tồn tại');
         }
-        if (!in_array($o['status'], $statuses, true)) {
-            throw new Invalid([], 'Đơn ' . $o['code'] . ' đang ở trạng thái "' . D::ORDER_STATUS[$o['status']]['label'] . '", không thực hiện được thao tác này');
+        if ($types !== null && !in_array($o['type'], $types, true)) {
+            throw new Invalid([], 'Thao tác không áp dụng cho ' . mb_strtolower(D::ORDER_TYPES[$o['type']]['label']));
         }
-        $o['item'] = (new Query())->from('dealer_order_item')->where(['order_id' => $o['id']])->one($this->db);
+        if (!in_array($o['status'], $statuses, true)) {
+            throw new Invalid([], 'Đơn ' . $o['code'] . ' đang ở trạng thái "' . D::orderStatusLabel($o['type'], $o['status']) . '", không thực hiện được thao tác này');
+        }
+        $o['items'] = (new Query())->select(['i.*', 'code' => 'p.code', 'name' => 'p.name', 'stock' => 'p.quantity_in_stock', 'cost' => 'p.cost_price'])
+            ->from('dealer_order_item i')->innerJoin('product p', 'p.id = i.product_id')->where(['i.order_id' => $o['id']])->orderBy('i.id')->all($this->db);
         return $o;
     }
 
@@ -704,42 +724,168 @@ class AgrimacService
         $this->insert('dealer_order_log', ['order_id' => $o['id'], 'from_status' => $o['status'], 'to_status' => $to, 'employee_id' => $this->userId, 'note' => $note]);
     }
 
-    private function orderResult($message, $code, $dealerCode = null)
+    private function orderResult($message, $code)
     {
         $order = R::order($code);
         return ['message' => $message, 'data' => [
-            'order' => $order, 'dealer' => R::dealer($dealerCode ?: $order['dealerId']), 'product' => R::product($order['productId']), 'parts' => R::parts(),
+            'order' => $order, 'dealer' => $order['dealerId'] ? R::dealer($order['dealerId']) : null, 'parts' => R::parts(),
         ]];
     }
+
+    private function productByKey($key)
+    {
+        $key = trim((string)$key);
+        if ($key === '') {
+            return null;
+        }
+        return (new Query())->from('product')->where(['is_delete' => 0])->andWhere(['or', ['code' => $key], ['name' => $key]])->orderBy('id')->one($this->db);
+    }
+
+    private function orderParts(array $o)
+    {
+        return (new Query())->select(['op.*', 'pt.code', 'pt.name', 'pt.stock', 'pt.cost_price'])->from('dealer_order_part op')
+            ->innerJoin('part pt', 'pt.id = op.part_id')->where(['op.order_id' => $o['id']])->all($this->db);
+    }
+
+    /** Dòng phiếu kho cho linh kiện của đơn */
+    private function partLines(array $parts)
+    {
+        return array_map(function ($p) {
+            return ['part', ['table' => 'part', 'id' => (int)$p['part_id'], 'name' => $p['name'], 'stock' => (int)$p['stock'], 'stockCol' => 'stock'], (int)$p['qty_total'], (int)$p['unit_cost']];
+        }, $parts);
+    }
+
+    /**
+     * Đọc danh sách linh kiện [{part, qty}] từ form → [part_id => [row, qty]]; lỗi ghi vào $errors[$field].
+     */
+    private function readParts($rows, array &$errors, $field = 'parts')
+    {
+        $out = [];
+        foreach ((array)$rows as $r) {
+            $code = trim((string)($r['part'] ?? ''));
+            $qty = (int)($r['qty'] ?? 0);
+            if ($code === '' && $qty === 0) {
+                continue;
+            }
+            $part = (new Query())->from('part')->where(['code' => $code])->one($this->db);
+            if (!$part) {
+                $errors[$field] = 'Linh kiện "' . $code . '" không tồn tại';
+                continue;
+            }
+            if ($qty < 1) {
+                $errors[$field] = 'Số lượng linh kiện "' . $part['name'] . '" phải ≥ 1';
+                continue;
+            }
+            if (isset($out[$part['id']])) {
+                $out[$part['id']][1] += $qty;
+            } else {
+                $out[$part['id']] = [$part, $qty];
+            }
+        }
+        if (!$out && empty($errors[$field])) {
+            $errors[$field] = 'Vui lòng chọn ít nhất một linh kiện';
+        }
+        return $out;
+    }
+
+    /** Ghi lại toàn bộ linh kiện của đơn; trả về tổng giá vốn (chốt giá linh kiện hiện tại). */
+    private function writeOrderParts(array $o, array $parts, $perUnitDivisor = 1)
+    {
+        $this->db->createCommand()->delete('dealer_order_part', ['order_id' => $o['id']])->execute();
+        $cost = 0;
+        foreach ($parts as $partId => [$part, $qty]) {
+            $this->insert('dealer_order_part', [
+                'order_id' => $o['id'], 'order_item_id' => null, 'part_id' => $partId,
+                'qty_per_unit' => max(1, (int)round($qty / max(1, $perUnitDivisor))), 'qty_total' => $qty, 'unit_cost' => (int)$part['cost_price'],
+            ]);
+            $cost += $qty * (int)$part['cost_price'];
+        }
+        return $cost;
+    }
+
+    /* ---------------- Tạo đơn ---------------- */
 
     private function createOrder(array $d)
     {
         $errors = [];
-        $this->require($errors, $d, ['dealerId' => 'đại lý đặt hàng', 'product' => 'sản phẩm', 'qty' => 'số lượng', 'sale' => 'Sale phụ trách']);
-        $type = ($d['type'] ?? '') === 'warranty' ? 'warranty' : 'new';
-        $dealerId = $this->idByCode('dealer', $d['dealerId'] ?? '');
-        if (!empty($d['dealerId']) && !$dealerId) {
-            $errors['dealerId'] = 'Đại lý không hợp lệ';
+        $type = isset(D::ORDER_TYPES[$d['type'] ?? '']) ? $d['type'] : null;
+        if (!$type) {
+            $errors['type'] = 'Vui lòng chọn loại đơn';
         }
-        $product = (new Query())->from('product')->where(['is_delete' => 0])
-            ->andWhere(['or', ['code' => (string)($d['product'] ?? '')], ['name' => (string)($d['product'] ?? '')]])->one($this->db);
-        if (!empty($d['product']) && !$product) {
-            $errors['product'] = 'Sản phẩm không hợp lệ';
+
+        // Sale phụ trách: Sale tạo đơn → chính họ (không đổi được); CEO tạo → chọn Sale
+        if ($this->role === 'sale') {
+            $saleId = $this->userId;
+        } else {
+            $saleId = $this->employeeByName($d['sale'] ?? '', 'sale');
+            if (!$saleId && $type !== 'assembly') {
+                $errors['sale'] = 'Vui lòng chọn Sale phụ trách';
+            }
+            $saleId = $saleId ?: $this->userId;
         }
-        $qty = $this->positive($errors, $d, 'qty', 'Số lượng');
-        $price = $this->int($d, 'price');
-        if ($price === false || $price === null || $price < 0) {
-            $errors['price'] = 'Đơn giá không hợp lệ';
-        } elseif ($type === 'new' && $price === 0) {
-            $errors['price'] = 'Đơn bán mới phải có giá bán lớn hơn 0';
+
+        // Khách: đại lý hoặc khách lẻ (đơn lắp ráp không có khách)
+        $dealerId = null;
+        $customerType = null;
+        $retail = ['customer_name' => null, 'customer_phone' => null, 'customer_address' => null];
+        if ($type && $type !== 'assembly') {
+            $customer = (string)($d['customer'] ?? '');
+            if ($customer === 'retail') {
+                $customerType = 'retail';
+                $retail = [
+                    'customer_name' => $this->str($d, 'customerName', 255),
+                    'customer_phone' => $this->str($d, 'customerPhone', 30),
+                    'customer_address' => $this->str($d, 'customerAddress', 300),
+                ];
+                $this->require($errors, $d, ['customerName' => 'tên khách hàng', 'customerPhone' => 'số điện thoại khách', 'customerAddress' => 'địa chỉ khách']);
+                if ($retail['customer_phone'] !== '' && !self::isPhone($retail['customer_phone'])) {
+                    $errors['customerPhone'] = 'Số điện thoại không hợp lệ (10–11 số, bắt đầu bằng 0)';
+                }
+            } else {
+                $customerType = 'dealer';
+                $dealerId = $this->idByCode('dealer', $customer, ['status' => 1]);
+                if (!$dealerId) {
+                    $errors['customer'] = $customer === '' ? 'Vui lòng chọn đại lý hoặc khách lẻ' : 'Đại lý không hợp lệ';
+                }
+            }
         }
+
+        // Sản phẩm (đơn bán / lắp ráp) hoặc linh kiện (đơn bảo hành)
+        $lines = [];
+        $parts = [];
         if ($type === 'warranty') {
-            $price = 0;
+            $parts = $this->readParts($d['parts'] ?? [], $errors);
+        } elseif ($type) {
+            $seen = [];
+            foreach ((array)($d['items'] ?? []) as $row) {
+                $key = trim((string)($row['product'] ?? ''));
+                if ($key === '' && trim((string)($row['qty'] ?? '')) === '') {
+                    continue;
+                }
+                $product = $this->productByKey($key);
+                if (!$product) {
+                    $errors['items'] = 'Sản phẩm "' . $key . '" không tồn tại';
+                    continue;
+                }
+                if (isset($seen[$product['id']])) {
+                    $errors['items'] = 'Sản phẩm "' . $product['name'] . '" bị chọn trùng — gộp vào một dòng';
+                    continue;
+                }
+                $seen[$product['id']] = true;
+                $qty = (int)($row['qty'] ?? 0);
+                $price = $type === 'assembly' ? 0 : (int)preg_replace('/\D/', '', (string)($row['price'] ?? ''));
+                if ($qty < 1) {
+                    $errors['items'] = 'Số lượng "' . $product['name'] . '" phải ≥ 1';
+                } elseif ($type === 'new' && $price <= 0) {
+                    $errors['items'] = 'Đơn giá "' . $product['name'] . '" phải lớn hơn 0';
+                }
+                $lines[] = [$product, $qty, $price];
+            }
+            if (!$lines && empty($errors['items'])) {
+                $errors['items'] = 'Vui lòng thêm ít nhất một sản phẩm';
+            }
         }
-        $saleId = $this->employeeByName($d['sale'] ?? '', 'sale');
-        if (!empty($d['sale']) && !$saleId) {
-            $errors['sale'] = 'Sale không hợp lệ';
-        }
+
         $claimId = null;
         if ($type === 'warranty' && !empty($d['warrantyRef'])) {
             $claimId = $this->idByCode('warranty_claim', $d['warrantyRef']);
@@ -750,177 +896,145 @@ class AgrimacService
         $this->fail($errors);
 
         $code = $this->nextCode('dealer_order', 'DH' . date('Y'));
-        $total = $qty * $price;
-        $leadId = !empty($d['lead']) ? $this->leadId($d['lead']) : null;
-        $id = $this->insert('dealer_order', [
-            'code' => $code, 'type' => $type, 'dealer_id' => $dealerId, 'lead_id' => $leadId ?: null, 'claim_id' => $claimId, 'status' => 'pending',
-            'total_amount' => $total, 'sale_id' => $saleId, 'note' => $this->str($d, 'note', 500) ?: null, 'ordered_at' => date('Y-m-d H:i:s'),
-        ]);
-        $this->insert('dealer_order_item', ['order_id' => $id, 'product_id' => $product['id'], 'qty' => $qty, 'unit_price' => $price, 'line_total' => $total]);
-        $this->insert('dealer_order_log', ['order_id' => $id, 'to_status' => 'pending', 'employee_id' => $this->userId, 'note' => 'Tạo đơn']);
+        $total = 0;
+        foreach ($lines as [, $qty, $price]) {
+            $total += $qty * $price;
+        }
+        $leadId = $type === 'new' && !empty($d['lead']) ? $this->leadId($d['lead']) : null;
+        $id = $this->insert('dealer_order', array_merge([
+            'code' => $code, 'type' => $type, 'dealer_id' => $dealerId, 'customer_type' => $customerType,
+            'lead_id' => $leadId ?: null, 'claim_id' => $claimId, 'status' => 'pending', 'total_amount' => $total,
+            'sale_id' => $saleId, 'created_by' => $this->userId, 'note' => $this->str($d, 'note', 500) ?: null, 'ordered_at' => date('Y-m-d H:i:s'),
+        ], $retail));
+        foreach ($lines as [$product, $qty, $price]) {
+            $this->insert('dealer_order_item', ['order_id' => $id, 'product_id' => $product['id'], 'qty' => $qty, 'unit_price' => $price, 'line_total' => $qty * $price]);
+        }
+        if ($parts) {
+            $cost = $this->writeOrderParts(['id' => $id], $parts);
+            $this->update('dealer_order', ['total_cost' => $cost], ['id' => $id]);
+        }
+        $this->insert('dealer_order_log', ['order_id' => $id, 'to_status' => 'pending', 'employee_id' => $this->userId, 'note' => 'Tạo ' . mb_strtolower(D::ORDER_TYPES[$type]['label'])]);
         if ($leadId) {
             $this->update('crm_lead', ['order_id' => $id, 'stage' => 'won', 'updated_at' => date('Y-m-d H:i:s')], ['id' => $leadId]);
         }
         if ($claimId) {
             $this->update('warranty_claim', ['order_id' => $id], ['id' => $claimId]);
         }
-        return $this->orderResult('✓ Đã tạo đơn ' . $code . ' — chờ KT bán hàng duyệt', $code);
+        return $this->orderResult('✓ Đã tạo ' . mb_strtolower(D::ORDER_TYPES[$type]['label']) . ' ' . $code . ' — chờ duyệt', $code);
+    }
+
+    /* ---------------- Duyệt ---------------- */
+
+    /** Số hoá đơn nội bộ tự sinh: HD + năm + 5 số (VD HD202600012) */
+    private function nextInvoiceNo()
+    {
+        $prefix = 'HD' . date('Y');
+        $max = (new Query())->from('dealer_order')->where(['like', 'invoice_no', $prefix . '%', false])
+            ->max(new Expression('CAST(SUBSTRING(invoice_no, ' . (strlen($prefix) + 1) . ') AS UNSIGNED)'), $this->db);
+        return $prefix . str_pad((string)((int)$max + 1), 5, '0', STR_PAD_LEFT);
     }
 
     private function approveOrder(array $d)
     {
         $o = $this->loadOrder($d['id'] ?? '', ['pending']);
         $errors = [];
-        $invoice = $this->str($d, 'invoiceNo', 20);
+        $invoice = null;
         $invoiceDate = null;
         if ($o['type'] === 'new') {
-            if ($invoice === '') {
-                $errors['invoiceNo'] = 'Vui lòng nhập số hoá đơn';
+            $invoice = $this->str($d, 'invoiceNo', 20) ?: $this->nextInvoiceNo();
+            if (!preg_match('/^[A-Za-z0-9\/-]{3,20}$/', $invoice)) {
+                $errors['invoiceNo'] = 'Số hoá đơn 3–20 ký tự, chỉ gồm chữ, số, / -';
+            } elseif ((new Query())->from('dealer_order')->where(['invoice_no' => $invoice])->andWhere(['<>', 'id', $o['id']])->exists($this->db)) {
+                $errors['invoiceNo'] = 'Số hoá đơn đã dùng cho đơn khác';
             }
-            $invoiceDate = $this->isoDate($d['invoiceDate'] ?? '', 'invoiceDate', $errors);
-        }
-        if ($invoice !== '' && !preg_match('/^[A-Za-z0-9\/-]{3,20}$/', $invoice)) {
-            $errors['invoiceNo'] = 'Số hoá đơn 3–20 ký tự, chỉ gồm chữ, số, / -';
-        } elseif ($invoice !== '' && (new Query())->from('dealer_order')->where(['invoice_no' => $invoice])->andWhere(['<>', 'id', $o['id']])->exists($this->db)) {
-            $errors['invoiceNo'] = 'Số hoá đơn đã dùng cho đơn khác';
+            $invoiceDate = !empty($d['invoiceDate']) ? $this->isoDate($d['invoiceDate'], 'invoiceDate', $errors) : date('Y-m-d');
         }
         $this->fail($errors);
 
-        $dealer = (new Query())->from('dealer')->where(['id' => $o['dealer_id']])->one($this->db);
-        $plannedDebt = $o['debt_mode'] !== null ? (int)$o['debt_amount'] : (int)$o['total_amount'];
-        $over = $o['type'] === 'new' && $dealer['current_debt'] + $plannedDebt > $dealer['credit_limit'];
+        $over = false;
+        if ($o['type'] === 'new' && $o['dealer_id']) {
+            $dealer = (new Query())->from('dealer')->where(['id' => $o['dealer_id']])->one($this->db);
+            $plannedDebt = $o['debt_mode'] !== null ? (int)$o['debt_amount'] : (int)$o['total_amount'];
+            $over = $dealer['current_debt'] + $plannedDebt > $dealer['credit_limit'];
+        }
+        $note = $this->str($d, 'note', 500);
         $this->setOrderStatus($o, 'confirmed', [
-            'invoice_no' => $invoice ?: null, 'invoice_date' => $invoiceDate, 'approved_by' => $this->userId, 'note' => $this->str($d, 'note', 500) ?: null,
+            'invoice_no' => $invoice, 'invoice_date' => $invoiceDate, 'approved_by' => $this->userId, 'approved_at' => date('Y-m-d H:i:s'),
+            'note' => $note !== '' ? $note : $o['note'],
         ], $over ? 'Duyệt khi đại lý vượt hạn mức công nợ' : null);
-        return $this->orderResult('✓ Đã duyệt đơn ' . $o['code'] . ($invoice ? ' · HĐ ' . $invoice : ''), $o['code']);
+        $next = $o['type'] === 'assembly' ? 'chờ kho xuất linh kiện' : 'chuyển xuống kho';
+        return $this->orderResult('✓ Đã duyệt ' . $o['code'] . ($invoice ? ' · HĐ ' . $invoice : '') . ' — ' . $next, $o['code']);
     }
 
-    /** Ghi BOM của đơn (thay toàn bộ), giá vốn chốt theo giá linh kiện hiện tại. Trả về tổng giá vốn. */
-    private function writeOrderBom(array $o, array $bom, $allowEmpty)
-    {
-        $items = [];
-        foreach ($bom as $b) {
-            $part = (new Query())->from('part')->where(['code' => (string)($b['id'] ?? '')])->one($this->db);
-            $qty = (int)($b['qty'] ?? 0);
-            if (!$part || $qty < 1) {
-                throw new Invalid([], 'Linh kiện hoặc số lượng trong BOM không hợp lệ');
-            }
-            $items[$part['id']] = ['qty' => $qty, 'cost' => (int)$part['cost_price']];
-        }
-        if (!$items && !$allowEmpty) {
-            throw new Invalid([], 'Đơn chưa có linh kiện — chọn BOM trước khi gửi lắp ráp');
-        }
-        $qtyOrder = (int)$o['item']['qty'];
-        $this->db->createCommand()->delete('dealer_order_part', ['order_id' => $o['id']])->execute();
-        $cost = 0;
-        foreach ($items as $partId => $it) {
-            $this->insert('dealer_order_part', [
-                'order_id' => $o['id'], 'order_item_id' => $o['item']['id'], 'part_id' => $partId, 'qty_per_unit' => $it['qty'],
-                'qty_total' => $it['qty'] * $qtyOrder, 'unit_cost' => $it['cost'],
-            ]);
-            $cost += $it['qty'] * $qtyOrder * $it['cost'];
-        }
-        return [$cost, count($items)];
-    }
-
-    private function saveOrderBom(array $d)
-    {
-        $o = $this->loadOrder($d['id'] ?? '', ['confirmed']);
-        [$cost] = $this->writeOrderBom($o, (array)($d['bom'] ?? []), true);
-        $this->update('dealer_order', ['total_cost' => $cost, 'updated_at' => date('Y-m-d H:i:s')], ['id' => $o['id']]);
-        return ['message' => null, 'data' => ['order' => R::order($o['code'])]];
-    }
-
-    private function sendToAssembly(array $d)
-    {
-        $o = $this->loadOrder($d['id'] ?? '', ['confirmed']);
-        [$cost, $count] = $this->writeOrderBom($o, (array)($d['bom'] ?? []), false);
-        $this->setOrderStatus($o, 'assembling', ['total_cost' => $cost]);
-        return $this->orderResult('✓ Đã gửi ' . $o['code'] . ' sang lắp ráp (' . $count . ' linh kiện)', $o['code']);
-    }
-
-    private function pickPart(array $d)
-    {
-        $o = $this->loadOrder($d['id'] ?? '', ['assembling']);
-        $where = ['order_id' => $o['id']];
-        if (empty($d['all'])) {
-            $partId = $this->idByCode('part', $d['partId'] ?? '');
-            if (!$partId) {
-                throw new Invalid([], 'Linh kiện không thuộc đơn');
-            }
-            $where['part_id'] = $partId;
-        }
-        $picked = !empty($d['picked']) || !empty($d['all']);
-        $this->update('dealer_order_part', ['is_picked' => $picked ? 1 : 0, 'picked_by' => $picked ? $this->userId : null, 'picked_at' => $picked ? date('Y-m-d H:i:s') : null], $where);
-        return ['message' => null, 'data' => ['order' => R::order($o['code'])]];
-    }
-
-    private function saveAssemblyNote(array $d)
-    {
-        $o = $this->loadOrder($d['id'] ?? '', ['assembling', 'assembled']);
-        $this->update('dealer_order', ['assembly_note' => $this->str($d, 'note', 5000) ?: null], ['id' => $o['id']]);
-        return ['message' => null, 'data' => []];
-    }
-
-    private function orderParts(array $o)
-    {
-        return (new Query())->select(['op.*', 'pt.code', 'pt.name', 'pt.stock', 'pt.cost_price'])->from('dealer_order_part op')
-            ->innerJoin('part pt', 'pt.id = op.part_id')->where(['op.order_id' => $o['id']])->all($this->db);
-    }
-
-    private function finishAssembly(array $d)
-    {
-        $o = $this->loadOrder($d['id'] ?? '', ['assembling']);
-        $parts = $this->orderParts($o);
-        $missing = array_filter($parts, function ($p) {
-            return !$p['is_picked'];
-        });
-        if (!$parts || $missing) {
-            throw new Invalid([], 'Chưa nhận đủ linh kiện (' . (count($parts) - count($missing)) . '/' . count($parts) . ') — bộ phận lắp ráp cần tick nhận đủ');
-        }
-        if ($o['type'] === 'new') {
-            $lines = array_map(function ($p) {
-                return ['part', ['table' => 'part', 'id' => (int)$p['part_id'], 'name' => $p['name'], 'stock' => (int)$p['stock'], 'stockCol' => 'stock'], (int)$p['qty_total'], (int)$p['unit_cost']];
-            }, $parts);
-            $this->writeVoucher('export', 'assembly_issue', -1, $lines, ['order_id' => $o['id'], 'note' => 'Xuất linh kiện lắp ráp ' . $o['code']]);
-            $product = $this->itemRow('product', (new Query())->select('code')->from('product')->where(['id' => $o['item']['product_id']])->scalar($this->db));
-            $perUnit = (int)round($o['total_cost'] / max(1, (int)$o['item']['qty']));
-            $this->writeVoucher('import', 'assembly_finish', 1, [['product', $product, (int)$o['item']['qty'], $perUnit]], ['order_id' => $o['id'], 'note' => 'Nhập máy lắp xong ' . $o['code']]);
-        }
-        $this->setOrderStatus($o, 'assembled', ['assembler_id' => $this->userId]);
-        return $this->orderResult('✓ ' . $o['code'] . ' lắp ráp xong' . ($o['type'] === 'new' ? ' — đã trừ linh kiện, nhập ' . $o['item']['qty'] . ' máy vào kho' : ''), $o['code']);
-    }
+    /* ---------------- Kho: xuất kho (máy / linh kiện) ---------------- */
 
     private function exportOrder(array $d)
     {
-        $o = $this->loadOrder($d['id'] ?? '', ['assembled']);
+        $o = $this->loadOrder($d['id'] ?? '', ['confirmed']);
         $errors = [];
-        $deliveryId = $this->employeeByName($d['delivery'] ?? '', 'delivery');
-        if (!$deliveryId) {
-            $errors['delivery'] = 'Vui lòng chọn nhân viên giao hàng';
+        $date = !empty($d['exportDate']) ? $this->isoDate($d['exportDate'], 'exportDate', $errors) : date('Y-m-d');
+        $note = $this->str($d, 'note', 500) ?: null;
+        $parts = [];
+        if ($o['type'] === 'assembly') {
+            $parts = $this->readParts($d['parts'] ?? [], $errors);
         }
-        $date = $this->isoDate($d['exportDate'] ?? '', 'exportDate', $errors);
         $this->fail($errors);
 
-        $extra = ['order_id' => $o['id'], 'employee_id' => $deliveryId, 'note' => $this->str($d, 'note', 500) ?: null, 'created_at' => $date . ' ' . date('H:i:s')];
+        $extra = ['order_id' => $o['id'], 'note' => $note, 'created_at' => $date . ' ' . date('H:i:s')];
+        $label = '';
         if ($o['type'] === 'new') {
-            $product = $this->itemRow('product', (new Query())->select('code')->from('product')->where(['id' => $o['item']['product_id']])->scalar($this->db));
-            $v = $this->writeVoucher('export', 'sale', -1, [['product', $product, (int)$o['item']['qty'], (int)$o['item']['unit_price']]], $extra);
-            $productCode = (new Query())->select('code')->from('product')->where(['id' => $o['item']['product_id']])->scalar($this->db);
-            for ($i = 0; $i < (int)$o['item']['qty']; $i++) {
-                $this->insert('warranty', [
-                    'serial' => $this->newSerial($productCode), 'qr_token' => Yii::$app->security->generateRandomString(12),
-                    'product_id' => $o['item']['product_id'], 'order_id' => $o['id'], 'dealer_id' => $o['dealer_id'], 'status' => 'unactivated',
-                ]);
+            $lines = [];
+            foreach ($o['items'] as $it) {
+                $lines[] = ['product', $this->itemRow('product', $it['code']), (int)$it['qty'], (int)$it['unit_price']];
             }
+            $v = $this->writeVoucher('export', 'sale', -1, $lines, $extra);
+            foreach ($o['items'] as $it) {
+                for ($i = 0; $i < (int)$it['qty']; $i++) {
+                    $this->insert('warranty', [
+                        'serial' => $this->newSerial($it['code']), 'qr_token' => Yii::$app->security->generateRandomString(12),
+                        'product_id' => $it['product_id'], 'order_id' => $o['id'], 'dealer_id' => $o['dealer_id'], 'status' => 'unactivated',
+                        'customer_name' => $o['customer_type'] === 'retail' ? $o['customer_name'] : null,
+                        'customer_phone' => $o['customer_type'] === 'retail' ? $o['customer_phone'] : null,
+                        'customer_address' => $o['customer_type'] === 'retail' ? $o['customer_address'] : null,
+                    ]);
+                }
+            }
+            $cost = 0;
+            foreach ($o['items'] as $it) {
+                $cost += (int)$it['qty'] * (int)$it['cost'];
+            }
+            $this->update('dealer_order', ['total_cost' => $cost], ['id' => $o['id']]);
+            $label = 'xuất ' . array_sum(array_column($o['items'], 'qty')) . ' máy, sinh serial bảo hành — chờ nhân viên giao hàng gửi đi';
+        } elseif ($o['type'] === 'warranty') {
+            $current = $this->orderParts($o);
+            if (!$current) {
+                throw new Invalid([], 'Đơn bảo hành chưa có linh kiện');
+            }
+            $v = $this->writeVoucher('export', 'warranty', -1, $this->partLines($current), $extra);
+            $label = 'xuất linh kiện bảo hành — chờ nhân viên giao hàng gửi đi';
         } else {
-            $lines = array_map(function ($p) {
-                return ['part', ['table' => 'part', 'id' => (int)$p['part_id'], 'name' => $p['name'], 'stock' => (int)$p['stock'], 'stockCol' => 'stock'], (int)$p['qty_total'], (int)$p['unit_cost']];
-            }, $this->orderParts($o));
-            $v = $this->writeVoucher('export', 'warranty', -1, $lines, $extra);
+            $totalUnits = array_sum(array_column($o['items'], 'qty'));
+            $cost = $this->writeOrderParts($o, $parts, $totalUnits);
+            $this->update('dealer_order', ['total_cost' => $cost], ['id' => $o['id']]);
+            $v = $this->writeVoucher('export', 'assembly_issue', -1, $this->partLines($this->orderParts($o)), $extra);
+            $label = 'xuất ' . count($parts) . ' loại linh kiện — chờ bộ phận lắp ráp nhận';
         }
-        $this->setOrderStatus($o, 'delivering', ['exporter_id' => $this->userId, 'delivery_id' => $deliveryId, 'delivery_note' => $extra['note']]);
-        return $this->orderResult('✓ Đã tạo phiếu ' . $v['code'] . ' — giao cho ' . $d['delivery'], $o['code']);
+        $this->setOrderStatus($o, 'exported', ['exporter_id' => $this->userId, 'exported_at' => $date . ' ' . date('H:i:s')], 'Phiếu ' . $v['code']);
+        return $this->orderResult('✓ Phiếu ' . $v['code'] . ': ' . $label, $o['code']);
+    }
+
+    /** Định mức linh kiện mặc định của đơn lắp ráp = BOM từng sản phẩm × số lượng (nút "Lấy tự động") */
+    public static function assemblyBom(array $items)
+    {
+        $need = [];
+        foreach ($items as $it) {
+            $bom = (new Query())->select(['b.qty', 'pt.code'])->from('product_bom b')->innerJoin('part pt', 'pt.id = b.part_id')
+                ->where(['b.product_id' => $it['product_id']])->all();
+            foreach ($bom as $b) {
+                $need[$b['code']] = ($need[$b['code']] ?? 0) + (int)$b['qty'] * (int)$it['qty'];
+            }
+        }
+        return $need;
     }
 
     private function newSerial($productCode)
@@ -958,9 +1072,9 @@ class AgrimacService
     /** Chọn / sửa thanh toán – công nợ của đơn đại lý (mọi trạng thái trừ đã huỷ). */
     private function saveOrderDebt(array $d)
     {
-        $o = $this->loadOrder($d['id'] ?? '', ['pending', 'confirmed', 'assembling', 'assembled', 'delivering', 'delivered']);
-        if ($o['type'] !== 'new') {
-            throw new Invalid([], 'Đơn bảo hành không phát sinh công nợ');
+        $o = $this->loadOrder($d['id'] ?? '', ['pending', 'confirmed', 'exported', 'shipping', 'delivered']);
+        if ($o['type'] !== 'new' || !$o['dealer_id']) {
+            throw new Invalid([], 'Chỉ đơn bán cho đại lý mới ghi công nợ');
         }
         $total = (int)$o['total_amount'];
         $mode = (string)($d['mode'] ?? '');
@@ -988,7 +1102,7 @@ class AgrimacService
             'debt_mode' => $mode, 'debt_amount' => $debt, 'paid_method' => $mode === 'full' ? null : $method, 'debt_note' => $note ?: null,
             'debt_updated_at' => date('Y-m-d H:i:s'), 'debt_updated_by' => $this->userId,
         ], ['id' => $o['id']]);
-        // Đơn chưa giao: nợ chỉ ghi sổ khi giao xong (deliverOrder), lúc này chỉ lưu lựa chọn
+        // Đơn chưa giao xong: nợ chỉ ghi sổ khi khách xác nhận đã nhận (receiveOrder), lúc này chỉ lưu lựa chọn
         $delta = 0;
         if ($o['status'] === 'delivered') {
             $delta = $this->applyOrderDebt($o, $debt, 'Sửa công nợ đơn ' . $o['code'] . ' · ' . D::DEBT_MODES[$mode] . ($note ? ' · ' . $note : ''));
@@ -1006,42 +1120,155 @@ class AgrimacService
         return $this->orderResult($msg, $o['code']);
     }
 
-    private function deliverOrder(array $d)
+    /* ---------------- Giao hàng: gửi nhà xe → khách xác nhận nhận ---------------- */
+
+    private function shipOrder(array $d)
     {
-        $o = $this->loadOrder($d['id'] ?? '', ['delivering']);
+        $o = $this->loadOrder($d['id'] ?? '', ['exported'], ['new', 'warranty']);
         $errors = [];
-        $this->require($errors, $d, ['receiver' => 'người nhận hàng']);
+        $carrierId = (int)($d['carrierId'] ?? 0);
+        if (!$carrierId || !(new Query())->from('carrier')->where(['id' => $carrierId, 'is_delete' => 0])->exists($this->db)) {
+            $errors['carrierId'] = 'Vui lòng chọn nhà xe';
+        }
+        if ($this->role === 'delivery') {
+            $deliveryId = $this->userId;
+        } else {
+            $deliveryId = $this->employeeByName($d['delivery'] ?? '', 'delivery');
+            if (!$deliveryId) {
+                $errors['delivery'] = 'Vui lòng chọn nhân viên giao hàng';
+            }
+        }
+        $date = !empty($d['shipDate']) ? $this->isoDate($d['shipDate'], 'shipDate', $errors) : date('Y-m-d');
+        $images = [];
+        foreach ((array)($d['images'] ?? []) as $url) {
+            $url = trim((string)$url);
+            if ($url === '') {
+                continue;
+            }
+            if (strpos($url, '/' . self::SHIP_IMAGE_DIR . '/') !== 0 || strpos($url, '..') !== false) {
+                $errors['images'] = 'Ảnh không hợp lệ, vui lòng tải lại';
+            }
+            $images[] = $url;
+        }
+        if (count($images) > D::SHIP_IMAGE_MAX) {
+            $errors['images'] = 'Tối đa ' . D::SHIP_IMAGE_MAX . ' ảnh';
+        }
+        $this->fail($errors);
+
+        $this->setOrderStatus($o, 'shipping', [
+            'carrier_id' => $carrierId, 'delivery_id' => $deliveryId, 'shipped_at' => $date . ' ' . date('H:i:s'),
+            'ship_images' => $images ? json_encode(array_values($images)) : null, 'delivery_note' => $this->str($d, 'note', 500) ?: null,
+        ]);
+        $carrier = (new Query())->select('name')->from('carrier')->where(['id' => $carrierId])->scalar($this->db);
+        return $this->orderResult('✓ Đã gửi ' . $o['code'] . ' qua nhà xe ' . $carrier . ($images ? ' · ' . count($images) . ' ảnh' : ''), $o['code']);
+    }
+
+    /** Khách đã nhận hàng → hoàn thành: ghi công nợ đại lý (đơn bán), tính hoa hồng Sale + giao hàng */
+    private function receiveOrder(array $d)
+    {
+        $o = $this->loadOrder($d['id'] ?? '', ['shipping'], ['new', 'warranty']);
+        $errors = [];
         if (!empty($d['receiverPhone']) && !self::isPhone($d['receiverPhone'])) {
             $errors['receiverPhone'] = 'Số điện thoại không hợp lệ';
         }
-        $date = $this->isoDate($d['deliveredDate'] ?? '', 'deliveredDate', $errors);
+        $date = !empty($d['receivedDate']) ? $this->isoDate($d['receivedDate'], 'receivedDate', $errors) : date('Y-m-d');
         $this->fail($errors);
 
+        $debt = 0;
         if ($o['type'] === 'new') {
-            // Chưa chọn hình thức thanh toán → ghi nợ cả đơn như trước đây
-            $mode = $o['debt_mode'] ?: 'full';
             $total = (int)$o['total_amount'];
-            $debt = $mode === 'full' ? $total : ($mode === 'paid' ? 0 : min($total, (int)$o['debt_amount']));
-            $this->update('dealer_order', ['debt_mode' => $mode, 'debt_amount' => $debt], ['id' => $o['id']]);
-            $this->applyOrderDebt($o, $debt, 'Giao đơn ' . $o['code'] . ($mode !== 'full' ? ' · ' . D::DEBT_MODES[$mode] : ''));
-            $this->update('dealer', ['total_purchase' => new Expression('total_purchase + ' . $total)], ['id' => $o['dealer_id']]);
+            if ($o['dealer_id']) {
+                // Chưa chọn hình thức thanh toán → ghi nợ cả đơn
+                $mode = $o['debt_mode'] ?: 'full';
+                $debt = $mode === 'full' ? $total : ($mode === 'paid' ? 0 : min($total, (int)$o['debt_amount']));
+                $this->update('dealer_order', ['debt_mode' => $mode, 'debt_amount' => $debt], ['id' => $o['id']]);
+                $this->applyOrderDebt($o, $debt, 'Giao đơn ' . $o['code'] . ($mode !== 'full' ? ' · ' . D::DEBT_MODES[$mode] : ''));
+                $this->update('dealer', ['total_purchase' => new Expression('total_purchase + ' . $total)], ['id' => $o['dealer_id']]);
+            }
             foreach (['sale' => $o['sale_id'], 'delivery' => $o['delivery_id']] as $role => $empId) {
-                if (!$empId) {
+                if (!$empId || (new Query())->from('commission')->where(['order_id' => $o['id'], 'employee_id' => $empId, 'role' => $role])->exists($this->db)) {
                     continue;
                 }
                 $rate = D::COMMISSION_RATES[$role];
                 $this->insert('commission', [
-                    'order_id' => $o['id'], 'employee_id' => $empId, 'role' => $role, 'base_amount' => $o['total_amount'], 'rate' => $rate,
-                    'amount' => (int)round($o['total_amount'] * $rate / 100), 'period' => substr($date, 0, 7),
+                    'order_id' => $o['id'], 'employee_id' => $empId, 'role' => $role, 'base_amount' => $total, 'rate' => $rate,
+                    'amount' => (int)round($total * $rate / 100), 'period' => substr($date, 0, 7),
                 ]);
             }
         }
+        $receiver = $this->str($d, 'receiver');
         $this->setOrderStatus($o, 'delivered', [
-            'receiver_name' => $this->str($d, 'receiver'), 'receiver_phone' => $this->str($d, 'receiverPhone', 30) ?: null,
-            'delivered_at' => $date . ' ' . date('H:i:s'), 'delivery_note' => $this->str($d, 'note', 500) ?: $o['delivery_note'],
-        ]);
-        return $this->orderResult('✓ Đơn ' . $o['code'] . ' hoàn thành' . ($o['type'] === 'new' ? ($debt > 0 ? ' · ghi nợ ' . D::money($debt) : ' · đã thanh toán đủ') : ''), $o['code']);
+            'receiver_name' => $receiver !== '' ? $receiver : ($o['customer_name'] ?: null), 'receiver_phone' => $this->str($d, 'receiverPhone', 30) ?: null,
+            'received_by' => $this->userId, 'delivered_at' => $date . ' ' . date('H:i:s'),
+        ], $this->str($d, 'note', 300) ?: null);
+        $msg = '✓ ' . $o['code'] . ': khách đã nhận hàng';
+        if ($o['type'] === 'new' && $o['dealer_id']) {
+            $msg .= $debt > 0 ? ' · ghi nợ ' . D::money($debt) : ' · đã thanh toán đủ';
+        }
+        return $this->orderResult($msg, $o['code']);
     }
+
+    /* ---------------- Lắp ráp: nhận linh kiện → bắt đầu → xong → kho nhập máy ---------------- */
+
+    private function receiveParts(array $d)
+    {
+        $o = $this->loadOrder($d['id'] ?? '', ['exported'], ['assembly']);
+        $now = date('Y-m-d H:i:s');
+        $this->update('dealer_order_part', ['is_picked' => 1, 'picked_by' => $this->userId, 'picked_at' => $now], ['order_id' => $o['id']]);
+        $this->setOrderStatus($o, 'received', ['parts_received_at' => $now, 'assembler_id' => $this->userId]);
+        return $this->orderResult('✓ Đã nhận linh kiện đơn ' . $o['code'] . ' — bấm "Bắt đầu" khi bắt tay vào lắp', $o['code']);
+    }
+
+    private function startAssembly(array $d)
+    {
+        $o = $this->loadOrder($d['id'] ?? '', ['received'], ['assembly']);
+        $this->setOrderStatus($o, 'assembling', ['started_at' => date('Y-m-d H:i:s'), 'assembler_id' => $this->userId]);
+        return $this->orderResult('▶ Bắt đầu lắp ráp ' . $o['code'] . ' lúc ' . date('H:i'), $o['code']);
+    }
+
+    private function finishAssembly(array $d)
+    {
+        $o = $this->loadOrder($d['id'] ?? '', ['assembling'], ['assembly']);
+        $now = date('Y-m-d H:i:s');
+        $minutes = (int)round((strtotime($now) - strtotime($o['started_at'])) / 60);
+        $this->setOrderStatus($o, 'assembled', ['finished_at' => $now], 'Thời gian lắp: ' . self::duration($minutes));
+        return $this->orderResult('✓ ' . $o['code'] . ' lắp xong sau ' . self::duration($minutes) . ' — chờ kế toán nhập kho', $o['code']);
+    }
+
+    public static function duration($minutes)
+    {
+        $minutes = max(0, (int)$minutes);
+        if ($minutes < 60) {
+            return $minutes . ' phút';
+        }
+        $h = intdiv($minutes, 60);
+        return ($h >= 24 ? intdiv($h, 24) . ' ngày ' . ($h % 24) . ' giờ' : $h . ' giờ ' . ($minutes % 60) . ' phút');
+    }
+
+    /** Nhập máy lắp xong vào kho (giá vốn = chi phí linh kiện chia đều cho số máy) */
+    private function stockAssembly(array $d)
+    {
+        $o = $this->loadOrder($d['id'] ?? '', ['assembled'], ['assembly']);
+        $units = max(1, array_sum(array_column($o['items'], 'qty')));
+        $perUnit = (int)round((int)$o['total_cost'] / $units);
+        $lines = [];
+        foreach ($o['items'] as $it) {
+            $lines[] = ['product', $this->itemRow('product', $it['code']), (int)$it['qty'], $perUnit];
+        }
+        $now = date('Y-m-d H:i:s');
+        $v = $this->writeVoucher('import', 'assembly_finish', 1, $lines, ['order_id' => $o['id'], 'note' => 'Nhập máy lắp xong ' . $o['code']]);
+        $this->setOrderStatus($o, 'delivered', ['stocked_at' => $now, 'stocked_by' => $this->userId], 'Phiếu ' . $v['code']);
+        return $this->orderResult('✓ Phiếu ' . $v['code'] . ': nhập ' . $units . ' máy thành phẩm vào kho', $o['code']);
+    }
+
+    private function saveAssemblyNote(array $d)
+    {
+        $o = $this->loadOrder($d['id'] ?? '', ['exported', 'received', 'assembling', 'assembled'], ['assembly']);
+        $this->update('dealer_order', ['assembly_note' => $this->str($d, 'note', 5000) ?: null], ['id' => $o['id']]);
+        return ['message' => null, 'data' => []];
+    }
+
+    /* ---------------- Huỷ ---------------- */
 
     private function cancelOrder(array $d)
     {
@@ -1059,6 +1286,46 @@ class AgrimacService
         $text = $reason . ($detail ? ': ' . $detail : '');
         $this->setOrderStatus($o, 'cancelled', ['cancel_reason' => $text, 'cancelled_at' => date('Y-m-d H:i:s')], $text);
         return $this->orderResult('Đã huỷ đơn ' . $o['code'], $o['code']);
+    }
+
+    /* ======================= Nhà xe ======================= */
+
+    private function saveCarrier(array $d)
+    {
+        $id = (int)($d['id'] ?? 0);
+        $errors = [];
+        $this->require($errors, $d, ['name' => 'tên nhà xe']);
+        $phone = $this->str($d, 'phone', 30);
+        if ($phone !== '' && !self::isPhone($phone)) {
+            $errors['phone'] = 'Số điện thoại không hợp lệ';
+        }
+        $name = $this->str($d, 'name');
+        if ($name !== '' && (new Query())->from('carrier')->where(['name' => $name, 'is_delete' => 0])->andWhere(['<>', 'id', $id])->exists($this->db)) {
+            $errors['name'] = 'Đã có nhà xe tên này';
+        }
+        if ($id && !(new Query())->from('carrier')->where(['id' => $id, 'is_delete' => 0])->exists($this->db)) {
+            throw new Invalid([], 'Nhà xe không tồn tại');
+        }
+        $this->fail($errors);
+        $row = ['name' => $name, 'phone' => $phone ?: null, 'address' => $this->str($d, 'address', 300) ?: null, 'note' => $this->str($d, 'note', 500) ?: null];
+        if ($id) {
+            $this->update('carrier', $row + ['updated_at' => date('Y-m-d H:i:s')], ['id' => $id]);
+        } else {
+            $this->insert('carrier', $row + ['created_by' => $this->userId]);
+        }
+        return ['message' => '✓ Đã lưu nhà xe "' . $name . '"', 'data' => ['carriers' => R::carriers()]];
+    }
+
+    private function deleteCarrier(array $d)
+    {
+        $id = (int)($d['id'] ?? 0);
+        $name = (new Query())->select('name')->from('carrier')->where(['id' => $id, 'is_delete' => 0])->scalar($this->db);
+        if (!$name) {
+            throw new Invalid([], 'Nhà xe không tồn tại');
+        }
+        // Xoá mềm: các đơn đã gửi vẫn giữ tên nhà xe
+        $this->update('carrier', ['is_delete' => 1, 'updated_at' => date('Y-m-d H:i:s')], ['id' => $id]);
+        return ['message' => 'Đã xoá nhà xe "' . $name . '"', 'data' => ['carriers' => R::carriers()]];
     }
 
     /* ======================= Đơn hàng sàn 1kho ======================= */

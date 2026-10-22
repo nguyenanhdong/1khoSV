@@ -37,7 +37,7 @@ class AgrimacController extends Controller
             ],
             'verbs' => [
                 'class' => VerbFilter::class,
-                'actions' => ['upload-image' => ['POST'], 'api' => ['POST'], 'activate' => ['GET', 'POST']],
+                'actions' => ['upload-image' => ['POST'], 'upload-ship-image' => ['POST'], 'api' => ['POST'], 'activate' => ['GET', 'POST']],
             ],
         ];
     }
@@ -65,7 +65,7 @@ class AgrimacController extends Controller
             return false;
         }
 
-        $actionPages = ['accounting-export' => 'accounting', 'upload-image' => 'products', 'api' => 'dashboard', 'lookup' => 'dashboard'];
+        $actionPages = ['accounting-export' => 'accounting', 'upload-image' => 'products', 'upload-ship-image' => 'orders', 'api' => 'dashboard', 'lookup' => 'dashboard'];
         $page = $actionPages[$action->id] ?? $action->id;
         if (!D::canAccess($role, $page)) {
             $this->redirect(['dashboard']);
@@ -161,19 +161,76 @@ class AgrimacController extends Controller
             'statuses' => D::MARKET_ORDER_STATUS,
             'payments' => D::MARKET_PAYMENT,
         ] : null;
+        $codes = [];
+        foreach ($orders as $o) {
+            foreach ($o['items'] as $it) {
+                $codes[] = $it['productId'];
+            }
+        }
         return $this->render('orders', [
             'orders'   => $orders,
-            'products' => R::productsByCodes(array_column($orders, 'productId')),
+            'products' => R::productsByCodes(array_values(array_unique(array_filter($codes)))),
+            'carriers' => R::carriers(),
             'market'   => $market,
         ]);
     }
 
+    /** Bộ phận lắp ráp: đơn lắp ráp đã xuất linh kiện trở đi (đơn đã nhập kho chỉ giữ 30 ngày gần nhất) */
     public function actionAssembly()
     {
-        $orders = array_values(array_filter(R::orders(), function ($o) {
-            return in_array($o['status'], ['assembling', 'assembled'], true);
+        $since = strtotime('-30 days');
+        $orders = array_values(array_filter(R::orders(), function ($o) use ($since) {
+            if ($o['type'] !== 'assembly' || in_array($o['status'], ['pending', 'cancelled'], true)) {
+                return false;
+            }
+            return $o['status'] !== 'delivered' || !$o['stockedAt'] || strtotime(str_replace('/', '-', substr($o['stockedAt'], 0, 10))) >= $since;
         }));
         return $this->render('assembly', ['orders' => $orders]);
+    }
+
+    public function actionCarriers()
+    {
+        return $this->render('carriers', ['carriers' => R::carriers()]);
+    }
+
+    /** Báo cáo quản trị cho CEO: ?from=YYYY-MM-DD&to=YYYY-MM-DD (mặc định tháng hiện tại) */
+    public function actionReports($from = '', $to = '')
+    {
+        $from = preg_match('/^\d{4}-\d{2}-\d{2}$/', $from) ? $from : date('Y-m-01');
+        $to = preg_match('/^\d{4}-\d{2}-\d{2}$/', $to) ? $to : date('Y-m-d');
+        if ($from > $to) {
+            [$from, $to] = [$to, $from];
+        }
+        return $this->render('reports', ['report' => R::reports($from, $to)]);
+    }
+
+    /** Ảnh gửi hàng (nhân viên giao hàng): nén còn ≤ 2MB, lưu JPEG theo tháng */
+    public function actionUploadShipImage()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        if (!in_array($this->view->params['amRole'], ['admin', 'delivery'], true)) {
+            Yii::$app->response->statusCode = 403;
+            return ['status' => false, 'message' => 'Chỉ nhân viên giao hàng được tải ảnh gửi hàng'];
+        }
+        $file = UploadedFile::getInstanceByName('file');
+        if ($file !== null && in_array($file->error, [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true)) {
+            return ['status' => false, 'message' => 'Ảnh vượt quá dung lượng cho phép của máy chủ (' . ini_get('upload_max_filesize') . ')'];
+        }
+        if ($file === null || $file->error !== UPLOAD_ERR_OK) {
+            return ['status' => false, 'message' => 'Không nhận được file, vui lòng thử lại'];
+        }
+        $data = \backend\components\ImageCompressor::toJpeg($file->tempName, D::SHIP_IMAGE_BYTES);
+        if ($data === null) {
+            return ['status' => false, 'message' => 'Không đọc được ảnh. Chỉ nhận ảnh JPG hoặc PNG'];
+        }
+        $sub = AgrimacService::SHIP_IMAGE_DIR . '/' . date('Ym');
+        $dir = Yii::getAlias('@webroot/' . $sub);
+        FileHelper::createDirectory($dir);
+        $name = time() . '-' . Yii::$app->security->generateRandomString(16) . '.jpg';
+        if (file_put_contents($dir . '/' . $name, $data) === false) {
+            return ['status' => false, 'message' => 'Không lưu được ảnh trên máy chủ'];
+        }
+        return ['status' => true, 'url' => '/' . $sub . '/' . $name, 'size' => strlen($data), 'originalSize' => (int)$file->size];
     }
 
     public function actionProducts()
@@ -312,11 +369,11 @@ class AgrimacController extends Controller
         $data = $this->accountingData();
         $fh = fopen('php://temp', 'r+');
         fwrite($fh, "\xEF\xBB\xBF");
-        fputcsv($fh, ['Mã đơn', 'Đại lý', 'Doanh thu', 'HH Sale', 'HH Giao hàng', 'Thực thu', 'Ngày']);
+        fputcsv($fh, ['Mã đơn', 'Khách hàng', 'Doanh thu', 'HH Sale', 'HH Giao hàng', 'Thực thu', 'Ngày']);
         foreach ($data['rows'] as $o) {
             fputcsv($fh, [
                 $o['id'],
-                $data['dealers'][$o['dealerId']]['name'] ?? '',
+                $o['customer'],
                 $o['total'], $o['comSale'], $o['comDeli'],
                 $o['total'] - $o['comSale'] - $o['comDeli'],
                 $o['date'],

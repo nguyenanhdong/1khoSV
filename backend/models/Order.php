@@ -155,7 +155,7 @@ class Order extends \yii\db\ActiveRecord
                     $modelOrderProduct->price                   = $product['total_price']/$product['quantity'];
                     $modelOrderProduct->quantity                = $product['quantity'];
                     $modelOrderProduct->total_price             = $total_price_order;
-                    $modelOrderProduct->product_classification_id = $product['id'];
+                    $modelOrderProduct->product_classification_id = ctype_digit((string)$product['id']) ? (int)$product['id'] : 0;
                     $modelOrderProduct->save(false);
 
                     //Lưu lịch sử sử dụng ví

@@ -84,20 +84,33 @@ class AgrimacDemoData
         ];
     }
 
-    /** Đơn hàng: bom = true → dùng BOM mặc định của sản phẩm. */
+    /**
+     * Đơn hàng theo 3 luồng (đơn bán / đơn lắp ráp / đơn bảo hành).
+     * items: [[mã SP, SL, đơn giá]]; parts: [[mã LK, SL]] (đơn bảo hành); đơn lắp ráp lấy linh kiện theo BOM mặc định.
+     */
     public static function orders()
     {
         return [
-            ['id' => 'DH2025001', 'type' => 'new', 'dealer' => 'DL001', 'product' => 'SP001', 'qty' => 3, 'price' => 285e6, 'sale' => 'hai.nv', 'delivery' => 'tuan.tm',
-                'status' => 'delivered', 'date' => '2025-05-10', 'bom' => true, 'invoiceNo' => 'HD0000101', 'receiver' => 'Anh Hùng', 'deliveredAt' => '2025-05-12'],
-            ['id' => 'DH2025002', 'type' => 'new', 'dealer' => 'DL002', 'product' => 'SP002', 'qty' => 2, 'price' => 320e6, 'sale' => 'mai.lt', 'delivery' => 'son.pv',
-                'status' => 'delivering', 'date' => '2025-05-13', 'bom' => true, 'invoiceNo' => 'HD0000102'],
-            ['id' => 'DH2025003', 'type' => 'new', 'dealer' => 'DL003', 'product' => 'SP003', 'qty' => 1, 'price' => 480e6, 'sale' => 'hai.nv', 'delivery' => null,
-                'status' => 'assembling', 'date' => '2025-05-14', 'bom' => true, 'invoiceNo' => 'HD0000103'],
-            ['id' => 'DH2025004', 'type' => 'new', 'dealer' => 'DL001', 'product' => 'SP004', 'qty' => 2, 'price' => 620e6, 'sale' => 'mai.lt', 'delivery' => null,
-                'status' => 'confirmed', 'date' => '2025-05-15', 'bom' => false, 'invoiceNo' => 'HD0000104'],
-            ['id' => 'DH2025005', 'type' => 'warranty', 'dealer' => 'DL001', 'product' => 'SP001', 'qty' => 1, 'price' => 0, 'sale' => 'hai.nv', 'delivery' => null,
-                'status' => 'assembling', 'date' => '2025-05-16', 'bom' => [['LK005', 1], ['LK006', 1]], 'claim' => 'KC001'],
+            ['id' => 'DH2025001', 'type' => 'new', 'dealer' => 'DL001', 'items' => [['SP001', 3, 270e6]], 'sale' => 'hai.nv', 'delivery' => 'tuan.tm',
+                'carrier' => 'NX01', 'status' => 'delivered', 'date' => '2025-05-10', 'invoiceNo' => 'HD0000101', 'receiver' => 'Anh Hùng', 'deliveredAt' => '2025-05-12'],
+            ['id' => 'DH2025002', 'type' => 'new', 'dealer' => 'DL002', 'items' => [['SP002', 1, 305e6], ['SP001', 1, 270e6]], 'sale' => 'mai.lt', 'delivery' => 'son.pv',
+                'carrier' => 'NX02', 'status' => 'shipping', 'date' => '2025-05-13', 'invoiceNo' => 'HD0000102'],
+            ['id' => 'DH2025003', 'type' => 'assembly', 'items' => [['SP003', 1, 0]], 'sale' => 'admin', 'status' => 'assembling', 'date' => '2025-05-14'],
+            ['id' => 'DH2025004', 'type' => 'new', 'dealer' => 'DL001', 'items' => [['SP004', 2, 590e6]], 'sale' => 'mai.lt', 'status' => 'confirmed',
+                'date' => '2025-05-15', 'invoiceNo' => 'HD0000104'],
+            ['id' => 'DH2025005', 'type' => 'warranty', 'dealer' => 'DL001', 'parts' => [['LK005', 1], ['LK006', 1]], 'sale' => 'hai.nv', 'status' => 'confirmed',
+                'date' => '2025-05-16', 'claim' => 'KC001'],
+            ['id' => 'DH2025006', 'type' => 'new', 'retail' => ['Anh Trần Văn Bình', '0912345678', 'Xã Tân Lập, Đan Phượng, Hà Nội'], 'items' => [['SP001', 1, 285e6]],
+                'sale' => 'hai.nv', 'status' => 'pending', 'date' => '2025-05-17'],
+        ];
+    }
+
+    /** Nhà xe demo */
+    public static function carriers()
+    {
+        return [
+            ['id' => 'NX01', 'name' => 'Nhà xe Hoàng Long', 'phone' => '0913000111', 'address' => 'Bến xe Giáp Bát, Hà Nội'],
+            ['id' => 'NX02', 'name' => 'Nhà xe Phương Trang', 'phone' => '0913000222', 'address' => 'Bến xe Miền Đông, TP.HCM'],
         ];
     }
 
@@ -161,9 +174,9 @@ class AgrimacDemoData
         return [
             ['username' => 'hai.nv',   'name' => 'Nguyễn Văn Hải',   'role' => 'sale',       'email' => 'hai@agrimac.vn'],
             ['username' => 'mai.lt',   'name' => 'Lê Thị Mai',       'role' => 'sale',       'email' => 'mai@agrimac.vn'],
-            ['username' => 'hoa.pt',   'name' => 'Phạm Thị Hoa',     'role' => 'kt_banhang', 'email' => 'hoa@agrimac.vn'],
+            ['username' => 'hoa.pt',   'name' => 'Phạm Thị Hoa',     'role' => 'sale',       'email' => 'hoa@agrimac.vn'],
             ['username' => 'lan.tt',   'name' => 'Trần Thị Lan',     'role' => 'kt_congno',  'email' => 'lan@agrimac.vn'],
-            ['username' => 'duc.vm',   'name' => 'Võ Minh Đức',      'role' => 'kt_xuatkho', 'email' => 'duc@agrimac.vn'],
+            ['username' => 'duc.vm',   'name' => 'Võ Minh Đức',      'role' => 'kt_congno',  'email' => 'duc@agrimac.vn'],
             ['username' => 'tuan.tm',  'name' => 'Trần Minh Tuấn',   'role' => 'delivery',   'email' => 'tuan@agrimac.vn'],
             ['username' => 'son.pv',   'name' => 'Phạm Văn Sơn',     'role' => 'delivery',   'email' => 'son@agrimac.vn'],
             ['username' => 'loi.nt',   'name' => 'Nguyễn Thành Lợi', 'role' => 'assembly',   'email' => 'loi@agrimac.vn'],

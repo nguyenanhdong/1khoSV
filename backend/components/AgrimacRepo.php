@@ -105,6 +105,8 @@ class AgrimacRepo
         return [
             'id' => $p['code'], 'name' => $p['name'], 'catId' => (string)$p['category_id'], 'supId' => $p['sup_code'],
             'price' => (int)$p['price'], 'cost' => (int)$p['cost_price'], 'stock' => (int)$p['quantity_in_stock'],
+            'priceDiscount' => (int)$p['price_discount'], 'dealerPrice' => (int)($p['price_dealer'] ?? 0), 'unit' => $p['unit'] ?? 'Cái',
+            'retailPrice' => (int)$p['price_discount'] > 0 ? (int)$p['price_discount'] : (int)$p['price'],
             'specs' => $p['specs'], 'hp' => $p['horsepower'] !== null ? (int)$p['horsepower'] : null, 'drive' => $p['drive_type'],
             'weight' => $p['weight'] ? (int)$p['weight'] : null, 'sourceType' => $p['source_type'], 'minStock' => (int)$p['min_stock'],
             'description' => (string)$p['description'], 'images' => array_values(array_filter(explode(';', (string)$p['image']))),
@@ -404,16 +406,19 @@ class AgrimacRepo
             // Đơn đại lý (để xem / sửa công nợ từ trang Đại lý)
             $dealerOrders = [];
             $orderRows = (new Query())->select(['o.id', 'o.dealer_id', 'o.code', 'o.status', 'o.total_amount', 'o.debt_mode', 'o.debt_amount', 'o.debt_recorded', 'o.paid_method', 'o.debt_note',
-                'at' => 'COALESCE(o.delivered_at, o.ordered_at)', 'product' => 'p.name'])
-                ->from('dealer_order o')->leftJoin('dealer_order_item i', 'i.order_id = o.id')->leftJoin('product p', 'p.id = i.product_id')
-                ->where(['o.type' => 'new'])->andWhere(['<>', 'o.status', 'cancelled'])->orderBy(['o.id' => SORT_DESC])->all();
+                'at' => 'COALESCE(o.delivered_at, o.ordered_at)',
+                'product' => new \yii\db\Expression("(SELECT p.name FROM dealer_order_item i JOIN product p ON p.id = i.product_id WHERE i.order_id = o.id ORDER BY i.id LIMIT 1)"),
+                'lines' => new \yii\db\Expression('(SELECT COUNT(*) FROM dealer_order_item i WHERE i.order_id = o.id)')])
+                ->from('dealer_order o')
+                ->where(['o.type' => 'new'])->andWhere(['not', ['o.dealer_id' => null]])->andWhere(['<>', 'o.status', 'cancelled'])->orderBy(['o.id' => SORT_DESC])->all();
             foreach ($orderRows as $o) {
                 // Đơn đã giao trước khi có sổ công nợ theo đơn (dữ liệu cũ) vẫn hiện trong lịch sử
                 if ($o['status'] === 'delivered' && !isset($ledgerOrders[$o['id']]) && (int)$o['debt_recorded'] > 0) {
                     $history[$o['dealer_id']][] = ['ts' => strtotime($o['at']), 'order' => $o['code'], 'val' => (int)$o['debt_recorded'], 'payment' => false, 'kind' => 'debit'];
                 }
                 $dealerOrders[$o['dealer_id']][] = [
-                    'id' => $o['code'], 'product' => $o['product'], 'status' => $o['status'], 'date' => self::vnDate($o['at']),
+                    'id' => $o['code'], 'product' => (string)$o['product'] . ((int)$o['lines'] > 1 ? ' +' . ((int)$o['lines'] - 1) . ' SP' : ''),
+                    'status' => $o['status'], 'statusLabel' => D::orderStatusLabel('new', $o['status']), 'date' => self::vnDate($o['at']),
                     'total' => (int)$o['total_amount'], 'debtMode' => $o['debt_mode'], 'debt' => (int)$o['debt_amount'], 'debtRecorded' => (int)$o['debt_recorded'],
                     'paid' => $o['debt_mode'] !== null ? (int)$o['total_amount'] - (int)$o['debt_amount'] : 0,
                     'paidMethod' => $o['paid_method'], 'debtNote' => $o['debt_note'],
@@ -478,50 +483,347 @@ class AgrimacRepo
     {
         return self::once('orders', function () {
             $rows = (new Query())->select([
-                'o.*', 'dealer_code' => 'd.code', 'product' => 'p.name', 'product_code' => 'p.code', 'i.qty',
-                'sale' => 'es.fullname', 'delivery' => 'ed.fullname', 'claim_code' => 'wc.code',
+                'o.*', 'dealer_code' => 'd.code', 'dealer_name' => 'd.name', 'dealer_phone' => 'd.phone', 'dealer_address' => 'd.address',
+                'sale' => 'es.fullname', 'delivery' => 'ed.fullname', 'assembler' => 'ea.fullname', 'claim_code' => 'wc.code',
+                'carrier_name' => 'c.name', 'carrier_phone' => 'c.phone', 'carrier_address' => 'c.address',
             ])->from('dealer_order o')
-                ->innerJoin('dealer d', 'd.id = o.dealer_id')
-                ->leftJoin('dealer_order_item i', 'i.order_id = o.id')
-                ->leftJoin('product p', 'p.id = i.product_id')
+                ->leftJoin('dealer d', 'd.id = o.dealer_id')
                 ->leftJoin('employee es', 'es.id = o.sale_id')
                 ->leftJoin('employee ed', 'ed.id = o.delivery_id')
+                ->leftJoin('employee ea', 'ea.id = o.assembler_id')
                 ->leftJoin('warranty_claim wc', 'wc.id = o.claim_id')
+                ->leftJoin('carrier c', 'c.id = o.carrier_id')
                 ->orderBy(['o.ordered_at' => SORT_DESC, 'o.id' => SORT_DESC])->all();
             $ids = array_column($rows, 'id') ?: [0];
 
-            $bom = [];
-            foreach ((new Query())->select(['op.*', 'part' => 'pt.code'])->from('dealer_order_part op')
+            $items = [];
+            $itemProducts = [];
+            $itemRows = (new Query())->select(['i.*', 'code' => 'p.code', 'name' => 'p.name', 'unit' => 'p.unit'])->from('dealer_order_item i')
+                ->leftJoin('product p', 'p.id = i.product_id')->where(['i.order_id' => $ids])->orderBy('i.id')->all();
+            // Định mức linh kiện (BOM) của các sản phẩm trong đơn → gợi ý "Lấy tự động" cho đơn lắp ráp
+            $bomOf = [];
+            foreach ((new Query())->select(['b.product_id', 'b.qty', 'code' => 'pt.code', 'name' => 'pt.name', 'unit' => 'pt.unit', 'stock' => 'pt.stock'])
+                ->from('product_bom b')->innerJoin('part pt', 'pt.id = b.part_id')->where(['b.product_id' => array_unique(array_column($itemRows, 'product_id')) ?: [0]])->all() as $b) {
+                $bomOf[$b['product_id']][] = $b;
+            }
+            foreach ($itemRows as $i) {
+                $itemProducts[$i['order_id']][] = $i;
+                $items[$i['order_id']][] = [
+                    'productId' => $i['code'], 'name' => $i['name'], 'unit' => $i['unit'] ?: 'Cái', 'qty' => (int)$i['qty'],
+                    'price' => (int)$i['unit_price'], 'total' => (int)$i['line_total'],
+                ];
+            }
+            $parts = [];
+            foreach ((new Query())->select(['op.*', 'code' => 'pt.code', 'name' => 'pt.name', 'unit' => 'pt.unit'])->from('dealer_order_part op')
                 ->innerJoin('part pt', 'pt.id = op.part_id')->where(['op.order_id' => $ids])->orderBy('op.id')->all() as $b) {
-                $bom[$b['order_id']][] = ['id' => $b['part'], 'qty' => (int)$b['qty_per_unit'], 'unitCost' => (int)$b['unit_cost'], 'picked' => (bool)$b['is_picked']];
+                $parts[$b['order_id']][] = [
+                    'id' => $b['code'], 'name' => $b['name'], 'unit' => $b['unit'], 'qty' => (int)$b['qty_per_unit'], 'qtyTotal' => (int)$b['qty_total'],
+                    'unitCost' => (int)$b['unit_cost'], 'picked' => (bool)$b['is_picked'],
+                ];
             }
             $com = [];
             foreach ((new Query())->select(['order_id', 'role', 'amount' => 'SUM(amount)'])->from('commission')->where(['order_id' => $ids])->groupBy(['order_id', 'role'])->all() as $c) {
                 $com[$c['order_id']][$c['role']] = (int)$c['amount'];
             }
             $exports = (new Query())->select(['code', 'order_id'])->from('stock_voucher')
-                ->where(['order_id' => $ids, 'type' => 'export', 'reason' => ['sale', 'warranty']])->indexBy('order_id')->column();
+                ->where(['order_id' => $ids, 'type' => 'export'])->indexBy('order_id')->column();
+            $imports = (new Query())->select(['code', 'order_id'])->from('stock_voucher')
+                ->where(['order_id' => $ids, 'type' => 'import', 'reason' => 'assembly_finish'])->indexBy('order_id')->column();
             $serials = [];
             foreach ((new Query())->select(['order_id', 'serial'])->from('warranty')->where(['order_id' => $ids])->orderBy('id')->all() as $w) {
                 $serials[$w['order_id']][] = $w['serial'];
             }
 
-            return array_map(function ($o) use ($bom, $com, $exports, $serials) {
+            return array_map(function ($o) use ($items, $parts, $com, $exports, $imports, $serials, $itemProducts, $bomOf) {
+                $autoParts = [];
+                if ($o['type'] === 'assembly') {
+                    foreach ($itemProducts[$o['id']] ?? [] as $i) {
+                        foreach ($bomOf[$i['product_id']] ?? [] as $b) {
+                            $k = $b['code'];
+                            $autoParts[$k] = $autoParts[$k] ?? ['part' => $k, 'name' => $b['name'], 'unit' => $b['unit'], 'stock' => (int)$b['stock'], 'qty' => 0];
+                            $autoParts[$k]['qty'] += (int)$b['qty'] * (int)$i['qty'];
+                        }
+                    }
+                }
+                $lines = $items[$o['id']] ?? [];
+                $bom = $parts[$o['id']] ?? [];
+                $first = $lines[0] ?? null;
+                if ($o['type'] === 'warranty') {
+                    $summary = $bom ? $bom[0]['name'] . (count($bom) > 1 ? ' +' . (count($bom) - 1) . ' LK' : '') : 'Chưa chọn linh kiện';
+                    $qty = array_sum(array_column($bom, 'qtyTotal'));
+                } else {
+                    $summary = $first ? $first['name'] . (count($lines) > 1 ? ' +' . (count($lines) - 1) . ' SP' : '') : '—';
+                    $qty = array_sum(array_column($lines, 'qty'));
+                }
+                $retail = $o['customer_type'] === 'retail';
+                $minutes = $o['started_at'] && $o['finished_at'] ? (int)round((strtotime($o['finished_at']) - strtotime($o['started_at'])) / 60) : null;
                 return [
-                    'id' => $o['code'], 'type' => $o['type'], 'dealerId' => $o['dealer_code'], 'product' => $o['product'], 'productId' => $o['product_code'],
-                    'qty' => (int)$o['qty'], 'total' => (int)$o['total_amount'], 'sale' => $o['sale'], 'delivery' => $o['delivery'],
-                    'status' => $o['status'], 'date' => self::vnDate($o['ordered_at']),
+                    'id' => $o['code'], 'type' => $o['type'], 'status' => $o['status'], 'statusLabel' => D::orderStatusLabel($o['type'], $o['status']),
+                    'customerType' => $o['type'] === 'assembly' ? null : ($retail ? 'retail' : 'dealer'),
+                    'dealerId' => $o['dealer_code'],
+                    'customer' => $o['type'] === 'assembly' ? 'Lắp ráp nhập kho' : ($retail ? (string)$o['customer_name'] : (string)$o['dealer_name']),
+                    'customerPhone' => $retail ? $o['customer_phone'] : $o['dealer_phone'],
+                    'customerAddress' => $retail ? $o['customer_address'] : $o['dealer_address'],
+                    'items' => $lines, 'parts' => $bom, 'bom' => $bom, 'autoParts' => array_values($autoParts),
+                    'product' => $summary, 'productId' => $first['productId'] ?? null, 'qty' => (int)$qty,
+                    'total' => (int)$o['total_amount'], 'cost' => (int)$o['total_cost'],
+                    'sale' => $o['sale'], 'delivery' => $o['delivery'], 'assembler' => $o['assembler'],
+                    'date' => self::vnDate($o['ordered_at']), 'orderedAt' => self::vnDate($o['ordered_at'], true),
+                    'approvedAt' => self::vnDate($o['approved_at'], true), 'exportedAt' => self::vnDate($o['exported_at'], true),
+                    'partsReceivedAt' => self::vnDate($o['parts_received_at'], true), 'startedAt' => self::vnDate($o['started_at'], true),
+                    'finishedAt' => self::vnDate($o['finished_at'], true), 'stockedAt' => self::vnDate($o['stocked_at'], true),
+                    'assemblyMinutes' => $minutes, 'startedTs' => $o['started_at'] ? strtotime($o['started_at']) : null,
+                    'shippedAt' => self::vnDate($o['shipped_at'], true), 'deliveredAt' => self::vnDate($o['delivered_at'], true),
+                    'carrierId' => $o['carrier_id'] ? (int)$o['carrier_id'] : null, 'carrier' => $o['carrier_name'],
+                    'carrierPhone' => $o['carrier_phone'], 'carrierAddress' => $o['carrier_address'],
+                    'shipImages' => array_values(array_filter((array)json_decode((string)$o['ship_images'], true))),
                     'comSale' => $com[$o['id']]['sale'] ?? 0, 'comDeli' => $com[$o['id']]['delivery'] ?? 0,
-                    'bom' => $bom[$o['id']] ?? [], 'warrantyRef' => $o['claim_code'], 'invoiceNo' => $o['invoice_no'],
-                    'exportCode' => $exports[$o['id']] ?? null, 'serials' => $serials[$o['id']] ?? [],
-                    'receiver' => $o['receiver_name'], 'receiverPhone' => $o['receiver_phone'], 'deliveredAt' => self::vnDate($o['delivered_at']),
-                    'note' => $o['note'], 'assemblyNote' => $o['assembly_note'], 'cancelReason' => $o['cancel_reason'], 'cancelledAt' => self::vnDate($o['cancelled_at']),
+                    'warrantyRef' => $o['claim_code'], 'invoiceNo' => $o['invoice_no'], 'invoiceDate' => self::vnDate($o['invoice_date']),
+                    'exportCode' => $exports[$o['id']] ?? null, 'importCode' => $imports[$o['id']] ?? null, 'serials' => $serials[$o['id']] ?? [],
+                    'receiver' => $o['receiver_name'], 'receiverPhone' => $o['receiver_phone'],
+                    'note' => $o['note'], 'deliveryNote' => $o['delivery_note'], 'assemblyNote' => $o['assembly_note'],
+                    'cancelReason' => $o['cancel_reason'], 'cancelledAt' => self::vnDate($o['cancelled_at']),
                     'debtMode' => $o['debt_mode'], 'debt' => (int)$o['debt_amount'], 'debtRecorded' => (int)$o['debt_recorded'],
                     'paid' => $o['debt_mode'] !== null ? (int)$o['total_amount'] - (int)$o['debt_amount'] : 0,
                     'paidMethod' => $o['paid_method'], 'debtNote' => $o['debt_note'], 'debtUpdatedAt' => self::vnDate($o['debt_updated_at'], true),
                 ];
             }, $rows);
         });
+    }
+
+    /* ======================= Báo cáo quản trị (CEO) ======================= */
+
+    /**
+     * Số liệu báo cáo cho CEO trong khoảng [from, to] (YYYY-MM-DD), so sánh với kỳ liền trước cùng độ dài.
+     * Doanh thu ghi nhận khi khách đã nhận hàng (đơn bán delivered); đơn sàn 1kho khi đã mua (status 3).
+     */
+    public static function reports($from, $to)
+    {
+        $start = $from . ' 00:00:00';
+        $end = $to . ' 23:59:59';
+        $days = (int)round((strtotime($to) - strtotime($from)) / 86400) + 1;
+        $prevTo = date('Y-m-d', strtotime($from . ' -1 day'));
+        $prevFrom = date('Y-m-d', strtotime($prevTo . ' -' . ($days - 1) . ' days'));
+
+        $sales = function ($s, $e) {
+            return (new Query())->from('dealer_order o')->where(['o.type' => 'new', 'o.status' => 'delivered'])
+                ->andWhere(['between', 'o.delivered_at', $s, $e]);
+        };
+        $sum = function ($s, $e) use ($sales) {
+            $r = $sales($s, $e)->select([
+                'n' => 'COUNT(*)', 'revenue' => 'COALESCE(SUM(o.total_amount),0)', 'cost' => 'COALESCE(SUM(o.total_cost),0)',
+                'dealer' => "COALESCE(SUM(CASE WHEN o.customer_type = 'retail' THEN 0 ELSE o.total_amount END),0)",
+                'retail' => "COALESCE(SUM(CASE WHEN o.customer_type = 'retail' THEN o.total_amount ELSE 0 END),0)",
+            ])->one();
+            $market = (new Query())->from('`order`')->where(['status' => 3])->andWhere(['between', 'time_payment', $s, $e])
+                ->select(['n' => 'COUNT(*)', 'revenue' => 'COALESCE(SUM(total_price),0)'])->one();
+            return [
+                'orders' => (int)$r['n'], 'revenue' => (int)$r['revenue'], 'cost' => (int)$r['cost'], 'profit' => (int)$r['revenue'] - (int)$r['cost'],
+                'dealer' => (int)$r['dealer'], 'retail' => (int)$r['retail'], 'marketOrders' => (int)$market['n'], 'market' => (int)$market['revenue'],
+            ];
+        };
+        $cur = $sum($start, $end);
+        $prev = $sum($prevFrom . ' 00:00:00', $prevTo . ' 23:59:59');
+        $newOrders = (int)(new Query())->from('dealer_order')->where(['type' => 'new'])->andWhere(['<>', 'status', 'cancelled'])
+            ->andWhere(['between', 'ordered_at', $start, $end])->count();
+        $cancelled = (int)(new Query())->from('dealer_order')->where(['status' => 'cancelled'])->andWhere(['between', 'cancelled_at', $start, $end])->count();
+
+        // Doanh thu theo ngày (≤ 62 ngày) hoặc theo tháng
+        $byMonth = $days > 62;
+        $fmt = $byMonth ? '%Y-%m' : '%Y-%m-%d';
+        $trendRows = $sales($start, $end)->select(['k' => new \yii\db\Expression("DATE_FORMAT(o.delivered_at, '$fmt')"), 'revenue' => 'SUM(o.total_amount)', 'profit' => 'SUM(o.total_amount - o.total_cost)'])
+            ->groupBy('k')->indexBy('k')->all();
+        $trend = [];
+        for ($t = strtotime($from); $t <= strtotime($to); $t = strtotime($byMonth ? '+1 month' : '+1 day', $t)) {
+            $k = date($byMonth ? 'Y-m' : 'Y-m-d', $t);
+            $trend[] = ['label' => date($byMonth ? 'm/Y' : 'd/m', $t), 'revenue' => (int)($trendRows[$k]['revenue'] ?? 0), 'profit' => (int)($trendRows[$k]['profit'] ?? 0)];
+            if ($byMonth) {
+                $t = strtotime(date('Y-m-01', $t));
+            }
+        }
+
+        // Hiệu suất Sales
+        $saleRows = $sales($start, $end)->select(['o.sale_id', 'n' => 'COUNT(*)', 'revenue' => 'SUM(o.total_amount)', 'profit' => 'SUM(o.total_amount - o.total_cost)'])
+            ->groupBy('o.sale_id')->indexBy('sale_id')->all();
+        $leadRows = (new Query())->from('crm_lead')->select(['sale_id', 'n' => 'COUNT(*)', 'won' => "SUM(stage = 'won')"])
+            ->where(['between', 'created_at', $start, $end])->groupBy('sale_id')->indexBy('sale_id')->all();
+        $comRows = (new Query())->from('commission c')->innerJoin('dealer_order o', 'o.id = c.order_id')
+            ->select(['c.employee_id', 'amount' => 'SUM(c.amount)'])->where(['c.role' => 'sale'])->andWhere(['between', 'o.delivered_at', $start, $end])
+            ->groupBy('c.employee_id')->indexBy('employee_id')->all();
+        $salesPeople = [];
+        foreach (self::staff() as $u) {
+            if ($u['role'] !== 'sale') {
+                continue;
+            }
+            $id = $u['dbId'];
+            $leads = (int)($leadRows[$id]['n'] ?? 0);
+            $salesPeople[] = [
+                'name' => $u['name'], 'orders' => (int)($saleRows[$id]['n'] ?? 0), 'revenue' => (int)($saleRows[$id]['revenue'] ?? 0),
+                'profit' => (int)($saleRows[$id]['profit'] ?? 0), 'leads' => $leads, 'won' => (int)($leadRows[$id]['won'] ?? 0),
+                'winRate' => $leads ? round(($leadRows[$id]['won'] ?? 0) / $leads * 100) : null, 'commission' => (int)($comRows[$id]['amount'] ?? 0),
+            ];
+        }
+        usort($salesPeople, function ($a, $b) {
+            return $b['revenue'] <=> $a['revenue'];
+        });
+
+        // Top sản phẩm / đại lý
+        $topProducts = (new Query())->from('dealer_order_item i')->innerJoin('dealer_order o', 'o.id = i.order_id')->innerJoin('product p', 'p.id = i.product_id')
+            ->select(['code' => 'p.code', 'name' => 'p.name', 'qty' => 'SUM(i.qty)', 'revenue' => 'SUM(i.line_total)', 'cost' => 'SUM(i.qty * p.cost_price)'])
+            ->where(['o.type' => 'new', 'o.status' => 'delivered'])->andWhere(['between', 'o.delivered_at', $start, $end])
+            ->groupBy('p.id')->orderBy(['revenue' => SORT_DESC])->limit(10)->all();
+        $topDealers = $sales($start, $end)->innerJoin('dealer d', 'd.id = o.dealer_id')
+            ->select(['code' => 'd.code', 'name' => 'd.name', 'n' => 'COUNT(*)', 'revenue' => 'SUM(o.total_amount)', 'debt' => 'd.current_debt', 'limit' => 'd.credit_limit'])
+            ->groupBy('d.id')->orderBy(['revenue' => SORT_DESC])->limit(10)->all();
+
+        // Công nợ
+        $debtNow = (new Query())->from('dealer')->where(['status' => 1])
+            ->select(['total' => 'COALESCE(SUM(current_debt),0)', 'over' => 'SUM(current_debt > credit_limit)', 'debtors' => 'SUM(current_debt > 0)'])->one();
+        $ledger = (new Query())->from('dealer_ledger')->where(['between', 'created_at', $start, $end])
+            ->select(['debit' => "COALESCE(SUM(CASE WHEN type IN ('debit','adjust') THEN amount ELSE 0 END),0)",
+                      'reverse' => "COALESCE(SUM(CASE WHEN type = 'debit_reverse' THEN amount ELSE 0 END),0)",
+                      'collected' => "COALESCE(SUM(CASE WHEN type = 'credit' THEN amount ELSE 0 END),0)"])->one();
+        $overDealers = (new Query())->from('dealer')->where(['status' => 1])->andWhere('current_debt > credit_limit')
+            ->select(['code', 'name', 'debt' => 'current_debt', 'limit' => 'credit_limit'])->orderBy(['current_debt' => SORT_DESC])->all();
+
+        // Vận hành: đơn đang ở từng bước + thời gian trung bình các bước (giờ)
+        $pipeline = [];
+        foreach ((new Query())->from('dealer_order')->select(['type', 'status', 'n' => 'COUNT(*)'])
+                     ->where(['not in', 'status', ['delivered', 'cancelled']])->groupBy(['type', 'status'])->all() as $r) {
+            $pipeline[$r['type']][$r['status']] = (int)$r['n'];
+        }
+        $avgHours = function ($a, $b, $type) use ($start, $end) {
+            $v = (new Query())->from('dealer_order')->where(['type' => $type])->andWhere(['not', [$a => null]])->andWhere(['not', [$b => null]])
+                ->andWhere(['between', $b, $start, $end])->average("TIMESTAMPDIFF(MINUTE, $a, $b)");
+            return $v === null ? null : round($v / 60, 1);
+        };
+        $leadTimes = [
+            ['Tạo đơn → Duyệt', $avgHours('ordered_at', 'approved_at', 'new')],
+            ['Duyệt → Xuất kho', $avgHours('approved_at', 'exported_at', 'new')],
+            ['Xuất kho → Gửi nhà xe', $avgHours('exported_at', 'shipped_at', 'new')],
+            ['Gửi nhà xe → Khách nhận', $avgHours('shipped_at', 'delivered_at', 'new')],
+            ['Tổng: Tạo đơn → Khách nhận', $avgHours('ordered_at', 'delivered_at', 'new')],
+        ];
+        // Đơn tồn quá 3 ngày ở một bước (đang xử lý)
+        $stuckRows = (new Query())->from('dealer_order')->select(['code', 'type', 'status', 'since' => 'COALESCE(updated_at, ordered_at)'])
+            ->where(['not in', 'status', ['delivered', 'cancelled']])->andWhere(['<', new \yii\db\Expression('COALESCE(updated_at, ordered_at)'), date('Y-m-d H:i:s', strtotime('-3 days'))])
+            ->orderBy(['since' => SORT_ASC])->limit(15)->all();
+        $stuckRows = array_map(function ($r) {
+            return ['code' => $r['code'], 'type' => $r['type'], 'status' => D::orderStatusLabel($r['type'], $r['status']),
+                    'days' => (int)floor((time() - strtotime($r['since'])) / 86400)];
+        }, $stuckRows);
+
+        // Lắp ráp
+        $asm = (new Query())->from('dealer_order o')->where(['o.type' => 'assembly'])->andWhere(['between', 'o.finished_at', $start, $end]);
+        $asmTotal = (clone $asm)->select(['n' => 'COUNT(*)', 'minutes' => 'SUM(TIMESTAMPDIFF(MINUTE, o.started_at, o.finished_at))',
+            'units' => '(SELECT COALESCE(SUM(i.qty),0) FROM dealer_order_item i WHERE i.order_id IN (SELECT o2.id FROM dealer_order o2 WHERE o2.type = \'assembly\' AND o2.finished_at BETWEEN :s AND :e))'])
+            ->addParams([':s' => $start, ':e' => $end])->one();
+        $asmByWorker = (clone $asm)->leftJoin('employee e', 'e.id = o.assembler_id')
+            ->select(['name' => 'e.fullname', 'n' => 'COUNT(*)', 'minutes' => 'SUM(TIMESTAMPDIFF(MINUTE, o.started_at, o.finished_at))',
+                      'units' => 'SUM((SELECT SUM(i.qty) FROM dealer_order_item i WHERE i.order_id = o.id))'])
+            ->groupBy('o.assembler_id')->orderBy(['units' => SORT_DESC])->all();
+        $asmByWorker = array_map(function ($r) {
+            return ['name' => $r['name'] ?: '—', 'orders' => (int)$r['n'], 'units' => (int)$r['units'], 'minutes' => (int)$r['minutes'],
+                    'perUnit' => $r['units'] > 0 ? (int)round($r['minutes'] / $r['units']) : null];
+        }, $asmByWorker);
+        $asmStocked = (int)(new Query())->from('dealer_order o')->innerJoin('dealer_order_item i', 'i.order_id = o.id')
+            ->where(['o.type' => 'assembly'])->andWhere(['between', 'o.stocked_at', $start, $end])->sum('i.qty');
+
+        // Giao hàng theo nhà xe / nhân viên
+        $byCarrier = (new Query())->from('dealer_order o')->innerJoin('carrier c', 'c.id = o.carrier_id')
+            ->select(['name' => 'c.name', 'n' => 'COUNT(*)', 'hours' => 'AVG(CASE WHEN o.delivered_at IS NOT NULL THEN TIMESTAMPDIFF(MINUTE, o.shipped_at, o.delivered_at) END) / 60',
+                      'open' => "SUM(o.status = 'shipping')"])
+            ->where(['between', 'o.shipped_at', $start, $end])->groupBy('c.id')->orderBy(['n' => SORT_DESC])->all();
+        $byDriver = (new Query())->from('dealer_order o')->innerJoin('employee e', 'e.id = o.delivery_id')
+            ->select(['name' => 'e.fullname', 'n' => 'COUNT(*)', 'done' => "SUM(o.status = 'delivered')"])
+            ->where(['between', 'o.shipped_at', $start, $end])->groupBy('o.delivery_id')->orderBy(['n' => SORT_DESC])->all();
+
+        // Kho
+        $stock = [
+            'productValue' => (int)(new Query())->from('product')->where(['is_delete' => 0])->sum('quantity_in_stock * cost_price'),
+            'partValue' => (int)(new Query())->from('part')->sum('stock * cost_price'),
+            'lowProducts' => self::lowStockCount(),
+            'lowParts' => (int)(new Query())->from('part')->where('stock <= min_stock')->count(),
+        ];
+        $topParts = (new Query())->from('stock_voucher_item vi')->innerJoin('stock_voucher v', 'v.id = vi.voucher_id')->innerJoin('part pt', 'pt.id = vi.item_id')
+            ->select(['name' => 'pt.name', 'qty' => 'SUM(vi.qty)', 'value' => 'SUM(vi.qty * vi.unit_price)'])
+            ->where(['vi.item_type' => 'part', 'v.type' => 'export'])->andWhere(['between', 'v.created_at', $start, $end])
+            ->groupBy('pt.id')->orderBy(['qty' => SORT_DESC])->limit(8)->all();
+
+        // Bảo hành
+        $warranty = [
+            'orders' => (int)(new Query())->from('dealer_order')->where(['type' => 'warranty'])->andWhere(['between', 'ordered_at', $start, $end])->count(),
+            'cost' => (int)(new Query())->from('dealer_order')->where(['type' => 'warranty'])->andWhere(['between', 'exported_at', $start, $end])->sum('total_cost'),
+            'claims' => (int)(new Query())->from('warranty_claim')->where(['between', 'created_at', $start, $end])->count(),
+            'openClaims' => (int)(new Query())->from('warranty_claim')->where(['status' => ['pending', 'processing']])->count(),
+            'activated' => (int)(new Query())->from('warranty')->where(['between', 'activated_at', $start, $end])->count(),
+        ];
+        $claimProducts = (new Query())->from('warranty_claim c')->innerJoin('warranty w', 'w.id = c.warranty_id')->innerJoin('product p', 'p.id = w.product_id')
+            ->select(['name' => 'p.name', 'n' => 'COUNT(*)'])->where(['between', 'c.created_at', $start, $end])
+            ->groupBy('p.id')->orderBy(['n' => SORT_DESC])->limit(5)->all();
+
+        // CRM
+        $crm = (new Query())->from('crm_lead')->where(['between', 'created_at', $start, $end])
+            ->select(['n' => 'COUNT(*)', 'won' => "SUM(stage = 'won')", 'lost' => "SUM(stage = 'lost')", 'value' => "COALESCE(SUM(CASE WHEN stage NOT IN ('won','lost') THEN expected_value ELSE 0 END),0)"])->one();
+
+        return [
+            'from' => $from, 'to' => $to, 'prevFrom' => $prevFrom, 'prevTo' => $prevTo, 'days' => $days,
+            'kpi' => [
+                'current' => $cur, 'previous' => $prev, 'newOrders' => $newOrders, 'cancelled' => $cancelled,
+                'avgOrder' => $cur['orders'] ? (int)round($cur['revenue'] / $cur['orders']) : 0,
+                'margin' => $cur['revenue'] ? round($cur['profit'] / $cur['revenue'] * 100, 1) : null,
+            ],
+            'trend' => $trend, 'trendByMonth' => $byMonth,
+            'salesPeople' => $salesPeople,
+            'topProducts' => array_map(function ($r) {
+                return ['code' => $r['code'], 'name' => $r['name'], 'qty' => (int)$r['qty'], 'revenue' => (int)$r['revenue'], 'profit' => (int)$r['revenue'] - (int)$r['cost']];
+            }, $topProducts),
+            'topDealers' => array_map(function ($r) {
+                return ['code' => $r['code'], 'name' => $r['name'], 'orders' => (int)$r['n'], 'revenue' => (int)$r['revenue'], 'debt' => (int)$r['debt'], 'limit' => (int)$r['limit']];
+            }, $topDealers),
+            'debt' => [
+                'total' => (int)$debtNow['total'], 'over' => (int)$debtNow['over'], 'debtors' => (int)$debtNow['debtors'],
+                'added' => (int)$ledger['debit'] - (int)$ledger['reverse'], 'collected' => (int)$ledger['collected'],
+                'overDealers' => array_map(function ($r) {
+                    return ['code' => $r['code'], 'name' => $r['name'], 'debt' => (int)$r['debt'], 'limit' => (int)$r['limit']];
+                }, $overDealers),
+            ],
+            'pipeline' => $pipeline, 'leadTimes' => $leadTimes, 'stuck' => $stuckRows,
+            'assembly' => [
+                'orders' => (int)$asmTotal['n'], 'units' => (int)$asmTotal['units'], 'minutes' => (int)$asmTotal['minutes'],
+                'perUnit' => $asmTotal['units'] > 0 ? (int)round($asmTotal['minutes'] / $asmTotal['units']) : null,
+                'stocked' => $asmStocked, 'byWorker' => $asmByWorker,
+            ],
+            'carriers' => array_map(function ($r) {
+                return ['name' => $r['name'], 'orders' => (int)$r['n'], 'hours' => $r['hours'] !== null ? round($r['hours'], 1) : null, 'open' => (int)$r['open']];
+            }, $byCarrier),
+            'drivers' => array_map(function ($r) {
+                return ['name' => $r['name'], 'orders' => (int)$r['n'], 'done' => (int)$r['done']];
+            }, $byDriver),
+            'stock' => $stock,
+            'topParts' => array_map(function ($r) {
+                return ['name' => $r['name'], 'qty' => (int)$r['qty'], 'value' => (int)$r['value']];
+            }, $topParts),
+            'warranty' => $warranty,
+            'claimProducts' => array_map(function ($r) {
+                return ['name' => $r['name'], 'claims' => (int)$r['n']];
+            }, $claimProducts),
+            'crm' => ['leads' => (int)$crm['n'], 'won' => (int)$crm['won'], 'lost' => (int)$crm['lost'], 'pipelineValue' => (int)$crm['value'],
+                      'winRate' => (int)$crm['n'] ? round($crm['won'] / $crm['n'] * 100) : null],
+        ];
+    }
+
+    /** Nhà xe đang dùng (chưa xoá) */
+    public static function carriers()
+    {
+        $used = (new Query())->select(['carrier_id', 'n' => 'COUNT(*)', 'last' => 'MAX(shipped_at)'])->from('dealer_order')
+            ->where(['not', ['carrier_id' => null]])->groupBy('carrier_id')->indexBy('carrier_id')->all();
+        return array_map(function ($c) use ($used) {
+            return [
+                'id' => (int)$c['id'], 'name' => $c['name'], 'phone' => (string)$c['phone'], 'address' => (string)$c['address'], 'note' => (string)$c['note'],
+                'orders' => (int)($used[$c['id']]['n'] ?? 0), 'lastShipped' => self::vnDate($used[$c['id']]['last'] ?? null),
+            ];
+        }, (new Query())->from('carrier')->where(['is_delete' => 0])->orderBy(['name' => SORT_ASC])->all());
     }
 
     public static function order($code)
@@ -663,6 +965,9 @@ class AgrimacRepo
             'pages'       => array_keys(D::menuFor($role)),
             'staff'       => self::staff(),
             'orderStatus' => D::ORDER_STATUS,
+            'orderTypes'  => D::ORDER_TYPES,
+            'orderFlows'  => D::ORDER_FLOWS,
+            'productUnits' => D::PRODUCT_UNITS,
             'debtModes'   => D::DEBT_MODES,
             'paidMethods' => D::PAID_METHODS,
             'leadSale'    => AgrimacAuth::leadSaleScope() !== null ? trim((string)(Yii::$app->user->identity->fullname ?? '')) : null,
@@ -673,6 +978,9 @@ class AgrimacRepo
             'defaultBoms' => (object)self::defaultBoms(),
             'apiUrl'      => \yii\helpers\Url::to(['agrimac/api']),
             'lookupUrl'   => \yii\helpers\Url::to(['agrimac/lookup']),
+            'shipUploadUrl' => \yii\helpers\Url::to(['agrimac/upload-ship-image']),
+            'shipImageMax'  => D::SHIP_IMAGE_MAX,
+            'me'          => ['id' => (int)Yii::$app->user->id, 'name' => trim((string)(Yii::$app->user->identity->fullname ?? '') ?: (string)(Yii::$app->user->identity->username ?? ''))],
         ];
     }
 }

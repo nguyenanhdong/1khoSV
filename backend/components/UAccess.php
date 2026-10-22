@@ -29,8 +29,11 @@ class UAccess extends \yii\base\Behavior
 
         if( !Yii::$app->user->isGuest ){
             // Nhân viên AgriMac (Sale, Kho, Giao hàng...) chỉ dùng các trang AgriMac; trang sàn 1kho dành cho Admin
-            if( !in_array($controller, $this->agrimacAllowed, true) && !\backend\components\AgrimacAuth::isSuperAdmin()
-                && \backend\components\AgrimacAuth::realRole() !== null && !\backend\components\AgrimacAuth::canUseLegacy() ){
+            // CEO đang "xem theo vai trò" khác cũng không vào trang quản trị website
+            $agrimacRole = \backend\components\AgrimacAuth::role();
+            if( !in_array($controller, $this->agrimacAllowed, true) && $agrimacRole !== null && (
+                    (!\backend\components\AgrimacAuth::isSuperAdmin() && !\backend\components\AgrimacAuth::canUseLegacy())
+                    || $agrimacRole !== 'admin' ) ){
                 Yii::$app->getResponse()->redirect(['/agrimac/dashboard'])->send();
                 die();
             }

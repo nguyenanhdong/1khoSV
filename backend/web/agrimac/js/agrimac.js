@@ -407,7 +407,15 @@
     };
 
     /* ---------- Thanh toán / công nợ của đơn đại lý (dùng ở trang Đơn hàng và Đại lý) ---------- */
-    AM.canEditDebt = function () { return AM.can('admin', 'kt_banhang', 'kt_congno'); };
+    AM.canEditDebt = function () { return AM.can('admin', 'sale', 'kt_congno'); };
+
+    /** 95 → "1 giờ 35 phút" */
+    AM.formatMinutes = function (m) {
+        m = Math.max(0, Math.round(+m || 0));
+        if (m < 60) return m + ' phút';
+        var h = Math.floor(m / 60);
+        return h >= 24 ? Math.floor(h / 24) + ' ngày ' + (h % 24) + ' giờ' : h + ' giờ ' + (m % 60) + ' phút';
+    };
 
     /** Nhãn ngắn trạng thái thanh toán của đơn: {label, color, bg} */
     AM.debtBadge = function (o) {

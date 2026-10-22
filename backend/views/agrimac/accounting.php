@@ -30,16 +30,16 @@ $this->registerJsFile('@web/agrimac/js/am-accounting.js', ['depends' => AgrimacA
 
     <div class="am-card" style="overflow:hidden">
         <div class="am-row-between" style="padding:14px 18px;border-bottom:1px solid #e5e7eb">
-            <div style="font-weight:700;font-size:14px">🧾 Sổ thu chi <?= Html::encode(mb_strtolower(D::PERIOD_LABEL)) ?></div>
+            <div style="font-weight:700;font-size:14px">🧾 Sổ thu chi — đơn bán đã giao</div>
             <a href="<?= Url::to(['agrimac/accounting-export']) ?>" style="padding:6px 14px;background:#10b981;color:#fff;border-radius:8px;font-size:12px;font-weight:700">⬇ Xuất Excel</a>
         </div>
         <table class="am-table">
-            <?= Ui::thead(['Mã đơn', 'Đại lý', 'Doanh thu', 'HH Sale', 'HH Giao hàng', 'Thực thu', 'Ngày']) ?>
+            <?= Ui::thead(['Mã đơn', 'Khách hàng', 'Doanh thu', 'HH Sale', 'HH Giao hàng', 'Thực thu', 'Ngày']) ?>
             <tbody>
             <?php foreach ($rows as $o): ?>
                 <tr>
                     <td><span style="font-weight:700"><?= Html::encode($o['id']) ?></span></td>
-                    <td style="font-size:12px"><?= Html::encode(D::shortDealerName($dealers[$o['dealerId']]['name'] ?? '')) ?></td>
+                    <td style="font-size:12px"><?= Html::encode($o['customerType'] === 'dealer' ? D::shortDealerName($o['customer']) : $o['customer']) ?></td>
                     <td><span style="font-weight:700;color:#059669"><?= D::money($o['total']) ?></span></td>
                     <td style="color:#7c3aed;font-weight:600"><?= D::money($o['comSale']) ?></td>
                     <td style="color:#0891b2;font-weight:600"><?= D::money($o['comDeli']) ?></td>

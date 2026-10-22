@@ -67,10 +67,10 @@ $field = function ($label, $input, $full = false, $hint = '') {
                 <?= $field('Danh mục <span class="am-req">*</span>', '<select name="catId" class="am-input"></select>') ?>
                 <?= $field('Nguồn hàng <span class="am-req">*</span>', '<select name="sourceType" class="am-input"></select>') ?>
                 <?= $field('Nhà cung cấp', '<select name="supId" class="am-input"></select>', false, 'Bắt buộc khi nhập nguyên chiếc') ?>
-                <?= $field('Giá bán (đ) <span class="am-req">*</span>', '<input name="price" type="number" min="0" class="am-input" placeholder="VD: 285000000">') ?>
+                <?= $field('Giá bán lẻ (đ) <span class="am-req">*</span>', '<input name="price" type="number" min="0" class="am-input" placeholder="VD: 285000000">', false, 'Dùng cho đơn khách lẻ') ?>
+                <?= $field('Giá đại lý (đ)', '<input name="dealerPrice" type="number" min="0" class="am-input" placeholder="VD: 260000000">', false, 'Giá chung cho mọi đại lý. Để trống = dùng giá bán lẻ') ?>
                 <?= $field('Giá vốn (đ)', '<input name="cost" type="number" min="0" class="am-input" placeholder="VD: 240000000">', false, 'Tự lắp: có thể để trống, tính theo BOM') ?>
-                <?= $field('Công suất (HP)', '<input name="hp" type="number" min="0" class="am-input" placeholder="VD: 34">') ?>
-                <?= $field('Hệ dẫn động', '<select name="drive" class="am-input"><option value="">— Chọn —</option><option value="2WD">2WD</option><option value="4WD">4WD</option></select>') ?>
+                <?= $field('Đơn vị tính <span class="am-req">*</span>', '<select name="unit" class="am-input">' . implode('', array_map(function ($u) { return '<option value="' . $u . '">' . $u . '</option>'; }, \backend\components\AgrimacData::PRODUCT_UNITS)) . '</select>') ?>
                 <?= $field('Trọng lượng (kg)', '<input name="weight" type="number" min="0" class="am-input" placeholder="VD: 1450">') ?>
                 <?= $field('Tồn tối thiểu', '<input name="minStock" type="number" min="0" class="am-input" value="3">', false, 'Dưới mức này sẽ cảnh báo sắp hết') ?>
                 <div class="am-field am-field-full" data-field="images">

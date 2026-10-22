@@ -18,48 +18,99 @@ class AgrimacData
         'dealers'    => ['icon' => '🏪', 'label' => 'Đại lý & Công nợ'],
         'warranty'   => ['icon' => '🛡', 'label' => 'Bảo hành'],
         'suppliers'  => ['icon' => '🏭', 'label' => 'Nhà cung cấp'],
+        'carriers'   => ['icon' => '🚛', 'label' => 'Nhà xe'],
         'accounting' => ['icon' => '🧾', 'label' => 'Kế toán & HH'],
+        'reports'    => ['icon' => '📈', 'label' => 'Báo cáo quản trị'],
         'users'      => ['icon' => '👥', 'label' => 'Tài khoản & Phân quyền'],
     ];
 
-    /** Trang quản trị sàn 1kho (controller cũ) hiển thị trong sidebar AgriMac, chỉ cho Admin. Mục có `before` được đặt ngay trên mục AgriMac đó thay vì trong nhóm "Sàn 1kho". */
+    /** Quản trị website / sàn 1kho (controller cũ): chỉ CEO thấy, gom trong nhóm "Quản trị website" của sidebar. */
     const LEGACY_MENU = [
         'banner'   => ['icon' => '🖼', 'label' => 'Banner', 'url' => '/banner/index'],
-        'category' => ['icon' => '🗂', 'label' => 'Chuyên mục sàn', 'url' => '/category/index', 'before' => 'products'],
+        'category' => ['icon' => '🗂', 'label' => 'Chuyên mục sàn', 'url' => '/category/index'],
         'voucher'  => ['icon' => '🎟', 'label' => 'Voucher', 'url' => '/voucher/index'],
         'notify'   => ['icon' => '🔔', 'label' => 'Thông báo', 'url' => '/notify/index'],
         'site-content' => ['icon' => '📝', 'label' => 'Nội dung & liên hệ', 'url' => '/site-content/index'],
     ];
 
+    /**
+     * 5 vai trò. Kinh doanh = Sale + KT bán hàng cũ (chăm sóc khách, bán hàng, tạo & duyệt đơn);
+     * Kế toán công nợ = KT công nợ + KT xuất kho cũ (xuất kho, nhập kho, công nợ, hoa hồng).
+     */
     const ROLES = [
-        'admin'      => ['label' => 'Admin / CEO',         'color' => '#ef4444', 'icon' => '👑'],
-        'sale'       => ['label' => 'Kinh doanh',          'color' => '#8b5cf6', 'icon' => '👔'],
-        'kt_banhang' => ['label' => 'KT Bán hàng',         'color' => '#f59e0b', 'icon' => '🧾'],
-        'kt_congno'  => ['label' => 'KT Công nợ',          'color' => '#f97316', 'icon' => '💰'],
-        'kt_xuatkho' => ['label' => 'KT Xuất kho',         'color' => '#06b6d4', 'icon' => '📦'],
-        'assembly'   => ['label' => 'Bộ phận lắp ráp',     'color' => '#0ea5e9', 'icon' => '🔩'],
-        'delivery'   => ['label' => 'Nhân viên giao hàng', 'color' => '#10b981', 'icon' => '🚚'],
+        'admin'     => ['label' => 'CEO / Quản lý',       'color' => '#ef4444', 'icon' => '👑'],
+        'sale'      => ['label' => 'Kinh doanh (Sales)',  'color' => '#8b5cf6', 'icon' => '👔'],
+        'kt_congno' => ['label' => 'Kế toán công nợ',     'color' => '#f97316', 'icon' => '💰'],
+        'assembly'  => ['label' => 'Bộ phận lắp ráp',     'color' => '#0ea5e9', 'icon' => '🔩'],
+        'delivery'  => ['label' => 'Nhân viên giao hàng', 'color' => '#10b981', 'icon' => '🚚'],
     ];
 
     const ROLE_ACCESS = [
-        'admin'      => 'all',
-        'sale'       => ['dashboard', 'crm', 'orders', 'products', 'dealers'],
-        'kt_banhang' => ['dashboard', 'orders', 'accounting', 'dealers'],
-        'kt_congno'  => ['dashboard', 'dealers', 'accounting'],
-        'kt_xuatkho' => ['dashboard', 'orders', 'assembly', 'inventory', 'products', 'suppliers'],
-        'assembly'   => ['dashboard', 'assembly', 'inventory'],
-        'delivery'   => ['dashboard', 'orders'],
+        'admin'     => 'all',
+        'sale'      => ['dashboard', 'crm', 'orders', 'products', 'dealers', 'warranty'],
+        'kt_congno' => ['dashboard', 'orders', 'assembly', 'inventory', 'products', 'suppliers', 'dealers', 'carriers', 'accounting'],
+        'assembly'  => ['dashboard', 'assembly', 'inventory'],
+        'delivery'  => ['dashboard', 'orders', 'carriers'],
     ];
 
-    const ORDER_STATUS = [
-        'pending'    => ['label' => 'Chờ duyệt',    'color' => '#f59e0b', 'bg' => '#fef3c7'],
-        'confirmed'  => ['label' => 'Đã duyệt',     'color' => '#3b82f6', 'bg' => '#dbeafe'],
-        'assembling' => ['label' => 'Đang lắp ráp', 'color' => '#0ea5e9', 'bg' => '#e0f2fe'],
-        'assembled'  => ['label' => 'Lắp ráp xong', 'color' => '#8b5cf6', 'bg' => '#ede9fe'],
-        'delivering' => ['label' => 'Đang giao',    'color' => '#f97316', 'bg' => '#ffedd5'],
-        'delivered'  => ['label' => 'Hoàn thành',   'color' => '#10b981', 'bg' => '#d1fae5'],
-        'cancelled'  => ['label' => 'Đã huỷ',       'color' => '#6b7280', 'bg' => '#f1f5f9'],
+    /* ---------------- Đơn hàng: 3 loại, mỗi loại một luồng trạng thái ---------------- */
+
+    const ORDER_TYPES = [
+        'new'      => ['label' => 'Đơn bán',      'short' => 'Bán',  'color' => '#059669', 'bg' => '#d1fae5'],
+        'assembly' => ['label' => 'Đơn lắp ráp',  'short' => 'Ráp',  'color' => '#0ea5e9', 'bg' => '#e0f2fe'],
+        'warranty' => ['label' => 'Đơn bảo hành', 'short' => 'BH',   'color' => '#ef4444', 'bg' => '#fee2e2'],
     ];
+
+    /** Các bước của từng loại đơn: trạng thái => nhãn (theo thứ tự). */
+    const ORDER_FLOWS = [
+        'new' => [
+            'pending'   => 'Chờ duyệt',
+            'confirmed' => 'Chờ xuất kho',
+            'exported'  => 'Chờ gửi hàng',
+            'shipping'  => 'Đang vận chuyển',
+            'delivered' => 'Khách đã nhận',
+        ],
+        'warranty' => [
+            'pending'   => 'Chờ duyệt',
+            'confirmed' => 'Chờ xuất linh kiện',
+            'exported'  => 'Chờ gửi hàng',
+            'shipping'  => 'Đang vận chuyển',
+            'delivered' => 'Khách đã nhận',
+        ],
+        'assembly' => [
+            'pending'    => 'Chờ duyệt',
+            'confirmed'  => 'Chờ xuất linh kiện',
+            'exported'   => 'Chờ nhận linh kiện',
+            'received'   => 'Đã nhận linh kiện',
+            'assembling' => 'Đang lắp ráp',
+            'assembled'  => 'Chờ nhập kho',
+            'delivered'  => 'Đã nhập kho',
+        ],
+    ];
+
+    /** Màu trạng thái (dùng chung 3 loại đơn); nhãn chi tiết lấy theo ORDER_FLOWS của từng loại. */
+    const ORDER_STATUS = [
+        'pending'    => ['label' => 'Chờ duyệt',        'color' => '#f59e0b', 'bg' => '#fef3c7'],
+        'confirmed'  => ['label' => 'Chờ xuất kho',     'color' => '#3b82f6', 'bg' => '#dbeafe'],
+        'exported'   => ['label' => 'Đã xuất kho',      'color' => '#6366f1', 'bg' => '#e0e7ff'],
+        'received'   => ['label' => 'Đã nhận linh kiện', 'color' => '#0891b2', 'bg' => '#cffafe'],
+        'assembling' => ['label' => 'Đang lắp ráp',     'color' => '#0ea5e9', 'bg' => '#e0f2fe'],
+        'assembled'  => ['label' => 'Chờ nhập kho',     'color' => '#8b5cf6', 'bg' => '#ede9fe'],
+        'shipping'   => ['label' => 'Đang vận chuyển',  'color' => '#f97316', 'bg' => '#ffedd5'],
+        'delivered'  => ['label' => 'Hoàn thành',       'color' => '#10b981', 'bg' => '#d1fae5'],
+        'cancelled'  => ['label' => 'Đã huỷ',           'color' => '#6b7280', 'bg' => '#f1f5f9'],
+    ];
+
+    /** Nhãn trạng thái theo loại đơn */
+    public static function orderStatusLabel($type, $status)
+    {
+        return self::ORDER_FLOWS[$type][$status] ?? (self::ORDER_STATUS[$status]['label'] ?? $status);
+    }
+
+    const PRODUCT_UNITS = ['Cái', 'Bộ'];
+    /** Ảnh gửi hàng: tối đa 2 ảnh, server nén còn ≤ 2MB mỗi ảnh */
+    const SHIP_IMAGE_MAX = 2;
+    const SHIP_IMAGE_BYTES = 2097152;
 
     /** Đơn hàng khách mua trên sàn 1kho (bảng `order`), khớp cột `order.status` và params `status_order`. */
     const MARKET_ORDER_STATUS = [
@@ -91,7 +142,6 @@ class AgrimacData
     const COMMISSION_RATES = ['sale' => 1, 'delivery' => 0.3];
 
     /** Kỳ báo cáo của bộ dữ liệu mẫu; khi ghép DB sẽ lấy theo bộ lọc tháng. */
-    const PERIOD_LABEL = 'Tháng 5/2025';
 
     const WARRANTY_MONTHS = 24;
     const HOTLINE = '1900 6868';
@@ -115,9 +165,9 @@ class AgrimacData
 
     /** Module hiển thị trong ma trận phân quyền ở trang Tài khoản. */
     const PERMISSION_MODULES = [
-        'crm' => 'CRM', 'orders' => 'Đơn hàng', 'products' => 'Sản phẩm', 'inventory' => 'Kho',
-        'dealers' => 'Đại lý', 'warranty' => 'Bảo hành', 'suppliers' => 'NCC',
-        'accounting' => 'Kế toán', 'users' => 'Tài khoản',
+        'crm' => 'CRM', 'orders' => 'Đơn hàng', 'assembly' => 'Lắp ráp', 'products' => 'Sản phẩm', 'inventory' => 'Kho',
+        'dealers' => 'Đại lý', 'warranty' => 'Bảo hành', 'suppliers' => 'NCC', 'carriers' => 'Nhà xe',
+        'accounting' => 'Kế toán', 'reports' => 'Báo cáo', 'users' => 'Tài khoản',
     ];
 
     const SOURCE_TYPES = [

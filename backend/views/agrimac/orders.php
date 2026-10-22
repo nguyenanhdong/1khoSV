@@ -3,6 +3,7 @@
 /* @var $this yii\web\View */
 /* @var $orders array */
 /* @var $products array */
+/* @var $carriers array nhà xe */
 /* @var $market array|null đơn hàng sàn 1kho (chỉ Admin) */
 
 use yii\web\View;
@@ -10,6 +11,7 @@ use backend\assets\AgrimacAsset;
 
 $this->registerJsVar('AM_ORDERS', $orders, View::POS_HEAD);
 $this->registerJsVar('AM_ORDER_PRODUCTS', $products, View::POS_HEAD);
+$this->registerJsVar('AM_CARRIERS', $carriers, View::POS_HEAD);
 $this->registerJsFile('@web/agrimac/js/am-orders.js', ['depends' => AgrimacAsset::class]);
 if ($market) {
     $this->registerJsVar('AM_MARKET', $market, View::POS_HEAD);
@@ -19,7 +21,7 @@ $height = $market ? 'calc(100vh - 176px)' : 'calc(100vh - 130px)';
 ?>
 <?php if ($market): ?>
 <div class="am-tabs" id="am-order-scope">
-    <button type="button" class="am-tab active" data-scope="dealer">📋 Đơn đại lý (<?= count($orders) ?>)</button>
+    <button type="button" class="am-tab active" data-scope="dealer">📋 Đơn hàng (<?= count($orders) ?>)</button>
     <button type="button" class="am-tab" data-scope="market">🛒 Đơn sàn 1kho (<span id="am-market-total"><?= array_sum($market['counts']) ?></span>)</button>
 </div>
 <?php endif; ?>
@@ -30,14 +32,14 @@ $height = $market ? 'calc(100vh - 176px)' : 'calc(100vh - 130px)';
         <div class="am-card" style="overflow:auto;flex:1">
             <table class="am-table">
                 <thead><tr>
-                    <th></th><th>Mã đơn</th><th>Đại lý</th><th>Sản phẩm</th><th>SL</th><th>Doanh thu</th>
-                    <th>Giá vốn LK</th><th>Lợi nhuận</th><th>Sale</th><th>Trạng thái</th>
+                    <th>Loại</th><th>Mã đơn</th><th>Khách hàng</th><th>Sản phẩm</th><th>SL</th><th>Giá trị</th>
+                    <th>Sale</th><th>Ngày</th><th>Trạng thái</th>
                 </tr></thead>
                 <tbody id="am-order-rows"></tbody>
             </table>
         </div>
     </div>
-    <div id="am-order-detail" class="am-panel am-hidden" style="width:340px;flex-shrink:0;display:flex;flex-direction:column;overflow:hidden"></div>
+    <div id="am-order-detail" class="am-panel am-hidden" style="width:380px;flex-shrink:0;display:flex;flex-direction:column;overflow:hidden"></div>
 </div>
 
 <?php if ($market): ?>

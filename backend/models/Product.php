@@ -307,11 +307,7 @@ class Product extends \yii\db\ActiveRecord
     }
 
     public static function getFeeShipProduct($product_combination){
-        $listCombinationId  = ArrayHelper::map($product_combination, 'id', 'id');
-        $resultCombination  = ProductClassificationCombination::find()->select('A.*, B.weight')
-        ->from(ProductClassificationCombination::tableName() . ' A')
-        ->leftJoin(self::tableName() . ' B', 'A.product_id = B.id')
-        ->where(['in', 'A.id', $listCombinationId])->asArray()->all();
+        $resultCombination  = ProductClassificationCombination::resolveLines($product_combination);
         
         if( empty($resultCombination) )
             return 0;
@@ -336,8 +332,7 @@ class Product extends \yii\db\ActiveRecord
     }
 
     public static function getPriceOfOrder($product_combination){
-        $listCombinationId  = ArrayHelper::map($product_combination, 'id', 'id');
-        $resultCombination  = ProductClassificationCombination::find()->where(['in', 'id', $listCombinationId])->asArray()->all();
+        $resultCombination  = ProductClassificationCombination::resolveLines($product_combination);
         
         if( empty($resultCombination) )
             return 0;
@@ -356,11 +351,7 @@ class Product extends \yii\db\ActiveRecord
     }
 
     public static function getProductByCombination($product_combination){
-        $listCombinationId  = ArrayHelper::map($product_combination, 'id', 'id');
-        $resultCombination  = ProductClassificationCombination::find()->select('A.*, B.name, B.weight, B.agent_id, B.price as price_origin')
-        ->from(ProductClassificationCombination::tableName() . ' A')
-        ->leftJoin(self::tableName() . ' B', 'A.product_id = B.id')
-        ->where(['in', 'A.id', $listCombinationId])->asArray()->all();
+        $resultCombination  = ProductClassificationCombination::resolveLines($product_combination);
         
         $data = [];
 

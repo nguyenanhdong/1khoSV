@@ -23,7 +23,7 @@ class AgrimacSeedController extends Controller
 
     const AGRIMAC_TABLES = [
         'commission_payout', 'commission', 'warranty_claim', 'warranty', 'supplier_return', 'stock_voucher_item', 'stock_voucher',
-        'dealer_order_log', 'dealer_order_part', 'dealer_order_item', 'dealer_order', 'crm_lead_note', 'crm_lead',
+        'dealer_order_log', 'dealer_order_part', 'dealer_order_item', 'dealer_order', 'carrier', 'crm_lead_note', 'crm_lead',
         'dealer_ledger', 'dealer', 'product_bom', 'part', 'part_category', 'supplier',
     ];
 
@@ -151,6 +151,7 @@ class AgrimacSeedController extends Controller
             $this->ids['product'][$p['id']] = $this->upsert('product', ['code' => $p['id']], [
                 'name' => $p['name'], 'category_id' => $this->id('category', $p['catId']),
                 'supplier_id' => $this->id('supplier', $p['supId']), 'price' => $p['price'], 'price_discount' => 0,
+                'price_dealer' => (int)round($p['price'] * 0.95 / 1e6) * 1e6, 'unit' => 'Cái',
                 'cost_price' => $p['cost'], 'source_type' => $p['sourceType'], 'horsepower' => $p['hp'], 'drive_type' => $p['drive'],
                 'specs' => $p['specs'], 'weight' => $p['weight'], 'quantity_in_stock' => $p['stock'], 'min_stock' => $p['minStock'],
                 'status' => 1, 'is_delete' => 0, 'image' => '',
@@ -192,38 +193,74 @@ class AgrimacSeedController extends Controller
 
     private function seedOrders()
     {
+        foreach (Demo::carriers() as $c) {
+            $this->ids['carrier'][$c['id']] = $this->upsert('carrier', ['name' => $c['name']], [
+                'phone' => $c['phone'], 'address' => $c['address'], 'is_delete' => 0, 'created_by' => $this->ids['employee']['admin'],
+            ]);
+        }
         $boms = Demo::defaultBoms();
         $parts = array_column(Demo::parts(), null, 'id');
-        $flow = ['pending', 'confirmed', 'assembling', 'assembled', 'delivering', 'delivered'];
+        $costs = array_column(Demo::products(), 'cost', 'id');
+        $flows = array_map('array_keys', \backend\components\AgrimacData::ORDER_FLOWS);
         foreach (Demo::orders() as $o) {
-            $total = $o['qty'] * $o['price'];
-            $bom = $o['bom'] === true ? $boms[$o['product']] : ($o['bom'] ?: []);
-            $cost = array_sum(array_map(function ($b) use ($parts, $o) {
-                return $parts[$b[0]]['cost'] * $b[1] * $o['qty'];
-            }, $bom));
+            $flow = $flows[$o['type']];
             $step = array_search($o['status'], $flow, true);
+            $at = function ($k, $h) use ($o, $step, $flow) {
+                return $step >= array_search($k, $flow, true) ? $o['date'] . ' ' . $h : null;
+            };
+            $items = $o['items'] ?? [];
+            $total = array_sum(array_map(function ($l) { return $l[1] * $l[2]; }, $items));
+            // Linh kiện: đơn lắp ráp theo BOM mặc định × SL, đơn bảo hành theo danh sách
+            $lines = [];
+            if ($o['type'] === 'assembly') {
+                foreach ($items as [$code, $qty]) {
+                    foreach ($boms[$code] as [$partCode, $per]) $lines[] = [$partCode, $per, $per * $qty];
+                }
+            } else {
+                foreach ($o['parts'] ?? [] as [$partCode, $qty]) $lines[] = [$partCode, $qty, $qty];
+            }
+            $cost = $o['type'] === 'new'
+                ? array_sum(array_map(function ($l) use ($costs) { return $costs[$l[0]] * $l[1]; }, $items))
+                : array_sum(array_map(function ($l) use ($parts) { return $parts[$l[0]]['cost'] * $l[2]; }, $lines));
+            $exported = $step >= 2;
+            $isDealer = !empty($o['dealer']);
+            $delivered = $o['status'] === 'delivered' && $o['type'] === 'new';
             $id = $this->upsert('dealer_order', ['code' => $o['id']], [
-                'type' => $o['type'], 'dealer_id' => $this->id('dealer', $o['dealer']), 'status' => $o['status'],
-                'total_amount' => $total, 'total_cost' => $step >= 2 ? $cost : 0,
-                'sale_id' => $this->id('employee', $o['sale']), 'approved_by' => $step >= 1 ? $this->ids['employee']['hoa.pt'] : null,
-                'assembler_id' => $step >= 3 ? $this->ids['employee']['loi.nt'] : null,
-                'exporter_id' => $step >= 4 ? $this->ids['employee']['duc.vm'] : null,
-                'delivery_id' => $this->id('employee', $o['delivery']), 'invoice_no' => $o['invoiceNo'] ?? null,
-                'invoice_date' => !empty($o['invoiceNo']) ? $o['date'] : null, 'ordered_at' => $o['date'] . ' 09:00:00',
+                'type' => $o['type'], 'status' => $o['status'],
+                'dealer_id' => $isDealer ? $this->id('dealer', $o['dealer']) : null,
+                'customer_type' => $o['type'] === 'assembly' ? null : ($isDealer ? 'dealer' : 'retail'),
+                'customer_name' => $o['retail'][0] ?? null, 'customer_phone' => $o['retail'][1] ?? null, 'customer_address' => $o['retail'][2] ?? null,
+                'total_amount' => $total, 'total_cost' => $exported ? $cost : 0,
+                'sale_id' => $this->id('employee', $o['sale']), 'created_by' => $this->id('employee', $o['sale']),
+                'approved_by' => $step >= 1 ? $this->id('employee', $o['sale']) : null, 'approved_at' => $at('confirmed', '10:00:00'),
+                'exporter_id' => $exported ? $this->ids['employee']['lan.tt'] : null, 'exported_at' => $at('exported', '14:00:00'),
+                'assembler_id' => $o['type'] === 'assembly' && $step >= 3 ? $this->ids['employee']['loi.nt'] : null,
+                'parts_received_at' => $o['type'] === 'assembly' ? $at('received', '15:00:00') : null,
+                'started_at' => $o['type'] === 'assembly' ? $at('assembling', '15:30:00') : null,
+                'finished_at' => $o['type'] === 'assembly' ? $at('assembled', '17:00:00') : null,
+                'delivery_id' => isset($o['delivery']) ? $this->id('employee', $o['delivery']) : null,
+                'carrier_id' => isset($o['carrier']) ? $this->ids['carrier'][$o['carrier']] : null,
+                'shipped_at' => $o['type'] !== 'assembly' ? $at('shipping', '16:00:00') : null,
+                'invoice_no' => $o['invoiceNo'] ?? null, 'invoice_date' => !empty($o['invoiceNo']) ? $o['date'] : null,
+                'ordered_at' => $o['date'] . ' 09:00:00',
                 'delivered_at' => isset($o['deliveredAt']) ? $o['deliveredAt'] . ' 16:00:00' : null,
                 // Đơn đã giao trong dữ liệu demo: đã ghi nợ cả đơn (nằm trong số dư công nợ đầu kỳ của đại lý)
-                'debt_mode' => $o['status'] === 'delivered' && $o['type'] === 'new' ? 'full' : null,
-                'debt_amount' => $o['status'] === 'delivered' && $o['type'] === 'new' ? $total : 0,
-                'debt_recorded' => $o['status'] === 'delivered' && $o['type'] === 'new' ? $total : 0,
+                'debt_mode' => $delivered && $isDealer ? 'full' : null,
+                'debt_amount' => $delivered && $isDealer ? $total : 0,
+                'debt_recorded' => $delivered && $isDealer ? $total : 0,
                 'receiver_name' => $o['receiver'] ?? null,
             ]);
             $this->ids['order'][$o['id']] = $id;
-            $itemId = $this->upsert('dealer_order_item', ['order_id' => $id, 'product_id' => $this->id('product', $o['product'])], [
-                'qty' => $o['qty'], 'unit_price' => $o['price'], 'line_total' => $total,
-            ]);
-            foreach ($bom as [$partCode, $qty]) {
-                $this->upsert('dealer_order_part', ['order_id' => $id, 'order_item_id' => $itemId, 'part_id' => $this->id('part', $partCode)], [
-                    'qty_per_unit' => $qty, 'qty_total' => $qty * $o['qty'], 'unit_cost' => $parts[$partCode]['cost'], 'is_picked' => $step >= 3 ? 1 : 0,
+            $itemId = null;
+            foreach ($items as [$code, $qty, $price]) {
+                $itemId = $this->upsert('dealer_order_item', ['order_id' => $id, 'product_id' => $this->id('product', $code)], [
+                    'qty' => $qty, 'unit_price' => $price, 'line_total' => $qty * $price,
+                ]);
+            }
+            foreach ($lines as [$partCode, $per, $qtyTotal]) {
+                $this->upsert('dealer_order_part', ['order_id' => $id, 'part_id' => $this->id('part', $partCode)], [
+                    'order_item_id' => $itemId, 'qty_per_unit' => $per, 'qty_total' => $qtyTotal, 'unit_cost' => $parts[$partCode]['cost'],
+                    'is_picked' => $step >= 3 ? 1 : 0,
                 ]);
             }
             if (!(new Query())->from('dealer_order_log')->where(['order_id' => $id])->exists($this->db)) {
@@ -234,7 +271,7 @@ class AgrimacSeedController extends Controller
                     ])->execute();
                 }
             }
-            if ($o['status'] === 'delivered' && $o['type'] === 'new') {
+            if ($delivered) {
                 foreach (['sale' => $o['sale'], 'delivery' => $o['delivery']] as $role => $username) {
                     $rate = \backend\components\AgrimacData::COMMISSION_RATES[$role];
                     $this->upsert('commission', ['order_id' => $id, 'employee_id' => $this->id('employee', $username), 'role' => $role], [
