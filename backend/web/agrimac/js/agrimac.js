@@ -12,6 +12,35 @@
         return t.toLocaleString('vi-VN') + 'đ';
     };
 
+    /* ---------- Ô nhập tiền: hiển thị 285.000.000, .val() vẫn trả "285000000" ---------- */
+    AM.moneyInput = function (v) {
+        var digits = String(v == null ? '' : v).replace(/\D/g, '').replace(/^0+(?=\d)/, '');
+        return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    };
+    var textHook = $.valHooks.text;
+    $.valHooks.text = {
+        get: function (el) {
+            if ($(el).hasClass('am-money')) return el.value.replace(/\D/g, '');
+            return textHook && textHook.get ? textHook.get(el) : undefined;
+        },
+        set: function (el, v) {
+            if ($(el).hasClass('am-money')) { el.value = AM.moneyInput(v); return true; }
+            return textHook && textHook.set ? textHook.set(el, v) : undefined;
+        }
+    };
+    $(document).on('input', 'input.am-money', function () {
+        // Định dạng lại khi gõ, giữ con trỏ sau đúng số chữ số đã gõ
+        var el = this, pos = el.selectionStart || 0, before = el.value.slice(0, pos).replace(/\D/g, '').length;
+        var out = AM.moneyInput(el.value);
+        if (out === el.value) return;
+        el.value = out;
+        var i = 0, seen = 0;
+        while (i < out.length && seen < before) { if (/\d/.test(out[i])) seen++; i++; }
+        try { el.setSelectionRange(i, i); } catch (e) {}
+    });
+    /** HTML thuộc tính cho ô tiền */
+    AM.MONEY_ATTRS = 'type="text" inputmode="numeric" autocomplete="off"';
+
     AM.NO_IMAGE = 'data:image/svg+xml,' + encodeURIComponent(
         '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="200"><defs><linearGradient id="g" x2="1" y2="1">' +
         '<stop offset="0" stop-color="#0f2027"/><stop offset="1" stop-color="#1a3a4a"/></linearGradient></defs>' +
@@ -296,6 +325,10 @@
         } else if (f.type === 'textarea') {
             input = '<textarea class="am-textarea" style="height:' + (f.height || 64) + 'px"' + attrs +
                 (f.placeholder ? ' placeholder="' + AM.esc(f.placeholder) + '"' : '') + '>' + AM.esc(v) + '</textarea>';
+        } else if (f.type === 'money') {
+            input = '<input class="am-input am-money" ' + AM.MONEY_ATTRS + ' value="' + AM.esc(AM.moneyInput(v)) + '"' + attrs +
+                (f.placeholder ? ' placeholder="' + AM.esc(f.placeholder) + '"' : '') +
+                (f.readonly ? ' style="background:#f8fafc;color:#6b7280"' : '') + '>';
         } else {
             input = '<input class="am-input" type="' + (f.type || 'text') + '" value="' + AM.esc(v) + '"' + attrs +
                 (f.placeholder ? ' placeholder="' + AM.esc(f.placeholder) + '"' : '') +
@@ -371,6 +404,13 @@
                         errors[f.name] = (f.type === 'select' ? 'Vui lòng chọn ' : 'Vui lòng nhập ') + f.label.toLowerCase();
                     }
                 });
+                // Ô tiền là type=text nên tự kiểm tra min/max
+                fields.forEach(function (f) {
+                    if (f.type !== 'money' || errors[f.name] || data[f.name] === '' || $form.find('[data-field="' + f.name + '"]').hasClass('am-hidden')) return;
+                    var n = +data[f.name];
+                    if (f.min !== undefined && n < +f.min) errors[f.name] = 'Tối thiểu ' + AM.moneyInput(f.min) + 'đ';
+                    else if (f.max !== undefined && n > +f.max) errors[f.name] = 'Tối đa ' + AM.moneyInput(f.max) + 'đ';
+                });
                 if (opts.validate) {
                     $.each(opts.validate(data, api) || {}, function (k, msg) { if (!errors[k]) errors[k] = msg; });
                 }
@@ -437,7 +477,7 @@
             fields: [
                 { name: 'mode', label: 'Hình thức thanh toán', type: 'select', required: true, full: true, placeholder: '— Chọn —',
                   options: $.map(modes, function (label, key) { return [[key, label]]; }) },
-                { name: 'debtAmount', label: 'Số tiền còn nợ (đ)', type: 'number', min: 1, required: true, hint: 'Phần còn lại coi như đại lý đã trả' },
+                { name: 'debtAmount', label: 'Số tiền còn nợ (đ)', type: 'money', min: 1, required: true, hint: 'Phần còn lại coi như đại lý đã trả' },
                 { name: 'paidMethod', label: 'Đã trả bằng', type: 'select', required: true, placeholder: '— Chọn —', options: methods.map(function (m) { return [m, m]; }) },
                 { name: 'note', label: 'Ghi chú', type: 'textarea', full: true, placeholder: 'VD: Đại lý trả trước 200tr, hẹn trả phần còn lại cuối tháng' }
             ],

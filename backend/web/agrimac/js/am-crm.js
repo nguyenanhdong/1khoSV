@@ -92,7 +92,7 @@
                 { name: 'dealer', label: 'Đại lý giới thiệu', type: 'select', placeholder: 'Khách trực tiếp (không qua đại lý)',
                     options: dealers.map(function (d) { return [d.id, d.name]; }) },
                 { name: 'product', label: 'Sản phẩm quan tâm', type: 'picker', source: 'products', required: true, full: true, placeholder: 'Gõ tên hoặc mã sản phẩm...' },
-                { name: 'value', label: 'Giá trị dự kiến (đ)', type: 'number', min: 0, required: true, hint: 'Tự điền theo giá sản phẩm, sửa nếu mua nhiều máy' },
+                { name: 'value', label: 'Giá trị dự kiến (đ)', type: 'money', min: 0, required: true, hint: 'Tự điền theo giá sản phẩm, sửa nếu mua nhiều máy' },
                 { name: 'sale', label: 'Sale phụ trách', type: 'select', required: true, placeholder: '— Chọn Sale —', options: sales.map(function (n) { return [n, n]; }) },
                 { name: 'stage', label: 'Giai đoạn', type: 'select', required: true, options: Object.keys(stages).map(function (k) { return [k, k]; }) },
                 { name: 'note', label: 'Ghi chú lần tiếp cận đầu', type: 'textarea', full: true, placeholder: 'Nhu cầu, diện tích canh tác, thời điểm cần máy...' }

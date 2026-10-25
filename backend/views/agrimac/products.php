@@ -67,9 +67,9 @@ $field = function ($label, $input, $full = false, $hint = '') {
                 <?= $field('Danh mục <span class="am-req">*</span>', '<select name="catId" class="am-input"></select>') ?>
                 <?= $field('Nguồn hàng <span class="am-req">*</span>', '<select name="sourceType" class="am-input"></select>') ?>
                 <?= $field('Nhà cung cấp', '<select name="supId" class="am-input"></select>', false, 'Bắt buộc khi nhập nguyên chiếc') ?>
-                <?= $field('Giá bán lẻ (đ) <span class="am-req">*</span>', '<input name="price" type="number" min="0" class="am-input" placeholder="VD: 285000000">', false, 'Dùng cho đơn khách lẻ') ?>
-                <?= $field('Giá đại lý (đ)', '<input name="dealerPrice" type="number" min="0" class="am-input" placeholder="VD: 260000000">', false, 'Giá chung cho mọi đại lý. Để trống = dùng giá bán lẻ') ?>
-                <?= $field('Giá vốn (đ)', '<input name="cost" type="number" min="0" class="am-input" placeholder="VD: 240000000">', false, 'Tự lắp: có thể để trống, tính theo BOM') ?>
+                <?= $field('Giá bán lẻ (đ) <span class="am-req">*</span>', '<input name="price" type="text" inputmode="numeric" autocomplete="off" class="am-input am-money" placeholder="VD: 285.000.000">', false, 'Dùng cho đơn khách lẻ') ?>
+                <?= $field('Giá đại lý (đ)', '<input name="dealerPrice" type="text" inputmode="numeric" autocomplete="off" class="am-input am-money" placeholder="VD: 260.000.000">', false, 'Giá chung cho mọi đại lý. Để trống = dùng giá bán lẻ') ?>
+                <?= $field('Giá vốn (đ)', '<input name="cost" type="text" inputmode="numeric" autocomplete="off" class="am-input am-money" placeholder="VD: 240.000.000">', false, 'Tự lắp: có thể để trống, tính theo BOM') ?>
                 <?= $field('Đơn vị tính <span class="am-req">*</span>', '<select name="unit" class="am-input">' . implode('', array_map(function ($u) { return '<option value="' . $u . '">' . $u . '</option>'; }, \backend\components\AgrimacData::PRODUCT_UNITS)) . '</select>') ?>
                 <?= $field('Trọng lượng (kg)', '<input name="weight" type="number" min="0" class="am-input" placeholder="VD: 1450">') ?>
                 <?= $field('Tồn tối thiểu', '<input name="minStock" type="number" min="0" class="am-input" value="3">', false, 'Dưới mức này sẽ cảnh báo sắp hết') ?>
@@ -77,6 +77,12 @@ $field = function ($label, $input, $full = false, $hint = '') {
                     <label>Ảnh sản phẩm <span style="font-weight:400;color:#9ca3af">(tối đa 8 ảnh · JPG, PNG, WEBP · ≤ 5MB/ảnh · ảnh đầu tiên là ảnh đại diện)</span></label>
                     <div id="am-pm-images" class="am-img-grid"></div>
                     <input type="file" id="am-pm-file" accept="image/jpeg,image/png,image/webp" multiple class="am-hidden">
+                    <div class="am-field-error"></div>
+                </div>
+                <div class="am-field am-field-full am-hidden" data-field="bom" id="am-pm-bom">
+                    <label>🔩 Linh kiện cấu thành / 1 <span data-bom-unit>máy</span> <span style="font-weight:400;color:#9ca3af">(BOM — kế toán bấm "Lấy tự động theo định mức" khi xuất kho cho đơn lắp ráp)</span></label>
+                    <input type="hidden" name="bom">
+                    <div id="am-pm-bom-box"></div>
                     <div class="am-field-error"></div>
                 </div>
                 <?= $field('Mô tả', '<textarea name="description" class="am-textarea" style="height:64px" placeholder="Mô tả ngắn về sản phẩm, trang bị đi kèm..."></textarea>', true) ?>

@@ -138,7 +138,7 @@
                 { name: 'province', label: 'Tỉnh / Thành phố', type: 'select', required: true, placeholder: '— Chọn tỉnh —', options: provinces.map(function (p) { return [p, p]; }) },
                 { name: 'taxCode', label: 'Mã số thuế', placeholder: 'Dùng khi xuất hoá đơn' },
                 { name: 'address', label: 'Địa chỉ', full: true, placeholder: 'Số nhà, đường, xã/phường, huyện' },
-                { name: 'limit', label: 'Hạn mức công nợ (đ)', type: 'number', min: 0, required: true, hint: 'Duyệt đơn vượt mức này sẽ bị cảnh báo' }
+                { name: 'limit', label: 'Hạn mức công nợ (đ)', type: 'money', min: 0, required: true, hint: 'Duyệt đơn vượt mức này sẽ bị cảnh báo' }
             ],
             values: d ? $.extend({ code: d.id }, d) : { code: AM.nextCode(dealers, 'DL', 3), level: 'Đồng', limit: 500000000 },
             onChange: function (api) {
@@ -174,7 +174,7 @@
             fields: [
                 { name: 'info', type: 'html', html: '<div class="am-row-between" style="background:#f8fafc;border-radius:8px;padding:10px 14px">' +
                     '<span style="font-size:12px;color:#6b7280">Dư nợ hiện tại</span><span style="font-weight:900;font-size:15px;color:#ef4444">' + AM.money(d.debt) + '</span></div>' },
-                { name: 'amount', label: 'Số tiền thu (đ)', type: 'number', min: 1, max: d.debt, required: true, full: true },
+                { name: 'amount', label: 'Số tiền thu (đ)', type: 'money', min: 1, max: d.debt, required: true, full: true },
                 { name: 'method', label: 'Hình thức', type: 'select', required: true, options: [['Tiền mặt', 'Tiền mặt'], ['Chuyển khoản', 'Chuyển khoản']] },
                 { name: 'date', label: 'Ngày thu', type: 'date', required: true },
                 { name: 'note', label: 'Ghi chú', type: 'textarea', full: true, placeholder: 'Số chứng từ, nội dung chuyển khoản...' }

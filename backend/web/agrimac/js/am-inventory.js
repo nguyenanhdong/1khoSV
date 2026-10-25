@@ -120,7 +120,7 @@
                 { name: 'cat', label: 'Nhóm linh kiện', type: 'select', placeholder: '— Chọn nhóm —', options: partCategories.map(function (c) { return [c, c]; }) },
                 { name: 'newCat', label: 'Hoặc tạo nhóm mới', placeholder: 'VD: Hệ thống phanh', hint: 'Điền nếu nhóm chưa có trong danh sách' },
                 { name: 'supId', label: 'Nhà cung cấp mặc định', type: 'select', placeholder: '— Không —', options: suppliers.map(function (x) { return [x.id, x.name]; }) },
-                { name: 'cost', label: 'Giá vốn (đ)', type: 'number', min: 0, required: true },
+                { name: 'cost', label: 'Giá vốn (đ)', type: 'money', min: 0, required: true },
                 { name: 'minStock', label: 'Tồn tối thiểu', type: 'number', min: 0, required: true, hint: 'Dưới mức này sẽ cảnh báo' }
             ],
             values: part ? $.extend({ code: part.id }, part) : { code: AM.nextCode(parts, 'LK', 3), unit: 'cái', minStock: 5, cat: partFilter },
@@ -262,7 +262,7 @@
         $('.am-kind').removeClass('active').filter('[data-kind="' + next + '"]').addClass('active');
         $('#am-imp-product-block').toggleClass('am-hidden', next !== 'product');
         $('#am-imp-part-block').toggleClass('am-hidden', next !== 'part');
-        $('#am-imp-price').attr('placeholder', next === 'part' ? 'VD: 45000000' : 'VD: 240000000');
+        $('#am-imp-price').attr('placeholder', next === 'part' ? 'VD: 45.000.000' : 'VD: 240.000.000');
         setPanel(null, false);
     }
 

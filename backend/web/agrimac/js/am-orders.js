@@ -293,11 +293,23 @@
         return customer === 'retail' ? retail : (p.dealerPrice || retail);
     }
 
+    /** Điền đơn giá theo khách + ghi chú đang áp giá nào (đại lý / bán lẻ) */
+    function setLinePrice($r, p, customer) {
+        var $note = $r.find('[data-line-note]'), note = '', warn = false;
+        $r.find('[data-line-price]').val(p ? productPrice(p, customer) : '');
+        if (p) {
+            if (customer === 'retail') note = 'Giá bán lẻ';
+            else if (p.dealerPrice) note = 'Giá đại lý';
+            else { note = 'Chưa có giá đại lý → đang lấy giá lẻ'; warn = true; }
+        }
+        $note.text(note).css('color', warn ? '#c2410c' : '#6b7280');
+    }
+
     function lineRow(kind) {
         var picker = AM.pickerHtml('line_item', kind === 'parts' ? 'parts' : 'products', '', '', kind === 'parts' ? 'Gõ tên / mã linh kiện...' : 'Gõ tên / mã sản phẩm...');
         return '<tr data-line data-auto="1"><td style="min-width:220px">' + picker + '</td>' +
             '<td style="width:74px"><input type="number" class="am-input" data-line-qty min="1" value="1"></td>' +
-            (kind === 'new' ? '<td style="width:130px"><input type="number" class="am-input" data-line-price min="0" placeholder="Đơn giá"></td><td style="width:90px;text-align:right;font-weight:700;font-size:12px" data-line-total>—</td>' : '') +
+            (kind === 'new' ? '<td style="width:130px"><input ' + AM.MONEY_ATTRS + ' class="am-input am-money" data-line-price placeholder="Đơn giá"><div data-line-note style="font-size:10px;margin-top:3px;line-height:1.3"></div></td><td style="width:90px;text-align:right;font-weight:700;font-size:12px" data-line-total>—</td>' : '') +
             '<td style="width:30px"><button type="button" class="am-line-del" data-line-del title="Xoá dòng">✕</button></td></tr>';
     }
 
@@ -365,7 +377,7 @@
         var customer = editor.api ? editor.api.get('customer') : '';
         $('#am-generic-form-el [data-lines="new"] tr[data-line][data-auto="1"]').each(function () {
             var code = $(this).find('input[type=hidden][name=line_item]').val(), p = code ? AM.productCache[code] : null;
-            if (p) $(this).find('[data-line-price]').val(productPrice(p, customer));
+            if (p) setLinePrice($(this), p, customer);
         });
     }
 
@@ -466,11 +478,11 @@
         .on('change', '#am-generic-form-el [data-lines="new"] input[type=hidden][name=line_item]', function () {
             var $r = $(this).closest('tr'), p = this.value ? AM.productCache[this.value] : null;
             $r.attr('data-auto', '1');
-            $r.find('[data-line-price]').val(p ? productPrice(p, editor.api ? editor.api.get('customer') : '') : '');
+            setLinePrice($r, p, editor.api ? editor.api.get('customer') : '');
             recalc();
         })
         .on('input', '#am-generic-form-el [data-line-price]', function () {
-            $(this).closest('tr').attr('data-auto', '0');
+            $(this).closest('tr').attr('data-auto', '0').find('[data-line-note]').text('Đã sửa giá tay').css('color', '#6b7280');
             recalc();
         })
         .on('input', '#am-generic-form-el [data-line-qty]', function () { recalc(); });

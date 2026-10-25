@@ -105,9 +105,9 @@
     /* ---------- BOM mặc định ---------- */
     var bomDraft = [];
 
-    function renderBomEditor(api, product) {
-        var total = bomCost(bomDraft);
-        var rows = bomDraft.map(function (b) {
+    /** Bảng linh kiện + ô chọn thêm (dùng cho popup BOM và form sản phẩm) */
+    function bomTableHtml(draft) {
+        var rows = draft.map(function (b) {
             var x = partById(b.id);
             if (!x) return '';
             return '<tr><td style="padding:6px 8px"><div style="font-weight:600;font-size:12px">' + AM.esc(x.name) + '</div>' +
@@ -116,10 +116,8 @@
                 '<td style="padding:6px 8px;text-align:right;font-weight:700;font-size:12px;white-space:nowrap">' + AM.money(x.cost * b.qty) + '</td>' +
                 '<td style="padding:6px 4px;width:30px"><button type="button" data-bom-del="' + x.id + '" style="background:#fee2e2;border:none;color:#ef4444;border-radius:5px;padding:2px 7px;cursor:pointer">✕</button></td></tr>';
         }).join('');
-        var avail = parts.filter(function (x) { return !bomDraft.some(function (b) { return b.id === x.id; }); });
-        api.html('bom',
-            '<label style="display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:5px">Danh sách linh kiện / 1 máy</label>' +
-            '<div style="border:1.5px solid #e5e7eb;border-radius:8px;overflow:hidden">' +
+        var avail = parts.filter(function (x) { return !draft.some(function (b) { return b.id === x.id; }); });
+        return '<div style="border:1.5px solid #e5e7eb;border-radius:8px;overflow:hidden">' +
             (rows ? '<table style="width:100%;border-collapse:collapse">' + rows + '</table>'
                   : '<div class="am-empty" style="padding:18px;font-size:12px">Chưa có linh kiện — thêm bên dưới</div>') +
             '<div style="display:flex;gap:6px;padding:8px;background:#f8fafc;border-top:1px solid #f3f4f6">' +
@@ -127,8 +125,30 @@
                 return '<option value="' + x.id + '">' + AM.esc(x.cat + ' · ' + x.name + ' (' + AM.money(x.cost) + ')') + '</option>';
             }).join('') + '</select>' +
             '<input type="number" min="1" value="1" data-bom-pick-qty class="am-input" style="width:64px;text-align:center">' +
-            '<button type="button" data-bom-add class="am-btn" style="padding:6px 12px">+ Thêm</button></div></div>'
-        );
+            '<button type="button" data-bom-add class="am-btn" style="padding:6px 12px">+ Thêm</button></div></div>';
+    }
+
+    /** Gắn sự kiện thêm / xoá / sửa SL cho bảng linh kiện trong $box; getDraft() trả mảng đang sửa */
+    function bindBomEditor($box, getDraft, redraw) {
+        $box.on('click', '[data-bom-add]', function () {
+            var id = $box.find('[data-bom-pick]').val(), qty = Math.max(1, Math.floor(+$box.find('[data-bom-pick-qty]').val() || 1));
+            if (!id) return;
+            getDraft().push({ id: id, qty: qty });
+            redraw();
+        }).on('click', '[data-bom-del]', function () {
+            var id = $(this).data('bom-del'), draft = getDraft();
+            for (var i = draft.length - 1; i >= 0; i--) if (draft[i].id === id) draft.splice(i, 1);
+            redraw();
+        }).on('change', '[data-bom-qty]', function () {
+            var id = $(this).data('bom-qty'), qty = Math.max(1, Math.floor(+this.value || 1));
+            getDraft().forEach(function (b) { if (b.id === id) b.qty = qty; });
+            redraw();
+        });
+    }
+
+    function renderBomEditor(api, product) {
+        var total = bomCost(bomDraft);
+        api.html('bom', '<label style="display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:5px">Danh sách linh kiện / 1 máy</label>' + bomTableHtml(bomDraft));
         var diff = total - product.cost;
         api.preview(bomDraft.length
             ? '<div style="background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:8px;padding:10px 14px;font-size:12px;color:#374151;line-height:1.7">' +
@@ -143,7 +163,7 @@
         bomDraft = (boms[product.name] || []).map(function (b) { return { id: b.id, qty: b.qty }; });
         var api = AM.form.open({
             title: '🔩 BOM mặc định — ' + product.name,
-            sub: 'Sale dùng BOM này khi bấm "↺ BOM mặc định" trong đơn hàng; có thể sửa riêng cho từng đơn',
+            sub: 'Kế toán bấm "⚡ Lấy tự động theo định mức" khi xuất linh kiện cho đơn lắp ráp; có thể sửa riêng từng đơn',
             width: 640,
             submitLabel: '💾 Lưu BOM',
             submitColor: '#0ea5e9',
@@ -164,21 +184,21 @@
                 });
             }
         });
-        var $f = api.$form;
-        $f.on('click', '[data-bom-add]', function () {
-            var id = $f.find('[data-bom-pick]').val(), qty = Math.max(1, Math.floor(+$f.find('[data-bom-pick-qty]').val() || 1));
-            if (!id) return;
-            bomDraft.push({ id: id, qty: qty });
-            renderBomEditor(api, product);
-        }).on('click', '[data-bom-del]', function () {
-            var id = $(this).data('bom-del');
-            bomDraft = bomDraft.filter(function (b) { return b.id !== id; });
-            renderBomEditor(api, product);
-        }).on('change', '[data-bom-qty]', function () {
-            var id = $(this).data('bom-qty'), qty = Math.max(1, Math.floor(+this.value || 1));
-            bomDraft.forEach(function (b) { if (b.id === id) b.qty = qty; });
-            renderBomEditor(api, product);
-        });
+        bindBomEditor(api.$form, function () { return bomDraft; }, function () { renderBomEditor(api, product); });
+    }
+
+    /* ---------- BOM trong form sản phẩm ---------- */
+    var pmBom = [];
+
+    function renderPmBom() {
+        var $f = $('#am-product-form'), source = $f.find('[name="sourceType"]').val(), show = source === 'assembly' || source === 'both';
+        $('#am-pm-bom').toggleClass('am-hidden', !show).find('[data-bom-unit]').text(($f.find('[name="unit"]').val() || 'Cái').toLowerCase());
+        if (!show) return;
+        var total = bomCost(pmBom);
+        $('#am-pm-bom-box').html(bomTableHtml(pmBom) + (pmBom.length
+            ? '<div style="font-size:12px;color:#0369a1;margin-top:6px">Giá vốn theo linh kiện: <b>' + AM.money(total) + '</b>' +
+              (+$f.find('[name="cost"]').val() ? '' : ' — để trống ô Giá vốn thì hệ thống lấy số này') + '</div>'
+            : '<div style="font-size:11px;color:#9ca3af;margin-top:6px">Có thể khai báo sau; đơn lắp ráp cần BOM để lấy linh kiện tự động.</div>'));
     }
 
     function render() {
@@ -324,6 +344,8 @@
             $f.find('[name="minStock"]').val(3);
             $f.find('[name="unit"]').val('Cái');
         }
+        pmBom = ((p && boms[p.name]) || []).map(function (b) { return { id: b.id, qty: b.qty }; });
+        renderPmBom();
         renderPreview();
         openModal('#am-product-modal');
     }
@@ -371,8 +393,13 @@
         var $btn = $('#am-pm-submit'), label = $btn.text();
         $btn.prop('disabled', true).text('⏳ Đang lưu...');
         AM.api('product.save', $.extend({}, d, {
-            id: state.editingId || '', images: state.images.map(function (img) { return img.url; })
+            id: state.editingId || '', images: state.images.map(function (img) { return img.url; }),
+            bomSent: 1, bom: pmBom
         })).done(function (data) {
+            if (data.boms) {
+                $.each(boms, function (k) { delete boms[k]; });
+                $.extend(boms, data.boms);
+            }
             var p = byId(products, data.product.id);
             if (p) {
                 $.extend(p, data.product);
@@ -438,6 +465,8 @@
             openModal('#am-category-modal');
         });
 
+        bindBomEditor($('#am-pm-bom-box'), function () { return pmBom; }, renderPmBom);
+        $('#am-product-form').on('change', '[name="sourceType"],[name="unit"]', renderPmBom).on('input', '[name="cost"]', renderPmBom);
         $('#am-product-form').on('submit', function (e) { e.preventDefault(); saveProduct(); })
             .on('input change', 'input:not([type=file]),select', function () {
                 $(this).closest('.am-field').removeClass('has-error').find('.am-field-error').text('');

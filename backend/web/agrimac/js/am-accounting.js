@@ -39,7 +39,7 @@
             fields: [
                 { name: 'info', type: 'html', html: '<div class="am-row-between" style="background:#f8fafc;border-radius:8px;padding:10px 14px">' +
                     '<span style="font-size:12px;color:#6b7280">Còn phải trả</span><b style="font-size:15px;color:#ef4444">' + AM.money(left) + '</b></div>' },
-                { name: 'amount', label: 'Số tiền chi (đ)', type: 'number', min: 1, max: left, required: true, full: true },
+                { name: 'amount', label: 'Số tiền chi (đ)', type: 'money', min: 1, max: left, required: true, full: true },
                 { name: 'method', label: 'Hình thức', type: 'select', required: true, options: [['Chuyển khoản', 'Chuyển khoản'], ['Tiền mặt', 'Tiền mặt'], ['Cộng vào lương', 'Cộng vào lương']] },
                 { name: 'date', label: 'Ngày chi', type: 'date', required: true },
                 { name: 'note', label: 'Ghi chú', full: true, placeholder: 'Số chứng từ / kỳ lương' }

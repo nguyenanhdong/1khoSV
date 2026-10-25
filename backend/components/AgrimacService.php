@@ -238,6 +238,11 @@ class AgrimacService
         if (count($images) > 20) {
             $errors['images'] = 'Tối đa 20 ảnh';
         }
+        // Linh kiện cấu thành (BOM): chỉ với sản phẩm tự lắp; gửi kèm cờ bomSent để phân biệt "không gửi" với "xoá hết"
+        $bom = null;
+        if (!empty($d['bomSent']) && in_array($source, ['assembly', 'both'], true)) {
+            $bom = $this->readBom($d['bom'] ?? [], 'bom');
+        }
         $this->fail($errors);
 
         // Công suất / hệ dẫn động không còn nhập ở CMS: giữ nguyên giá trị cũ trong DB
@@ -259,8 +264,18 @@ class AgrimacService
             $code = 'SP' . str_pad((string)$newId, 5, '0', STR_PAD_LEFT);
             $this->update('product', ['code' => $code], ['id' => $newId]);
         }
-        return ['message' => ($id ? '✓ Đã cập nhật "' : '✓ Đã thêm sản phẩm "') . $name . '" (' . $code . ')', 'data' => [
-            'product' => R::product($code), 'categories' => R::categories(),
+        $bomNote = '';
+        if ($bom !== null) {
+            $productId = $id ?: $newId;
+            $bomCost = $this->writeBom($productId, $bom);
+            // Chưa nhập giá vốn → lấy theo tổng linh kiện
+            if ($bom && $nums['cost'] === null) {
+                $this->update('product', ['cost_price' => $bomCost], ['id' => $productId]);
+            }
+            $bomNote = $bom ? ' · ' . count($bom) . ' linh kiện' : '';
+        }
+        return ['message' => ($id ? '✓ Đã cập nhật "' : '✓ Đã thêm sản phẩm "') . $name . '" (' . $code . ')' . $bomNote, 'data' => [
+            'product' => R::product($code), 'categories' => R::categories(), 'boms' => (object)R::defaultBoms(),
         ]];
     }
 
@@ -281,31 +296,45 @@ class AgrimacService
         return ['message' => '✓ Đã thêm danh mục "' . $name . '"', 'data' => ['id' => (string)$id, 'categories' => R::categories()]];
     }
 
+    /** Đọc danh sách linh kiện [{id: mã LK, qty}] → [part_id => qty]; lỗi gắn vào ô $field */
+    private function readBom($rows, $field)
+    {
+        $items = [];
+        foreach ((array)$rows as $it) {
+            $partId = $this->idByCode('part', $it['id'] ?? '');
+            $qty = (int)($it['qty'] ?? 0);
+            if (!$partId || $qty < 1) {
+                throw new Invalid([$field => 'Linh kiện hoặc số lượng không hợp lệ']);
+            }
+            $items[$partId] = ($items[$partId] ?? 0) + $qty;
+        }
+        return $items;
+    }
+
+    /** Ghi đè BOM mặc định của sản phẩm, trả về giá vốn theo BOM / 1 máy */
+    private function writeBom($productId, array $items)
+    {
+        $this->db->createCommand()->delete('product_bom', ['product_id' => $productId])->execute();
+        $cost = 0;
+        $costs = $items ? (new Query())->select(['cost_price', 'id'])->from('part')->where(['id' => array_keys($items)])->indexBy('id')->column($this->db) : [];
+        foreach ($items as $partId => $qty) {
+            $this->insert('product_bom', ['product_id' => $productId, 'part_id' => $partId, 'qty' => $qty]);
+            $cost += (int)$costs[$partId] * $qty;
+        }
+        return $cost;
+    }
+
     private function saveBom(array $d)
     {
         $productId = $this->idByCode('product', $d['productId'] ?? '');
         if (!$productId) {
             throw new Invalid(['updateCost' => 'Sản phẩm không tồn tại']);
         }
-        $items = [];
-        foreach ((array)($d['items'] ?? []) as $it) {
-            $partId = $this->idByCode('part', $it['id'] ?? '');
-            $qty = (int)($it['qty'] ?? 0);
-            if (!$partId || $qty < 1) {
-                throw new Invalid(['updateCost' => 'Linh kiện hoặc số lượng không hợp lệ']);
-            }
-            $items[$partId] = $qty;
-        }
+        $items = $this->readBom($d['items'] ?? [], 'updateCost');
         if (!$items) {
             throw new Invalid(['updateCost' => 'BOM cần ít nhất 1 linh kiện']);
         }
-        $this->db->createCommand()->delete('product_bom', ['product_id' => $productId])->execute();
-        $cost = 0;
-        $costs = (new Query())->select(['id', 'cost_price'])->from('part')->where(['id' => array_keys($items)])->indexBy('id')->column($this->db);
-        foreach ($items as $partId => $qty) {
-            $this->insert('product_bom', ['product_id' => $productId, 'part_id' => $partId, 'qty' => $qty]);
-            $cost += $costs[$partId] * $qty;
-        }
+        $cost = $this->writeBom($productId, $items);
         if (!empty($d['updateCost'])) {
             $this->update('product', ['cost_price' => $cost], ['id' => $productId]);
         }

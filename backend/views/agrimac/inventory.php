@@ -203,7 +203,7 @@ $label = function ($text, $color = '#374151', $size = 12, $weight = 700, $mb = 5
             </div>
             <div style="margin-bottom:12px">
                 <?= $label('Đơn giá vốn (đ)') ?>
-                <input id="am-imp-price" type="number" placeholder="VD: 240000000" class="am-input">
+                <input id="am-imp-price" type="text" inputmode="numeric" autocomplete="off" placeholder="VD: 240.000.000" class="am-input am-money">
             </div>
             <div id="am-imp-total" class="am-hidden" style="background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:8px;padding:10px 14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
                 <span style="font-size:12px;color:#6b7280">Tổng giá trị nhập:</span>
