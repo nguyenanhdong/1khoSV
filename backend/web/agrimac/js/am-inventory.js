@@ -107,6 +107,8 @@
         }).join(''));
     }
 
+    var NEW_CAT = '__new__';
+
     function openPartForm(part) {
         AM.form.open({
             title: part ? '✏️ Sửa linh kiện ' + part.id : '🔩 Thêm linh kiện',
@@ -117,17 +119,19 @@
                 { name: 'code', label: 'Mã linh kiện', readonly: true },
                 { name: 'unit', label: 'Đơn vị tính', required: true, placeholder: 'cái / bộ' },
                 { name: 'name', label: 'Tên linh kiện', required: true, full: true, placeholder: 'VD: Bơm cao áp Kubota' },
-                { name: 'cat', label: 'Nhóm linh kiện', type: 'select', placeholder: '— Chọn nhóm —', options: partCategories.map(function (c) { return [c, c]; }) },
-                { name: 'newCat', label: 'Hoặc tạo nhóm mới', placeholder: 'VD: Hệ thống phanh', hint: 'Điền nếu nhóm chưa có trong danh sách' },
+                { name: 'cat', label: 'Nhóm linh kiện', type: 'select', required: true, placeholder: '— Chọn nhóm —',
+                  options: partCategories.map(function (c) { return [c, c]; }).concat([[NEW_CAT, '➕ Tạo nhóm mới...']]) },
+                { name: 'newCat', label: 'Tên nhóm mới', required: true, placeholder: 'VD: Động cơ, Hộp số, Hệ thống phanh' },
                 { name: 'supId', label: 'Nhà cung cấp mặc định', type: 'select', placeholder: '— Không —', options: suppliers.map(function (x) { return [x.id, x.name]; }) },
                 { name: 'cost', label: 'Giá vốn (đ)', type: 'money', min: 0, required: true },
                 { name: 'minStock', label: 'Tồn tối thiểu', type: 'number', min: 0, required: true, hint: 'Dưới mức này sẽ cảnh báo' }
             ],
-            values: part ? $.extend({ code: part.id }, part) : { code: AM.nextCode(parts, 'LK', 3), unit: 'cái', minStock: 5, cat: partFilter },
+            values: part ? $.extend({ code: part.id }, part)
+                : { code: AM.nextCode(parts, 'LK', 3), unit: 'cái', minStock: 5, cat: partCategories.length ? (partCategories.indexOf(partFilter) >= 0 ? partFilter : '') : NEW_CAT },
+            onChange: function (api) { api.toggle('newCat', api.get('cat') === NEW_CAT); },
             validate: function (v) {
                 var e = {}, name = v.name.toLowerCase();
-                if (!v.cat && !v.newCat) e.cat = 'Chọn nhóm hoặc tạo nhóm mới';
-                if (v.newCat && partCategories.some(function (c) { return c.toLowerCase() === v.newCat.toLowerCase(); })) e.newCat = 'Nhóm đã tồn tại, hãy chọn ở trên';
+                if (v.cat === NEW_CAT && v.newCat && partCategories.some(function (c) { return c.toLowerCase() === v.newCat.toLowerCase(); })) e.newCat = 'Nhóm đã tồn tại, hãy chọn ở trên';
                 if (v.name && parts.some(function (x) { return x.name.toLowerCase() === name && (!part || x.id !== part.id); })) e.name = 'Linh kiện đã tồn tại';
                 $.each(['cost', 'minStock'], function (_, k) {
                     if (v[k] !== '' && (+v[k] < 0 || Math.floor(+v[k]) !== +v[k])) e[k] = 'Phải là số nguyên không âm';
@@ -135,7 +139,8 @@
                 return e;
             },
             onSubmit: function (v) {
-                return AM.api('part.save', $.extend({}, v, { id: part ? part.id : '' })).done(function (data) {
+                var isNew = v.cat === NEW_CAT;
+                return AM.api('part.save', $.extend({}, v, { id: part ? part.id : '', cat: isNew ? '' : v.cat, newCat: isNew ? v.newCat : '' })).done(function (data) {
                     applyInventory(data);
                     if (!part) selected.part = data.id;
                     renderAll();
