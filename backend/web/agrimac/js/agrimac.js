@@ -459,7 +459,8 @@
 
     /** Nhãn ngắn trạng thái thanh toán của đơn: {label, color, bg} */
     AM.debtBadge = function (o) {
-        if (o.type === 'warranty' || o.status === 'cancelled') return null;
+        // Công nợ chỉ áp dụng cho đơn bán của đại lý
+        if (o.type !== 'new' || o.customerType === 'retail' || o.status === 'cancelled') return null;
         if (!o.debtMode) return { label: 'Chưa chọn TT', color: '#6b7280', bg: '#f1f5f9' };
         if (o.debtMode === 'paid') return { label: 'Đã thanh toán', color: '#059669', bg: '#d1fae5' };
         return { label: 'Nợ ' + AM.money(o.debt), color: '#ef4444', bg: '#fee2e2' };

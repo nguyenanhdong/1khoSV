@@ -15,6 +15,7 @@
 -- Đợt cập nhật frontend 30/09/2026: chạy thêm production_frontend_2026-09-30.sql (index, số điện thoại +84).
 -- Công nợ theo đơn đại lý 05/10/2026: chạy thêm production_debt_2026-10-05.sql.
 -- Luồng 3 loại đơn + nhà xe 22/10/2026: chạy thêm production_flow_2026-10-22.sql (sau file công nợ).
+-- Nguồn hàng không bắt buộc + chiết khấu đơn 25/10/2026: chạy thêm production_product_2026-10-25.sql (sau file luồng đơn).
 -- KHÔNG gồm dữ liệu demo (đại lý, đơn, NCC, linh kiện, nhân viên mẫu của lệnh `php yii agrimac-seed`) — không chạy seed trên production.
 -- =====================================================================
 

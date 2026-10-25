@@ -64,9 +64,15 @@ $field = function ($label, $input, $full = false, $hint = '') {
             <div class="am-form-grid">
                 <?= $field('Tên sản phẩm <span class="am-req">*</span>', '<input name="name" class="am-input" placeholder="VD: Kubota L3408">', true) ?>
                 <?= $field('Mã sản phẩm', '<input name="code" class="am-input" readonly style="background:#f8fafc;color:#6b7280">', false, 'Tự sinh khi lưu') ?>
-                <?= $field('Danh mục <span class="am-req">*</span>', '<select name="catId" class="am-input"></select>') ?>
-                <?= $field('Nguồn hàng <span class="am-req">*</span>', '<select name="sourceType" class="am-input"></select>') ?>
-                <?= $field('Nhà cung cấp', '<select name="supId" class="am-input"></select>', false, 'Bắt buộc khi nhập nguyên chiếc') ?>
+                <?= $field('Danh mục <span class="am-req">*</span><button type="button" class="am-quick-link" data-quick="category">+ Thêm nhanh</button>', '<select name="catId" class="am-input"></select>'
+                    . '<div class="am-quick am-hidden" data-quick-box="category"><select data-quick-parent class="am-input"></select>'
+                    . '<input data-quick-name class="am-input" placeholder="Tên danh mục mới">'
+                    . '<div class="am-quick-actions"><button type="button" class="am-btn" data-quick-save>Lưu</button><button type="button" class="am-cancel" data-quick-cancel>Hủy</button></div></div>') ?>
+                <?= $field('Nguồn hàng', '<select name="sourceType" class="am-input"></select>', false, 'Chọn Tự lắp / Cả hai để khai báo linh kiện') ?>
+                <?= $field('Nhà cung cấp<button type="button" class="am-quick-link" data-quick="supplier">+ Thêm nhanh</button>', '<select name="supId" class="am-input"></select>'
+                    . '<div class="am-quick am-hidden" data-quick-box="supplier"><input data-quick-name class="am-input" placeholder="Tên nhà cung cấp mới">'
+                    . '<input data-quick-phone class="am-input" placeholder="Số điện thoại (không bắt buộc)">'
+                    . '<div class="am-quick-actions"><button type="button" class="am-btn" data-quick-save>Lưu</button><button type="button" class="am-cancel" data-quick-cancel>Hủy</button></div></div>', false, 'Bắt buộc khi nhập nguyên chiếc') ?>
                 <?= $field('Giá bán lẻ (đ) <span class="am-req">*</span>', '<input name="price" type="text" inputmode="numeric" autocomplete="off" class="am-input am-money" placeholder="VD: 285.000.000">', false, 'Dùng cho đơn khách lẻ') ?>
                 <?= $field('Giá đại lý (đ)', '<input name="dealerPrice" type="text" inputmode="numeric" autocomplete="off" class="am-input am-money" placeholder="VD: 260.000.000">', false, 'Giá chung cho mọi đại lý. Để trống = dùng giá bán lẻ') ?>
                 <?= $field('Giá vốn (đ)', '<input name="cost" type="text" inputmode="numeric" autocomplete="off" class="am-input am-money" placeholder="VD: 240.000.000">', false, 'Tự lắp: có thể để trống, tính theo BOM') ?>

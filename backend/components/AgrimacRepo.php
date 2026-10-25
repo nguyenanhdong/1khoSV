@@ -360,6 +360,16 @@ class AgrimacRepo
     }
 
     /** BOM mặc định theo tên sản phẩm (trang Đơn hàng dùng tên để tra). */
+    /** Định mức linh kiện (BOM) / 1 máy của một sản phẩm, kèm tồn kho linh kiện */
+    public static function productBom($code)
+    {
+        return array_map(function ($r) {
+            return ['id' => $r['code'], 'name' => $r['name'], 'unit' => $r['unit'], 'qty' => (int)$r['qty'], 'stock' => (int)$r['stock'], 'cost' => (int)$r['cost_price']];
+        }, (new Query())->select(['pt.code', 'pt.name', 'pt.unit', 'b.qty', 'pt.stock', 'pt.cost_price'])->from('product_bom b')
+            ->innerJoin('product p', 'p.id = b.product_id')->innerJoin('part pt', 'pt.id = b.part_id')
+            ->where(['p.code' => $code])->orderBy('b.id')->all());
+    }
+
     public static function defaultBoms()
     {
         return self::once('boms', function () {
@@ -510,7 +520,8 @@ class AgrimacRepo
                 $itemProducts[$i['order_id']][] = $i;
                 $items[$i['order_id']][] = [
                     'productId' => $i['code'], 'name' => $i['name'], 'unit' => $i['unit'] ?: 'Cái', 'qty' => (int)$i['qty'],
-                    'price' => (int)$i['unit_price'], 'total' => (int)$i['line_total'],
+                    'price' => (int)$i['unit_price'], 'total' => (int)$i['line_total'], 'gross' => (int)$i['qty'] * (int)$i['unit_price'],
+                    'discountType' => $i['discount_type'] ?? 'amount', 'discountValue' => (float)($i['discount_value'] ?? 0), 'discountAmount' => (int)($i['discount_amount'] ?? 0),
                 ];
             }
             $parts = [];
@@ -567,6 +578,8 @@ class AgrimacRepo
                     'items' => $lines, 'parts' => $bom, 'bom' => $bom, 'autoParts' => array_values($autoParts),
                     'product' => $summary, 'productId' => $first['productId'] ?? null, 'qty' => (int)$qty,
                     'total' => (int)$o['total_amount'], 'cost' => (int)$o['total_cost'],
+                    'subtotal' => (int)($o['subtotal'] ?? 0) ?: (int)$o['total_amount'], 'discountType' => $o['discount_type'] ?? 'amount',
+                    'discountValue' => (float)($o['discount_value'] ?? 0), 'discountAmount' => (int)($o['discount_amount'] ?? 0),
                     'sale' => $o['sale'], 'delivery' => $o['delivery'], 'assembler' => $o['assembler'],
                     'date' => self::vnDate($o['ordered_at']), 'orderedAt' => self::vnDate($o['ordered_at'], true),
                     'approvedAt' => self::vnDate($o['approved_at'], true), 'exportedAt' => self::vnDate($o['exported_at'], true),
@@ -669,7 +682,7 @@ class AgrimacRepo
 
         // Top sản phẩm / đại lý
         $topProducts = (new Query())->from('dealer_order_item i')->innerJoin('dealer_order o', 'o.id = i.order_id')->innerJoin('product p', 'p.id = i.product_id')
-            ->select(['code' => 'p.code', 'name' => 'p.name', 'qty' => 'SUM(i.qty)', 'revenue' => 'SUM(i.line_total)', 'cost' => 'SUM(i.qty * p.cost_price)'])
+            ->select(['code' => 'p.code', 'name' => 'p.name', 'qty' => 'SUM(i.qty)', 'revenue' => 'SUM(CASE WHEN o.subtotal > 0 THEN ROUND(i.line_total * o.total_amount / o.subtotal) ELSE i.line_total END)', 'cost' => 'SUM(i.qty * p.cost_price)'])
             ->where(['o.type' => 'new', 'o.status' => 'delivered'])->andWhere(['between', 'o.delivered_at', $start, $end])
             ->groupBy('p.id')->orderBy(['revenue' => SORT_DESC])->limit(10)->all();
         $topDealers = $sales($start, $end)->innerJoin('dealer d', 'd.id = o.dealer_id')

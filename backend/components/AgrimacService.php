@@ -23,7 +23,7 @@ class AgrimacService
         'part.save'            => ['savePart', ['inventory'], null],
         'stock.import'         => ['stockImport', ['inventory'], null],
         'stock.export'         => ['stockExport', ['inventory'], null],
-        'supplier.save'        => ['saveSupplier', ['suppliers', 'inventory'], null],
+        'supplier.save'        => ['saveSupplier', ['suppliers', 'inventory', 'products'], null],
         'supplier.return'      => ['createReturn', ['suppliers'], null],
         'supplier.returnNext'  => ['nextReturnStatus', ['suppliers'], null],
         'dealer.save'          => ['saveDealer', ['dealers'], ['admin', 'sale']],
@@ -208,8 +208,9 @@ class AgrimacService
         if ($catId && !(new Query())->from('category')->where(['id' => $catId, 'is_delete' => 0])->exists($this->db)) {
             $errors['catId'] = 'Danh mục không hợp lệ';
         }
-        $source = $d['sourceType'] ?? 'import';
-        if (!isset(D::SOURCE_TYPES[$source])) {
+        // Nguồn hàng không bắt buộc: để trống = NULL
+        $source = ($d['sourceType'] ?? '') === '' ? null : $d['sourceType'];
+        if ($source !== null && !isset(D::SOURCE_TYPES[$source])) {
             $errors['sourceType'] = 'Nguồn hàng không hợp lệ';
         }
         $supplierId = !empty($d['supId']) ? $this->idByCode('supplier', $d['supId']) : null;
@@ -834,6 +835,43 @@ class AgrimacService
 
     /* ---------------- Tạo đơn ---------------- */
 
+    /**
+     * Chiết khấu: $type percent|amount, $value nhập (% cho phép số lẻ, hoặc số tiền) áp trên $base.
+     * Trả [type, value, số tiền chiết khấu]; lỗi ghi vào $errors[$field].
+     */
+    private function discount($type, $value, $base, $field, array &$errors, $label = '')
+    {
+        $type = $type === 'percent' ? 'percent' : 'amount';
+        $raw = trim(str_replace(',', '.', (string)$value));
+        if ($type === 'amount') {
+            $raw = preg_replace('/\D/', '', $raw);
+        }
+        $prefix = $label !== '' ? 'Chiết khấu "' . $label . '"' : 'Chiết khấu cuối đơn';
+        if ($raw === '') {
+            return [$type, 0, 0];
+        }
+        if (!is_numeric($raw) || (float)$raw < 0) {
+            $errors[$field] = $prefix . ' không hợp lệ';
+            return [$type, 0, 0];
+        }
+        $v = (float)$raw;
+        if ($v == 0) {
+            return [$type, 0, 0];
+        }
+        if ($type === 'percent') {
+            if ($v > 100) {
+                $errors[$field] = $prefix . ' tối đa 100%';
+                return [$type, 0, 0];
+            }
+            return [$type, round($v, 2), (int)round($base * $v / 100)];
+        }
+        if ($v > $base) {
+            $errors[$field] = $prefix . ' lớn hơn giá trị ' . ($label !== '' ? 'dòng' : 'đơn');
+            return [$type, 0, 0];
+        }
+        return [$type, (int)$v, (int)$v];
+    }
+
     private function createOrder(array $d)
     {
         $errors = [];
@@ -908,7 +946,8 @@ class AgrimacService
                 } elseif ($type === 'new' && $price <= 0) {
                     $errors['items'] = 'Đơn giá "' . $product['name'] . '" phải lớn hơn 0';
                 }
-                $lines[] = [$product, $qty, $price];
+                $disc = $type === 'new' ? $this->discount($row['discountType'] ?? '', $row['discount'] ?? '', max(0, $qty) * $price, 'items', $errors, $product['name']) : ['amount', 0, 0];
+                $lines[] = [$product, $qty, $price, $disc];
             }
             if (!$lines && empty($errors['items'])) {
                 $errors['items'] = 'Vui lòng thêm ít nhất một sản phẩm';
@@ -925,18 +964,26 @@ class AgrimacService
         $this->fail($errors);
 
         $code = $this->nextCode('dealer_order', 'DH' . date('Y'));
-        $total = 0;
-        foreach ($lines as [, $qty, $price]) {
-            $total += $qty * $price;
+        $subtotal = 0;
+        foreach ($lines as [, $qty, $price, $disc]) {
+            $subtotal += $qty * $price - $disc[2];
         }
+        // Chiết khấu cuối đơn (chỉ đơn bán)
+        $orderDisc = $type === 'new' ? $this->discount($d['discountType'] ?? '', $d['discount'] ?? '', $subtotal, 'discount', $errors) : ['amount', 0, 0];
+        $this->fail($errors);
+        $total = $subtotal - $orderDisc[2];
         $leadId = $type === 'new' && !empty($d['lead']) ? $this->leadId($d['lead']) : null;
         $id = $this->insert('dealer_order', array_merge([
             'code' => $code, 'type' => $type, 'dealer_id' => $dealerId, 'customer_type' => $customerType,
             'lead_id' => $leadId ?: null, 'claim_id' => $claimId, 'status' => 'pending', 'total_amount' => $total,
+            'subtotal' => $subtotal, 'discount_type' => $orderDisc[0], 'discount_value' => $orderDisc[1], 'discount_amount' => $orderDisc[2],
             'sale_id' => $saleId, 'created_by' => $this->userId, 'note' => $this->str($d, 'note', 500) ?: null, 'ordered_at' => date('Y-m-d H:i:s'),
         ], $retail));
-        foreach ($lines as [$product, $qty, $price]) {
-            $this->insert('dealer_order_item', ['order_id' => $id, 'product_id' => $product['id'], 'qty' => $qty, 'unit_price' => $price, 'line_total' => $qty * $price]);
+        foreach ($lines as [$product, $qty, $price, $disc]) {
+            $this->insert('dealer_order_item', [
+                'order_id' => $id, 'product_id' => $product['id'], 'qty' => $qty, 'unit_price' => $price,
+                'discount_type' => $disc[0], 'discount_value' => $disc[1], 'discount_amount' => $disc[2], 'line_total' => $qty * $price - $disc[2],
+            ]);
         }
         if ($parts) {
             $cost = $this->writeOrderParts(['id' => $id], $parts);

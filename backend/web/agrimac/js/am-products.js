@@ -219,12 +219,58 @@
     function fillOptions() {
         var $f = $('#am-product-form');
         $f.find('[name="catId"]').html('<option value="">— Chọn danh mục —</option>' + categoryOptions());
-        $f.find('[name="sourceType"]').html($.map(sourceTypes, function (label, key) {
+        $f.find('[name="sourceType"]').html('<option value="">— Chưa xác định —</option>' + $.map(sourceTypes, function (label, key) {
             return '<option value="' + key + '">' + AM.esc(label) + '</option>';
         }).join(''));
-        $f.find('[name="supId"]').html('<option value="">— Không có —</option>' + suppliers.map(function (s) {
+        fillSuppliers();
+    }
+
+    function fillSuppliers() {
+        $('#am-product-form [name="supId"]').html('<option value="">— Không có —</option>' + suppliers.map(function (s) {
             return '<option value="' + s.id + '">' + AM.esc(s.name) + '</option>';
         }).join(''));
+    }
+
+    /* ---------- Thêm nhanh danh mục / nhà cung cấp ngay trong form sản phẩm ---------- */
+    function quickBox(kind) { return $('#am-product-form [data-quick-box="' + kind + '"]'); }
+
+    function closeQuick(kind) { quickBox(kind).addClass('am-hidden').find('input').val(''); }
+
+    function openQuick(kind) {
+        var $box = quickBox(kind);
+        if (!$box.hasClass('am-hidden')) return closeQuick(kind);
+        if (kind === 'category') {
+            $box.find('[data-quick-parent]').html('<option value="">— Danh mục cấp 1 —</option>' + categories.filter(function (c) { return !c.parent; }).map(function (c) {
+                return '<option value="' + c.id + '">Thuộc: ' + AM.esc(c.name) + '</option>';
+            }).join(''));
+        }
+        $box.removeClass('am-hidden').find('[data-quick-name]').trigger('focus');
+    }
+
+    function saveQuick(kind) {
+        var $f = $('#am-product-form'), $box = quickBox(kind), name = $.trim($box.find('[data-quick-name]').val());
+        var field = kind === 'category' ? 'catId' : 'supId';
+        if (!name) return setError($f, field, kind === 'category' ? 'Nhập tên danh mục mới' : 'Nhập tên nhà cung cấp mới');
+        var $btn = $box.find('[data-quick-save]').prop('disabled', true);
+        var req = kind === 'category'
+            ? AM.api('category.save', { name: name, parentId: $box.find('[data-quick-parent]').val() })
+            : AM.api('supplier.save', { name: name, contact: $.trim($box.find('[data-quick-phone]').val()) });
+        req.done(function (data) {
+            if (kind === 'category') {
+                AM.replace(categories, data.categories);
+                $f.find('[name="catId"]').html('<option value="">— Chọn danh mục —</option>' + categoryOptions());
+                renderCategories();
+            } else {
+                AM.replace(suppliers, data.suppliers);
+                fillSuppliers();
+            }
+            $f.find('[name="' + field + '"]').val(String(data.id)).closest('.am-field').removeClass('has-error').find('.am-field-error').text('');
+            closeQuick(kind);
+        }).fail(function (err) {
+            err.handled = true;
+            var msg = $.map(err.errors || {}, function (m) { return m; })[0] || err.message;
+            setError($f, field, msg);
+        }).always(function () { $btn.prop('disabled', false); });
     }
 
     function clearErrors($form) {
@@ -329,6 +375,8 @@
         renderImages();
         fillOptions();
         $f[0].reset();
+        closeQuick('category');
+        closeQuick('supplier');
         clearErrors($f);
         $('#am-pm-title').text(p ? '✏️ Sửa sản phẩm ' + p.id : '🚜 Thêm sản phẩm mới');
         $('#am-pm-sub').text(p ? 'Tồn kho hiện tại: ' + p.stock + ' chiếc (thay đổi qua phiếu kho)' : 'Tồn kho ban đầu = 0, tăng khi tạo phiếu nhập kho hoặc hoàn tất lắp ráp');
@@ -466,6 +514,13 @@
         });
 
         bindBomEditor($('#am-pm-bom-box'), function () { return pmBom; }, renderPmBom);
+        $('#am-product-form')
+            .on('click', '[data-quick]', function (e) { e.preventDefault(); openQuick($(this).data('quick')); })
+            .on('click', '[data-quick-save]', function () { saveQuick($(this).closest('[data-quick-box]').data('quick-box')); })
+            .on('click', '[data-quick-cancel]', function () { closeQuick($(this).closest('[data-quick-box]').data('quick-box')); })
+            .on('keydown', '[data-quick-box] input', function (e) {
+                if (e.key === 'Enter') { e.preventDefault(); saveQuick($(this).closest('[data-quick-box]').data('quick-box')); }
+            });
         $('#am-product-form').on('change', '[name="sourceType"],[name="unit"]', renderPmBom).on('input', '[name="cost"]', renderPmBom);
         $('#am-product-form').on('submit', function (e) { e.preventDefault(); saveProduct(); })
             .on('input change', 'input:not([type=file]),select', function () {

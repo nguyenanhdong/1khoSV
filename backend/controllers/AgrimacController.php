@@ -119,6 +119,8 @@ class AgrimacController extends Controller
                 return ['rows' => R::productSearch($request->get('q', ''), 20)];
             case 'product':
                 return ['row' => R::product($request->get('code', ''))];
+            case 'product-bom':
+                return ['rows' => R::productBom((string)$request->get('code', ''))];
             case 'market-orders':
             case 'market-order':
                 if (!D::canMarketOrders($this->view->params['amRole'])) {
