@@ -198,7 +198,7 @@
         }
         var html = '<div class="am-label" style="margin:2px 0 6px">' + (o.type === 'assembly' ? 'MÁY CẦN LẮP' : 'SẢN PHẨM') + '</div><table class="am-mini-table">' +
             o.items.map(function (i) {
-                return '<tr><td>' + AM.esc(i.name) + '<div class="am-mini-sub">' + AM.esc(i.productId) + '</div></td>' +
+                return '<tr><td>' + (i.kind === 'part' ? '🔩 ' : '') + AM.esc(i.name) + '<div class="am-mini-sub">' + AM.esc(i.productId) + (i.kind === 'part' ? ' · linh kiện' : '') + '</div></td>' +
                     '<td class="r">× ' + i.qty + ' ' + AM.esc(i.unit) + '</td>' +
                     (o.type === 'new' ? '<td class="r">' + AM.money(i.price) + (i.discountAmount ? '<div class="am-mini-sub" style="color:#c2410c">CK ' +
                         (i.discountType === 'percent' ? i.discountValue + '% = ' : '') + '−' + AM.money(i.discountAmount) + '</div>' : '') +
@@ -212,7 +212,8 @@
         if (o.type === 'new') html += '<tr class="tot"><td colspan="3">Tổng giá trị đơn</td><td class="r b" style="color:#059669">' + AM.money(o.total) + '</td></tr>';
         html += '</table>';
         if (o.type === 'assembly' && o.parts.length) {
-            html += '<div class="am-label" style="margin:10px 0 6px">LINH KIỆN ĐÃ XUẤT (' + AM.money(o.cost) + ')</div><table class="am-mini-table">' +
+            var planned = o.status === 'pending' || o.status === 'confirmed';
+            html += '<div class="am-label" style="margin:10px 0 6px">' + (planned ? 'LINH KIỆN DỰ KIẾN (CHƯA XUẤT)' : 'LINH KIỆN ĐÃ XUẤT') + ' · ' + AM.money(o.cost) + '</div><table class="am-mini-table">' +
                 o.parts.map(function (p) {
                     return '<tr><td>' + AM.esc(p.name) + '</td><td class="r">× ' + p.qtyTotal + ' ' + AM.esc(p.unit || '') + '</td><td class="r">' + (p.picked ? '✓ đã nhận' : '') + '</td></tr>';
                 }).join('') + '</table>';
@@ -223,7 +224,7 @@
                     return '<tr><td>' + AM.esc(p.name) + '<div class="am-mini-sub">' + AM.esc(p.part) + '</div></td><td class="r b">× ' + p.qty + ' ' + AM.esc(p.unit || '') + '</td>' +
                         '<td class="r" style="color:' + (p.qty > p.stock ? '#dc2626;font-weight:700' : '#059669') + '">tồn ' + p.stock + '</td></tr>';
                 }).join('') + '</table>'
-                : '<div class="am-bom-empty">⚠ Máy chưa khai báo linh kiện cấu thành (Sản phẩm → Sửa)</div>');
+                : '<div class="am-bom-empty">⚠ Máy chưa khai báo linh kiện cấu thành' + o.items.map(function (i) { return AM.bomLink(i.productId); }).join('') + '</div>');
         }
         return html;
     }
@@ -252,19 +253,18 @@
 
     function renderDebtBox(o) {
         if (o.type !== 'new' || o.customerType !== 'dealer' || o.status === 'cancelled') return '';
-        var modes = AM.data.debtModes || {}, chosen = !!o.debtMode;
-        var rows = chosen
-            ? [['Hình thức', modes[o.debtMode] || o.debtMode, '#1a2035'], ['Đã trả', AM.money(o.paid) + (o.paid > 0 && o.paidMethod ? ' · ' + o.paidMethod : ''), '#059669'], ['Còn nợ', AM.money(o.debt), o.debt > 0 ? '#ef4444' : '#059669']]
-            : [['Hình thức', 'Chưa chọn — khách nhận hàng sẽ ghi nợ cả đơn', '#6b7280']];
-        if (o.debtNote) rows.push(['Ghi chú', o.debtNote, '#374151']);
-        if (chosen && o.status !== 'delivered') rows.push(['', 'Ghi vào công nợ đại lý khi khách nhận hàng', '#9ca3af']);
-        return '<div style="background:#fff;border:1.5px solid ' + (chosen && o.debt > 0 ? '#fecaca' : '#e5e7eb') + ';border-radius:10px;padding:8px 12px;margin-bottom:12px">' +
-            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span class="am-label">💰 THANH TOÁN / CÔNG NỢ</span>' +
-            (AM.canEditDebt() ? '<button type="button" class="am-btn am-btn-sm" data-action="edit-debt">✎ ' + (chosen ? 'Sửa' : 'Chọn') + '</button>' : '') + '</div>' +
-            rows.map(function (r) {
-                return '<div style="display:flex;gap:8px;padding:3px 0;font-size:11px"><span style="color:#9ca3af;min-width:72px">' + r[0] + '</span>' +
-                    '<span style="font-weight:700;color:' + r[2] + ';word-break:break-word">' + AM.esc(r[1]) + '</span></div>';
-            }).join('') + '</div>';
+        var paid = o.paid || 0, debt = Math.max(0, o.total - paid), times = (o.payments || []).filter(function (p) { return !p.voided; }).length;
+        var state = debt <= 0 ? ['✓ Đã thanh toán đủ', '#059669', '#d1fae5'] : paid > 0 ? ['Còn nợ ' + AM.money(debt), '#b45309', '#fef3c7'] : ['Chưa trả', '#ef4444', '#fee2e2'];
+        return '<div style="background:#fff;border:1.5px solid ' + (debt > 0 ? '#fecaca' : '#bbf7d0') + ';border-radius:10px;padding:8px 12px;margin-bottom:12px">' +
+            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span class="am-label">💰 THANH TOÁN / CÔNG NỢ</span>' +
+            AM.badge(state[0], state[1], state[2], 10) + '</div>' +
+            '<div class="am-pay-sum"><div><span>Giá trị đơn</span><b>' + AM.money(o.total) + '</b></div>' +
+            '<div><span>Đã trả' + (times ? ' (' + times + ' lần)' : '') + '</span><b style="color:#059669">' + AM.money(paid) + '</b></div>' +
+            '<div><span>Còn nợ</span><b style="color:' + (debt > 0 ? '#ef4444' : '#059669') + '">' + AM.money(debt) + '</b></div></div>' +
+            '<div class="am-label" style="margin:8px 0 4px">LỊCH SỬ TRẢ TIỀN</div>' + AM.paymentsHtml(o) +
+            (debt > 0 && AM.canPay() ? '<button type="button" class="am-btn am-btn-sm" data-action="add-payment" style="margin-top:8px;width:100%;background:#059669;color:#fff">+ Ghi nhận thanh toán</button>' : '') +
+            (o.status !== 'delivered' && debt > 0 ? '<div style="font-size:10px;color:#9ca3af;margin-top:6px">Phần còn nợ được ghi vào công nợ đại lý khi khách nhận hàng.</div>' : '') +
+            '</div>';
     }
 
     function renderDetail() {
@@ -326,8 +326,19 @@
     }
 
     /** Điền đơn giá theo khách + ghi chú đang áp giá nào (đại lý / bán lẻ) */
+    function lineItem($r) {
+        var code = $r.find('input[type=hidden][name=line_item]').val();
+        return !code ? null : $r.attr('data-kind') === 'part' ? AM.part(code) : AM.productCache[code];
+    }
+
     function setLinePrice($r, p, customer) {
         var $note = $r.find('[data-line-note]'), note = '', warn = false;
+        if ($r.attr('data-kind') === 'part') {
+            // Linh kiện chưa có giá bán → nhập tay
+            $r.find('[data-line-price]').val('');
+            $note.text(p ? 'Nhập giá bán (giá vốn ' + AM.money(p.cost) + ')' : '').css('color', '#c2410c');
+            return;
+        }
         $r.find('[data-line-price]').val(p ? productPrice(p, customer) : '');
         if (p) {
             if (customer === 'retail') note = 'Giá bán lẻ';
@@ -339,7 +350,10 @@
 
     function lineRow(kind) {
         var picker = AM.pickerHtml('line_item', kind === 'parts' ? 'parts' : 'products', '', '', kind === 'parts' ? 'Gõ tên / mã linh kiện...' : 'Gõ tên / mã sản phẩm...');
-        return '<tr data-line data-auto="1"><td style="min-width:220px">' + picker + '</td>' +
+        return '<tr data-line data-auto="1" data-kind="' + (kind === 'parts' ? 'part' : 'product') + '">' +
+            // Đơn bán: mỗi dòng là máy hoặc linh kiện lẻ
+            (kind === 'new' ? '<td style="width:112px"><select class="am-input" data-line-kind><option value="product">🚜 Máy</option><option value="part">🔩 Linh kiện</option></select></td>' : '') +
+            '<td style="min-width:200px">' + picker + '</td>' +
             '<td style="width:74px"><input type="number" class="am-input" data-line-qty min="1" value="1"></td>' +
             (kind === 'new' ? '<td style="width:130px"><input ' + AM.MONEY_ATTRS + ' class="am-input am-money" data-line-price placeholder="Đơn giá"><div data-line-note style="font-size:10px;margin-top:3px;line-height:1.3"></div></td>' +
                 '<td style="width:150px">' + discHtml('line-disc') + '</td>' +
@@ -355,7 +369,7 @@
 
     function linesEditor(kind) {
         var head = kind === 'parts' ? '<th>Linh kiện</th><th>SL</th><th></th>'
-            : '<th>Sản phẩm</th><th>SL</th>' + (kind === 'new' ? '<th>Đơn giá (đ)</th><th>Chiết khấu</th><th style="text-align:right">Thành tiền</th>' : '') + '<th></th>';
+            : (kind === 'new' ? '<th>Loại</th>' : '') + '<th>Sản phẩm</th><th>SL</th>' + (kind === 'new' ? '<th>Đơn giá (đ)</th><th>Chiết khấu</th><th style="text-align:right">Thành tiền</th>' : '') + '<th></th>';
         return '<div class="am-field am-field-full" data-field="' + (kind === 'parts' ? 'parts' : 'items') + '">' +
             '<label>' + (kind === 'parts' ? 'Linh kiện gửi bảo hành' : kind === 'assembly' ? 'Máy cần lắp ráp' : 'Sản phẩm') + ' <span class="am-req">*</span></label>' +
             '<table class="am-lines"><thead><tr>' + head + '</tr></thead><tbody data-lines="' + kind + '">' + lineRow(kind) + '</tbody></table>' +
@@ -365,7 +379,20 @@
             '<div class="am-field-error"></div></div>';
     }
 
+    /** Đơn lắp ráp: máy + linh kiện dự kiến (dòng con), tự lấy theo định mức */
+    var ASSEMBLY_LINES = { machinesOnly: true, stockCheck: true };
+
+    function readAssembly() {
+        var r = AM.lx.read($('#am-generic-form-el .am-lx')), parts = {};
+        r.lines.forEach(function (l) { parts[l.item] = (parts[l.item] || 0) + (+l.qty || 0); });
+        return {
+            error: r.error, items: r.groups.map(function (g) { return { product: g.product, qty: g.qty }; }),
+            parts: $.map(parts, function (qty, code) { return { part: code, qty: qty }; })
+        };
+    }
+
     function readLines() {
+        if (editor.type === 'assembly') return readAssembly().items;
         var kind = editor.type === 'warranty' ? 'parts' : editor.type, out = [];
         $('#am-generic-form-el [data-lines] tr[data-line]').each(function () {
             var $r = $(this), code = $r.find('input[type=hidden][name=line_item]').val(), qty = $r.find('[data-line-qty]').val();
@@ -373,7 +400,9 @@
             if (kind === 'parts') out.push({ part: code, qty: qty });
             else if (kind === 'new') {
                 var d = discRead($r.find('[data-line-disc]'), $r.find('[data-line-disc-type]'));
-                out.push({ product: code, qty: qty, price: $r.find('[data-line-price]').val(), discount: d.raw, discountType: d.type });
+                var line = { kind: $r.attr('data-kind') || 'product', qty: qty, price: $r.find('[data-line-price]').val(), discount: d.raw, discountType: d.type };
+                line[line.kind === 'part' ? 'part' : 'product'] = code;
+                out.push(line);
             } else out.push({ product: code, qty: qty, price: 0 });
         });
         return out;
@@ -387,61 +416,11 @@
             'Dư nợ <b>' + AM.money(dealer.debt) + '</b> + đơn này <b>' + AM.money(extra || 0) + '</b> = <b>' + AM.money(after) + '</b> / hạn mức <b>' + AM.money(dealer.limit) + '</b> (' + pct + '%)</div>';
     }
 
-    /* ---------- Đơn lắp ráp: hiện linh kiện theo định mức (BOM) của từng máy ---------- */
-    var bomCache = {};
-
-    function loadBom(code) {
-        if (bomCache[code]) return;
-        bomCache[code] = 'loading';
-        AM.lookup('product-bom', { code: code }).done(function (res) {
-            bomCache[code] = res.rows || [];
-            recalc();
-        }).fail(function () { delete bomCache[code]; });
-    }
-
-    function assemblyPreview() {
-        var machines = [], need = {}, loading = false;
-        $('#am-generic-form-el [data-lines="assembly"] tr[data-line]').each(function () {
-            var code = $(this).find('input[type=hidden][name=line_item]').val(), qty = +$(this).find('[data-line-qty]').val() || 0;
-            if (!code || !qty) return;
-            var bom = bomCache[code];
-            if (!bom) { loadBom(code); loading = true; return; }
-            if (bom === 'loading') { loading = true; return; }
-            var p = AM.productCache[code] || {};
-            machines.push({ code: code, name: p.name || code, qty: qty, bom: bom });
-            bom.forEach(function (b) {
-                need[b.id] = need[b.id] || { name: b.name, unit: b.unit, stock: b.stock, qty: 0 };
-                need[b.id].qty += b.qty * qty;
-            });
-        });
-        if (!machines.length) return loading ? '<div style="font-size:12px;color:#6b7280;padding:6px 0">⏳ Đang tải định mức linh kiện...</div>' : '';
-        var html = '<div class="am-label" style="margin:2px 0 6px">LINH KIỆN CẦN DÙNG (THEO ĐỊNH MỨC)</div>';
-        machines.forEach(function (m) {
-            html += '<div class="am-bom-box"><div class="am-bom-head">🚜 ' + AM.esc(m.name) + ' <span>× ' + m.qty + '</span>' +
-                (m.bom.length ? '<em>' + m.bom.length + ' linh kiện</em>' : '') + '</div>';
-            if (!m.bom.length) {
-                html += '<div class="am-bom-empty">⚠ Máy này chưa khai báo linh kiện cấu thành — vào <b>Sản phẩm → Sửa</b> để khai báo, nếu không kế toán phải chọn tay khi xuất kho.</div></div>';
-                return;
-            }
-            html += '<table class="am-mini-table"><tr class="h"><td>Linh kiện</td><td class="r">Định mức</td><td class="r">Cần</td><td class="r">Tồn</td></tr>' +
-                m.bom.map(function (b) {
-                    var total = b.qty * m.qty, short = need[b.id].qty > b.stock;
-                    return '<tr><td>' + AM.esc(b.name) + '<div class="am-mini-sub">' + AM.esc(b.id) + '</div></td><td class="r">' + b.qty + '/máy</td>' +
-                        '<td class="r b">' + total + ' ' + AM.esc(b.unit || '') + '</td><td class="r" style="color:' + (short ? '#dc2626;font-weight:700' : '#059669') + '">' + b.stock + '</td></tr>';
-                }).join('') + '</table></div>';
-        });
-        var shortList = $.map(need, function (n) { return n.qty > n.stock ? n.name + ' (thiếu ' + (n.qty - n.stock) + ')' : null; });
-        html += shortList.length
-            ? '<div class="am-bom-warn">⚠ Không đủ tồn kho: ' + AM.esc(shortList.join(', ')) + '. Cần nhập thêm trước khi xuất linh kiện.</div>'
-            : (Object.keys(need).length ? '<div class="am-bom-ok">✓ Đủ linh kiện trong kho cho đơn này</div>' : '');
-        return html;
-    }
-
     function recalc() {
         var api = editor.api;
         if (!api) return;
         if (editor.type === 'assembly') {
-            api.preview(assemblyPreview());
+            api.preview('');
             return;
         }
         var subtotal = 0, lineDisc = 0, customer = api.get('customer'), html = '';
@@ -453,7 +432,7 @@
                 subtotal += gross - disc;
                 lineDisc += disc;
             }
-            var code = $r.find('input[type=hidden][name=line_item]').val(), p = code ? AM.productCache[code] : null;
+            var p = lineItem($r);
             if (editor.type === 'new' && p && qty > p.stock) {
                 html += '<div style="font-size:11px;color:#b45309;margin-bottom:6px">⚠ ' + AM.esc(p.name) + ': tồn kho còn ' + p.stock + ' — cần nhập hoặc lắp thêm trước khi xuất.</div>';
             }
@@ -477,7 +456,8 @@
     function repriceAuto() {
         var customer = editor.api ? editor.api.get('customer') : '';
         $('#am-generic-form-el [data-lines="new"] tr[data-line][data-auto="1"]').each(function () {
-            var code = $(this).find('input[type=hidden][name=line_item]').val(), p = code ? AM.productCache[code] : null;
+            if ($(this).attr('data-kind') === 'part') return;
+            var p = lineItem($(this));
             if (p) setLinePrice($(this), p, customer);
         });
     }
@@ -511,7 +491,13 @@
                 var t = api.get('type'), customer = api.get('customer');
                 if (name === null || name === 'type') {
                     editor.type = t;
-                    api.html('lines', linesEditor(t === 'warranty' ? 'parts' : t));
+                    if (t === 'assembly') {
+                        api.html('lines', '<div class="am-field am-field-full" data-field="items"><label>Máy cần lắp ráp & linh kiện <span class="am-req">*</span></label>' +
+                            AM.lx.html(ASSEMBLY_LINES) + '<div class="am-field-error"></div></div>');
+                        AM.lx.init(api.$form.find('.am-lx'), ASSEMBLY_LINES);
+                    } else {
+                        api.html('lines', linesEditor(t === 'warranty' ? 'parts' : t));
+                    }
                 }
                 api.toggle('customer', t !== 'assembly');
                 api.toggle('customerName', t !== 'assembly' && customer === 'retail');
@@ -524,6 +510,7 @@
             },
             validate: function (d) {
                 var e = {}, lines = readLines(), key = editor.type === 'warranty' ? 'parts' : 'items';
+                if (editor.type === 'assembly' && readAssembly().error) e.items = readAssembly().error;
                 if (!lines.length) e[key] = 'Vui lòng thêm ít nhất một dòng';
                 lines.forEach(function (l) {
                     if (!(l.product || l.part)) e[key] = 'Có dòng chưa chọn ' + (key === 'parts' ? 'linh kiện' : 'sản phẩm') + ' từ danh sách gợi ý';
@@ -545,6 +532,7 @@
                 var payload = { type: d.type, sale: d.sale || '', customer: d.type === 'assembly' ? '' : d.customer, customerName: d.customerName, customerPhone: d.customerPhone,
                     customerAddress: d.customerAddress, warrantyRef: d.type === 'warranty' ? d.warrantyRef : '', note: d.note, lead: prefill.lead || '' };
                 payload[d.type === 'warranty' ? 'parts' : 'items'] = readLines();
+                if (d.type === 'assembly') payload.parts = readAssembly().parts;
                 if (d.type === 'new') {
                     var od = discRead($('#am-generic-form-el [data-order-disc]'), $('#am-generic-form-el [data-order-disc-type]'));
                     payload.discount = od.raw;
@@ -562,7 +550,7 @@
         // Đơn bảo hành chọn linh kiện, không gán sẵn máy của phiếu khiếu nại vào dòng
         if (prefill.product && type !== 'warranty') {
             resolveProduct(prefill.product).done(function (p) {
-                var $p = $('#am-generic-form-el [data-lines] tr[data-line]').first().find('.am-picker');
+                var $p = $('#am-generic-form-el [data-lines] tr[data-line], #am-generic-form-el .am-lx tr[data-lx="group"]').first().find('.am-picker');
                 if (p && $p.length) AM.pickerSet($p, p);
             });
         }
@@ -590,9 +578,9 @@
             recalc();
         })
         .on('change', '#am-generic-form-el [data-lines="new"] input[type=hidden][name=line_item]', function () {
-            var $r = $(this).closest('tr'), p = this.value ? AM.productCache[this.value] : null;
+            var $r = $(this).closest('tr');
             $r.attr('data-auto', '1');
-            setLinePrice($r, p, editor.api ? editor.api.get('customer') : '');
+            setLinePrice($r, lineItem($r), editor.api ? editor.api.get('customer') : '');
             recalc();
         })
         .on('input', '#am-generic-form-el [data-line-price]', function () {
@@ -600,10 +588,21 @@
             recalc();
         })
         .on('input', '#am-generic-form-el [data-line-qty]', function () { recalc(); })
+        .on('change', '#am-generic-form-el [data-line-kind]', function () {
+            var $r = $(this).closest('tr');
+            $r.attr('data-kind', this.value).attr('data-auto', '1');
+            AM.pickerSource($r.find('.am-picker'), this.value === 'part' ? 'parts' : 'products');
+            $r.find('.am-picker-input').attr('placeholder', this.value === 'part' ? 'Gõ tên / mã linh kiện...' : 'Gõ tên / mã sản phẩm...');
+            recalc();
+        })
         // Chọn xong ở dòng cuối → tự sinh dòng trống mới
         .on('change', '#am-generic-form-el [data-lines] input[type=hidden][name=line_item]', function () {
             var $r = $(this).closest('tr'), $body = $r.closest('tbody'), kind = $body.data('lines');
-            if (this.value && $r.is(':last-child')) $body.append(kind === 'export-parts' ? partRow('', '', 1) : lineRow(kind));
+            if (this.value && $r.is(':last-child')) {
+                var $n = $(kind === 'export-parts' ? partRow('', '', 1) : lineRow(kind)).appendTo($body);
+                // Dòng mới giữ loại của dòng vừa chọn (gắn vào bảng trước để sự kiện chạy)
+                if (kind === 'new' && $r.attr('data-kind') === 'part') $n.find('[data-line-kind]').val('part').trigger('change');
+            }
             if (kind === 'assembly') recalc();
         })
         .on('input', '#am-generic-form-el [data-line-disc], #am-generic-form-el [data-order-disc]', function () { recalc(); })
@@ -652,7 +651,10 @@
     function openExport(o) {
         var assembly = o.type === 'assembly';
         var lines = o.type === 'new'
-            ? o.items.map(function (i) { var p = AM.productCache[i.productId]; return stockLine('🚜', i.name, i.qty, p ? p.stock : null); }).join('')
+            ? o.items.map(function (i) {
+                var part = i.kind === 'part', p = part ? AM.part(i.productId) : AM.productCache[i.productId];
+                return stockLine(part ? '🔩' : '🚜', i.name, i.qty, p ? p.stock : null);
+            }).join('')
             : o.type === 'warranty' ? o.parts.map(function (p) { var part = AM.part(p.id); return stockLine('🔩', p.name, p.qtyTotal, part ? part.stock : null); }).join('') : '';
         AM.form.open({
             title: (o.type === 'new' ? '📤 Xuất kho — ' : '📤 Xuất linh kiện — ') + o.id,
@@ -682,7 +684,10 @@
             },
             onSubmit: function (v) { return run('order.export', o, { exportDate: v.exportDate, note: v.note, parts: assembly ? readExportParts() : [] }); }
         });
-        if (assembly && o.autoParts && o.autoParts.length) fillAutoParts(o);
+        // Điền sẵn linh kiện dự kiến lúc tạo đơn; chưa có thì lấy theo định mức
+        if (assembly && o.parts && o.parts.length) {
+            fillParts(o.parts.map(function (p) { var x = AM.part(p.id); return { part: p.id, name: p.name, qty: p.qtyTotal, stock: x ? x.stock : 0 }; }), 'dự kiến khi tạo đơn');
+        } else if (assembly && o.autoParts && o.autoParts.length) fillAutoParts(o);
         $('#am-generic-form-el').off('click.auto').on('click.auto', '[data-auto-parts]', function () {
             if (!o.autoParts || !o.autoParts.length) {
                 AM.toast('⚠ Sản phẩm chưa khai báo định mức linh kiện — vào Sản phẩm → 🔩 BOM để khai báo', false);
@@ -692,12 +697,14 @@
         });
     }
 
-    function fillAutoParts(o) {
-        $('#am-generic-form-el [data-lines="export-parts"]').html(o.autoParts.map(function (p) { return partRow(p.part, p.name, p.qty); }).join(''));
-        var short = o.autoParts.filter(function (p) { return p.stock < p.qty; });
+    function fillAutoParts(o) { fillParts(o.autoParts, 'theo định mức'); }
+
+    function fillParts(list, source) {
+        $('#am-generic-form-el [data-lines="export-parts"]').html(list.map(function (p) { return partRow(p.part, p.name, p.qty); }).join(''));
+        var short = list.filter(function (p) { return p.stock < p.qty; });
         $('#am-generic-form-el [data-preview]').html(short.length
             ? '<div style="font-size:11px;color:#ef4444">⚠ Không đủ tồn: ' + short.map(function (p) { return AM.esc(p.name) + ' (còn ' + p.stock + ', cần ' + p.qty + ')'; }).join('; ') + '</div>'
-            : '<div style="font-size:11px;color:#059669">✓ Đã lấy ' + o.autoParts.length + ' loại linh kiện theo định mức — đủ tồn kho</div>');
+            : '<div style="font-size:11px;color:#059669">✓ Đã lấy ' + list.length + ' loại linh kiện ' + source + ' — đủ tồn kho</div>');
     }
 
     function readExportParts() {
@@ -875,8 +882,13 @@
                 var o = findOrder(state.selected), h = ACTION_HANDLERS[$(this).data('order-action')];
                 if (o && h) h(o);
             })
-            .on('click', '[data-action="edit-debt"]', function () {
-                AM.debtForm(findOrder(state.selected), function (data) { applyOrder(data); render(); });
+            .on('click', '[data-action="add-payment"]', function () {
+                AM.payForm(findOrder(state.selected), function (data) { applyOrder(data); render(); });
+            })
+            .on('click', '[data-pay-void]', function () {
+                var o = findOrder(state.selected), code = $(this).data('pay-void');
+                var pay = (o.payments || []).filter(function (p) { return p.code === code; })[0];
+                if (pay) AM.payVoidForm(o, pay, function (data) { applyOrder(data); render(); });
             });
     });
 })(jQuery, window.AM);

@@ -325,3 +325,34 @@ body.am-login-body { margin: 0; min-height: 100vh; font-family: 'IBM Plex Sans',
 .am-bom-empty { font-size: 12px; color: #b45309; background: #fffbeb; border-radius: 6px; padding: 8px 10px; }
 .am-bom-warn { font-size: 12px; color: #b91c1c; background: #fef2f2; border: 1.5px solid #fecaca; border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; }
 .am-bom-ok { font-size: 12px; color: #047857; background: #ecfdf5; border: 1.5px solid #a7f3d0; border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; }
+/* Bảng nhiều dòng dùng chung (phiếu kho / đơn lắp ráp) */
+.am-lx-table .lx-k { width: 128px; }
+.am-lx-table .lx-q { width: 74px; }
+.am-lx-table .lx-p { width: 130px; }
+.am-lx-table .lx-t { width: 96px; text-align: right; font-weight: 700; font-size: 12px; }
+.am-lx-table .lx-a { width: 64px; white-space: nowrap; text-align: right; }
+.am-lx-table tr.lx-group td { background: #f0f9ff; border-top: 1px solid #bae6fd; }
+.am-lx-table tr.lx-sub td { background: #fafcff; }
+.am-lx-table .lx-arrow { color: #0ea5e9; font-weight: 800; text-align: center; padding-right: 4px; }
+.am-lx-table tr.lx-sub td:nth-child(1) .am-picker, .am-lx-table tr.lx-sub .lx-arrow + .am-picker { display: inline-block; width: calc(100% - 22px); }
+.am-lx-table .lx-gnote { font-size: 10px; color: #0369a1; margin-top: 3px; }
+.am-line-add { background: #e0f2fe; color: #0369a1; border: none; border-radius: 6px; padding: 4px 6px; font-size: 10px; font-weight: 800; cursor: pointer; margin-right: 4px; }
+.am-lx-bar { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 6px; }
+.am-lx-btn { background: #f1f5f9; color: #0f2027; }
+.am-lx-hint { font-size: 11px; color: #9ca3af; }
+.am-lx-sum { margin-top: 8px; }
+.am-lx-sum .lx-total { background: #f0fdf4; border: 1.5px solid #bbf7d0; border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; font-size: 12px; color: #374151; }
+.am-lx-sum .lx-total b { font-size: 15px; color: #059669; }
+/* Phiếu thu theo đơn */
+.am-pay-sum { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.am-pay-sum div { background: #f8fafc; border-radius: 8px; padding: 6px 8px; display: flex; flex-direction: column; gap: 2px; }
+.am-pay-sum span { font-size: 10px; color: #6b7280; }
+.am-pay-sum b { font-size: 13px; color: #1a2035; }
+.am-pay { border-bottom: 1px dashed #e5e7eb; padding: 6px 0; font-size: 12px; }
+.am-pay-main { display: flex; align-items: center; gap: 8px; }
+.am-pay-main b { color: #059669; }
+.am-pay-main span { color: #374151; flex: 1; }
+.am-pay-sub { font-size: 10px; color: #9ca3af; margin-top: 2px; word-break: break-word; }
+.am-pay.voided .am-pay-main b, .am-pay.voided .am-pay-main span { text-decoration: line-through; color: #9ca3af; }
+.am-pay-void-note { font-size: 10px; color: #dc2626; margin-top: 2px; }
+.am-pay-void { background: #fee2e2; color: #dc2626; border: none; border-radius: 6px; padding: 2px 7px; cursor: pointer; font-size: 11px; font-weight: 800; }

@@ -16,6 +16,8 @@
 -- Công nợ theo đơn đại lý 05/10/2026: chạy thêm production_debt_2026-10-05.sql.
 -- Luồng 3 loại đơn + nhà xe 22/10/2026: chạy thêm production_flow_2026-10-22.sql (sau file công nợ).
 -- Nguồn hàng không bắt buộc + chiết khấu đơn 25/10/2026: chạy thêm production_product_2026-10-25.sql (sau file luồng đơn).
+-- Đơn bán có dòng linh kiện 05/11/2026: chạy thêm production_stock_2026-11-05.sql (sau file 25/10).
+-- Phiếu thu theo đơn 05/11/2026: chạy thêm production_payment_2026-11-05.sql (sau file production_stock).
 -- KHÔNG gồm dữ liệu demo (đại lý, đơn, NCC, linh kiện, nhân viên mẫu của lệnh `php yii agrimac-seed`) — không chạy seed trên production.
 -- =====================================================================
 

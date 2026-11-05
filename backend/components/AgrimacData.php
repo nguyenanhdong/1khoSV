@@ -107,7 +107,19 @@ class AgrimacData
         return self::ORDER_FLOWS[$type][$status] ?? (self::ORDER_STATUS[$status]['label'] ?? $status);
     }
 
+    /** Đơn vị tính dùng chung cho sản phẩm và linh kiện */
     const PRODUCT_UNITS = ['Cái', 'Bộ'];
+
+    /** Chuẩn hoá đơn vị tính (không phân biệt hoa thường, VD "cái" → "Cái"); không hợp lệ → null */
+    public static function unit($value)
+    {
+        foreach (self::PRODUCT_UNITS as $u) {
+            if (mb_strtolower(trim((string)$value)) === mb_strtolower($u)) {
+                return $u;
+            }
+        }
+        return null;
+    }
     /** Ảnh gửi hàng: tối đa 2 ảnh, server nén còn ≤ 2MB mỗi ảnh */
     const SHIP_IMAGE_MAX = 2;
     const SHIP_IMAGE_BYTES = 2097152;

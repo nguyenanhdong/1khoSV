@@ -417,7 +417,7 @@ class AgrimacRepo
             $dealerOrders = [];
             $orderRows = (new Query())->select(['o.id', 'o.dealer_id', 'o.code', 'o.status', 'o.total_amount', 'o.debt_mode', 'o.debt_amount', 'o.debt_recorded', 'o.paid_method', 'o.debt_note',
                 'at' => 'COALESCE(o.delivered_at, o.ordered_at)',
-                'product' => new \yii\db\Expression("(SELECT p.name FROM dealer_order_item i JOIN product p ON p.id = i.product_id WHERE i.order_id = o.id ORDER BY i.id LIMIT 1)"),
+                'product' => new \yii\db\Expression("(SELECT COALESCE(p.name, pt.name) FROM dealer_order_item i LEFT JOIN product p ON p.id = i.product_id LEFT JOIN part pt ON pt.id = i.part_id WHERE i.order_id = o.id ORDER BY i.id LIMIT 1)"),
                 'lines' => new \yii\db\Expression('(SELECT COUNT(*) FROM dealer_order_item i WHERE i.order_id = o.id)')])
                 ->from('dealer_order o')
                 ->where(['o.type' => 'new'])->andWhere(['not', ['o.dealer_id' => null]])->andWhere(['<>', 'o.status', 'cancelled'])->orderBy(['o.id' => SORT_DESC])->all();
@@ -508,8 +508,10 @@ class AgrimacRepo
 
             $items = [];
             $itemProducts = [];
-            $itemRows = (new Query())->select(['i.*', 'code' => 'p.code', 'name' => 'p.name', 'unit' => 'p.unit'])->from('dealer_order_item i')
-                ->leftJoin('product p', 'p.id = i.product_id')->where(['i.order_id' => $ids])->orderBy('i.id')->all();
+            $itemRows = (new Query())->select([
+                'i.*', 'code' => 'COALESCE(p.code, pt.code)', 'name' => 'COALESCE(p.name, pt.name)', 'unit' => 'COALESCE(p.unit, pt.unit)',
+            ])->from('dealer_order_item i')
+                ->leftJoin('product p', "p.id = i.product_id AND i.item_type = 'product'")->leftJoin('part pt', "pt.id = i.part_id AND i.item_type = 'part'")->where(['i.order_id' => $ids])->orderBy('i.id')->all();
             // Định mức linh kiện (BOM) của các sản phẩm trong đơn → gợi ý "Lấy tự động" cho đơn lắp ráp
             $bomOf = [];
             foreach ((new Query())->select(['b.product_id', 'b.qty', 'code' => 'pt.code', 'name' => 'pt.name', 'unit' => 'pt.unit', 'stock' => 'pt.stock'])
@@ -519,7 +521,7 @@ class AgrimacRepo
             foreach ($itemRows as $i) {
                 $itemProducts[$i['order_id']][] = $i;
                 $items[$i['order_id']][] = [
-                    'productId' => $i['code'], 'name' => $i['name'], 'unit' => $i['unit'] ?: 'Cái', 'qty' => (int)$i['qty'],
+                    'kind' => $i['item_type'] ?? 'product', 'productId' => $i['code'], 'name' => $i['name'], 'unit' => $i['unit'] ?: 'Cái', 'qty' => (int)$i['qty'],
                     'price' => (int)$i['unit_price'], 'total' => (int)$i['line_total'], 'gross' => (int)$i['qty'] * (int)$i['unit_price'],
                     'discountType' => $i['discount_type'] ?? 'amount', 'discountValue' => (float)($i['discount_value'] ?? 0), 'discountAmount' => (int)($i['discount_amount'] ?? 0),
                 ];
@@ -545,7 +547,18 @@ class AgrimacRepo
                 $serials[$w['order_id']][] = $w['serial'];
             }
 
-            return array_map(function ($o) use ($items, $parts, $com, $exports, $imports, $serials, $itemProducts, $bomOf) {
+            // Phiếu thu theo đơn (cả phiếu đã huỷ để giữ dấu vết)
+            $payments = [];
+            foreach ((new Query())->select(['p.*', 'by' => 'e.fullname', 'voider' => 'ev.fullname'])->from('dealer_order_payment p')
+                ->leftJoin('employee e', 'e.id = p.created_by')->leftJoin('employee ev', 'ev.id = p.voided_by')
+                ->where(['p.order_id' => $ids])->orderBy(['p.paid_at' => SORT_ASC, 'p.id' => SORT_ASC])->all() as $p) {
+                $payments[$p['order_id']][] = [
+                    'code' => $p['code'], 'amount' => (int)$p['amount'], 'method' => $p['method'], 'date' => self::vnDate($p['paid_at']),
+                    'note' => $p['note'], 'by' => $p['by'], 'createdAt' => self::vnDate($p['created_at'], true),
+                    'voided' => $p['voided_at'] !== null, 'voidReason' => $p['void_reason'], 'voidedBy' => $p['voider'], 'voidedAt' => self::vnDate($p['voided_at'], true),
+                ];
+            }
+            return array_map(function ($o) use ($items, $parts, $com, $exports, $imports, $serials, $itemProducts, $bomOf, $payments) {
                 $autoParts = [];
                 if ($o['type'] === 'assembly') {
                     foreach ($itemProducts[$o['id']] ?? [] as $i) {
@@ -563,7 +576,7 @@ class AgrimacRepo
                     $summary = $bom ? $bom[0]['name'] . (count($bom) > 1 ? ' +' . (count($bom) - 1) . ' LK' : '') : 'Chưa chọn linh kiện';
                     $qty = array_sum(array_column($bom, 'qtyTotal'));
                 } else {
-                    $summary = $first ? $first['name'] . (count($lines) > 1 ? ' +' . (count($lines) - 1) . ' SP' : '') : '—';
+                    $summary = $first ? $first['name'] . (count($lines) > 1 ? ' +' . (count($lines) - 1) . ' dòng' : '') : '—';
                     $qty = array_sum(array_column($lines, 'qty'));
                 }
                 $retail = $o['customer_type'] === 'retail';
@@ -599,6 +612,7 @@ class AgrimacRepo
                     'debtMode' => $o['debt_mode'], 'debt' => (int)$o['debt_amount'], 'debtRecorded' => (int)$o['debt_recorded'],
                     'paid' => $o['debt_mode'] !== null ? (int)$o['total_amount'] - (int)$o['debt_amount'] : 0,
                     'paidMethod' => $o['paid_method'], 'debtNote' => $o['debt_note'], 'debtUpdatedAt' => self::vnDate($o['debt_updated_at'], true),
+                    'payments' => $payments[$o['id']] ?? [],
                 ];
             }, $rows);
         });
@@ -695,7 +709,10 @@ class AgrimacRepo
         $ledger = (new Query())->from('dealer_ledger')->where(['between', 'created_at', $start, $end])
             ->select(['debit' => "COALESCE(SUM(CASE WHEN type IN ('debit','adjust') THEN amount ELSE 0 END),0)",
                       'reverse' => "COALESCE(SUM(CASE WHEN type = 'debit_reverse' THEN amount ELSE 0 END),0)",
-                      'collected' => "COALESCE(SUM(CASE WHEN type = 'credit' THEN amount ELSE 0 END),0)"])->one();
+                      'collected' => "COALESCE(SUM(CASE WHEN type = 'credit' AND order_id IS NULL THEN amount ELSE 0 END),0)"])->one();
+        // Đã thu = thu chung trên sổ đại lý + phiếu thu theo đơn (kể cả thu trước khi giao)
+        $ledger['collected'] = (int)$ledger['collected'] + (int)(new Query())->from('dealer_order_payment')
+            ->where(['voided_at' => null])->andWhere(['between', 'paid_at', substr($start, 0, 10), substr($end, 0, 10)])->sum('amount');
         $overDealers = (new Query())->from('dealer')->where(['status' => 1])->andWhere('current_debt > credit_limit')
             ->select(['code', 'name', 'debt' => 'current_debt', 'limit' => 'credit_limit'])->orderBy(['current_debt' => SORT_DESC])->all();
 

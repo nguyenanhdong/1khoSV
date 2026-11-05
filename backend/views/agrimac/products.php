@@ -68,7 +68,7 @@ $field = function ($label, $input, $full = false, $hint = '') {
                     . '<div class="am-quick am-hidden" data-quick-box="category"><select data-quick-parent class="am-input"></select>'
                     . '<input data-quick-name class="am-input" placeholder="Tên danh mục mới">'
                     . '<div class="am-quick-actions"><button type="button" class="am-btn" data-quick-save>Lưu</button><button type="button" class="am-cancel" data-quick-cancel>Hủy</button></div></div>') ?>
-                <?= $field('Nguồn hàng', '<select name="sourceType" class="am-input"></select>', false, 'Chọn Tự lắp / Cả hai để khai báo linh kiện') ?>
+                <?= $field('Nguồn hàng', '<select name="sourceType" class="am-input"></select>') ?>
                 <?= $field('Nhà cung cấp<button type="button" class="am-quick-link" data-quick="supplier">+ Thêm nhanh</button>', '<select name="supId" class="am-input"></select>'
                     . '<div class="am-quick am-hidden" data-quick-box="supplier"><input data-quick-name class="am-input" placeholder="Tên nhà cung cấp mới">'
                     . '<input data-quick-phone class="am-input" placeholder="Số điện thoại (không bắt buộc)">'

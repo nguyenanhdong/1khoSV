@@ -249,6 +249,239 @@
         AM.pickerSet($picker, null);
     };
 
+    /* ---------- Bảng nhiều dòng dùng chung: phiếu nhập / phiếu xuất kho / đơn lắp ráp ----------
+     * Dòng thường (máy hoặc linh kiện) + nhóm "⚙ LK theo máy": chọn máy + số máy → linh kiện theo định mức tự thêm thành các dòng con.
+     * opts: kinds ['product','part'] loại dòng thường; bom: cho phép nhóm theo máy; machinesOnly: mọi dòng chính là máy (đơn lắp ráp);
+     *       price: có cột đơn giá (phiếu nhập); priceOf(kind, item); instock: chỉ gợi ý hàng còn tồn; stockCheck: cảnh báo thiếu tồn; onChange()
+     */
+    AM.bomCache = {};
+    AM.loadBom = function (code) {
+        if (AM.bomCache[code]) return $.Deferred().resolve(AM.bomCache[code]).promise();
+        return AM.lookup('product-bom', { code: code }).then(function (res) { return (AM.bomCache[code] = res.rows || []); });
+    };
+
+    /** Link mở form sửa sản phẩm (tab mới) để khai báo linh kiện cấu thành */
+    AM.bomLink = function (code) {
+        return AM.can('admin', 'sale', 'kt_congno')
+            ? ' · <a href="' + AM.esc(AM.url('products', { edit: code })) + '" target="_blank" rel="noopener" style="color:#2563eb;font-weight:700">Khai báo ngay ↗</a>'
+            : ' (Sản phẩm → Sửa → Linh kiện cấu thành)';
+    };
+
+    var LX_KINDS = { product: '🚜 Máy', part: '🔩 Linh kiện', bom: '⚙ LK theo máy' };
+
+    function lxOpts($root) { return $root.data('lx') || {}; }
+    function lxShowKind(o) { return !o.machinesOnly && ((o.kinds || []).length > 1 || o.bom); }
+
+    function lxPicker(kind, code, label, o, placeholder) {
+        var html = AM.pickerHtml('lx_item', kind === 'part' ? 'parts' : 'products', code || '', label || '',
+            placeholder || (kind === 'part' ? 'Gõ tên / mã linh kiện...' : 'Gõ tên / mã máy...'));
+        return o.instock && kind !== 'bom' ? html.replace('class="am-picker"', 'class="am-picker" data-instock="true"') : html;
+    }
+
+    function lxKindSelect(o, kind) {
+        var kinds = (o.kinds || []).concat(o.bom ? ['bom'] : []);
+        return '<td class="lx-k"><select class="am-input" data-lx-kind>' + kinds.map(function (k) {
+            return '<option value="' + k + '"' + (k === kind ? ' selected' : '') + '>' + LX_KINDS[k] + '</option>';
+        }).join('') + '</select></td>';
+    }
+
+    function lxPriceCells(o) {
+        return o.price ? '<td class="lx-p"><input ' + AM.MONEY_ATTRS + ' class="am-input am-money" data-lx-price placeholder="Đơn giá"></td><td class="lx-t" data-lx-total>—</td>' : '';
+    }
+
+    function lxItemRow(o, kind) {
+        return '<tr data-lx="item" data-kind="' + kind + '">' + (lxShowKind(o) ? lxKindSelect(o, kind) : '') +
+            '<td>' + lxPicker(kind, '', '', o) + '</td>' +
+            '<td class="lx-q"><input type="number" class="am-input" data-lx-qty min="1" value="1"></td>' + lxPriceCells(o) +
+            '<td class="lx-a"><button type="button" class="am-line-del" data-lx-del title="Xoá dòng">✕</button></td></tr>';
+    }
+
+    function lxGroupRow(o) {
+        return '<tr data-lx="group" class="lx-group">' + (lxShowKind(o) ? lxKindSelect(o, 'bom') : '') +
+            '<td>' + lxPicker('product', '', '', o, o.machinesOnly ? 'Gõ tên / mã máy cần lắp...' : 'Chọn máy để lấy linh kiện theo định mức...') +
+            '<div class="lx-gnote" data-lx-gnote></div></td>' +
+            '<td class="lx-q"><input type="number" class="am-input" data-lx-qty min="1" value="1" title="Số máy"></td>' + (o.price ? '<td></td><td></td>' : '') +
+            '<td class="lx-a"><button type="button" class="am-line-add" data-lx-sub-add title="Thêm linh kiện cho máy này">+LK</button>' +
+            '<button type="button" class="am-line-del" data-lx-del title="Xoá máy và linh kiện của máy">✕</button></td></tr>';
+    }
+
+    function lxSubRow(o, part, per, qty, auto) {
+        return '<tr data-lx="sub" class="lx-sub" data-auto="' + (auto ? 1 : 0) + '" data-per="' + (per || 0) + '">' + (lxShowKind(o) ? '<td class="lx-k lx-arrow">↳</td>' : '') +
+            '<td>' + (lxShowKind(o) ? '' : '<span class="lx-arrow">↳</span>') + lxPicker('part', part ? part.id : '', part ? part.name + ' (' + part.id + ')' : '', o) + '</td>' +
+            '<td class="lx-q"><input type="number" class="am-input" data-lx-qty min="1" value="' + (qty || 1) + '"></td>' + lxPriceCells(o) +
+            '<td class="lx-a"><button type="button" class="am-line-del" data-lx-del title="Xoá dòng">✕</button></td></tr>';
+    }
+
+    function lxSubs($group) { return $group.nextUntil('tr[data-lx="group"], tr[data-lx="item"]'); }
+
+    function lxCode($tr) { return $tr.find('input[type=hidden][name=lx_item]').val(); }
+
+    function lxFillGroup($root, $group) {
+        var o = lxOpts($root), code = lxCode($group), $note = $group.find('[data-lx-gnote]');
+        lxSubs($group).remove();
+        if (!code) { $note.text(''); return lxChanged($root); }
+        $note.text('⏳ Đang lấy định mức...');
+        AM.loadBom(code).done(function (bom) {
+            if (lxCode($group) !== code) return;
+            var mq = +$group.find('[data-lx-qty]').val() || 1;
+            lxSubs($group).remove();
+            $group.after(bom.map(function (b) {
+                return lxSubRow(o, AM.part(b.id) || { id: b.id, name: b.name }, b.qty, b.qty * mq, true);
+            }).join(''));
+            $note.html(bom.length ? bom.length + ' linh kiện theo định mức / máy'
+                : '<span style="color:#b45309">⚠ Máy chưa khai báo linh kiện cấu thành' + AM.bomLink(code) + ' — hoặc bấm +LK để thêm tay</span>');
+            lxChanged($root);
+        });
+    }
+
+    function lxStock(kind, code) {
+        if (kind === 'part') { var p = AM.part(code); return p ? p.stock : null; }
+        var pr = AM.productCache[code]; return pr ? pr.stock : null;
+    }
+
+    function lxChanged($root) {
+        var o = lxOpts($root), total = 0, need = {};
+        $root.find('tbody tr[data-lx="item"], tbody tr[data-lx="sub"]').each(function () {
+            var $r = $(this), kind = $r.data('lx') === 'sub' ? 'part' : $r.attr('data-kind'), code = lxCode($r), qty = +$r.find('[data-lx-qty]').val() || 0;
+            if (o.price) {
+                var price = +$r.find('[data-lx-price]').val() || 0;
+                $r.find('[data-lx-total]').text(qty && price ? AM.money(qty * price) : '—');
+                total += qty * price;
+            }
+            if (code && qty) {
+                var k = kind + ':' + code;
+                need[k] = need[k] || { kind: kind, code: code, qty: 0, name: $r.find('.am-picker-input').val() };
+                need[k].qty += qty;
+            }
+        });
+        var html = '';
+        if (o.price && total) html += '<div class="am-row-between lx-total"><span>Tổng giá trị phiếu</span><b>' + AM.money(total) + '</b></div>';
+        if (o.stockCheck) {
+            var keys = Object.keys(need), short = keys.map(function (k) { return need[k]; }).filter(function (n) {
+                var st = lxStock(n.kind, n.code); return st !== null && n.qty > st;
+            });
+            if (short.length) {
+                html += '<div class="am-bom-warn">⚠ Không đủ tồn kho: ' + short.map(function (n) {
+                    return AM.esc(n.name) + ' (còn ' + lxStock(n.kind, n.code) + ', cần ' + n.qty + ')';
+                }).join('; ') + '</div>';
+            } else if (keys.length) {
+                html += '<div class="am-bom-ok">✓ Đủ tồn kho cho ' + keys.length + ' mặt hàng</div>';
+            }
+        }
+        $root.find('.am-lx-sum').html(html);
+        if (o.onChange) o.onChange();
+    }
+
+    AM.lx = {
+        html: function (opts) {
+            var o = opts || {}, kindCol = lxShowKind(o);
+            var head = (kindCol ? '<th>Loại</th>' : '') + '<th>' + (o.machinesOnly ? 'Máy / linh kiện' : 'Hàng') + '</th><th>' + (o.machinesOnly ? 'SL' : 'SL') + '</th>' +
+                (o.price ? '<th>Đơn giá (đ)</th><th style="text-align:right">Thành tiền</th>' : '') + '<th></th>';
+            return '<div class="am-lx"><table class="am-lines am-lx-table"><thead><tr>' + head + '</tr></thead><tbody></tbody></table>' +
+                '<div class="am-lx-bar"><button type="button" class="am-btn am-btn-sm am-lx-btn" data-lx-add>+ ' + (o.machinesOnly ? 'Thêm máy' : 'Thêm dòng') + '</button>' +
+                (o.bom ? '<button type="button" class="am-btn am-btn-sm am-lx-btn" data-lx-add-bom>⚙ + Linh kiện theo máy</button>' : '') +
+                '<span class="am-lx-hint">' + (o.machinesOnly ? 'Chọn máy → linh kiện theo định mức tự thêm bên dưới (sửa / xoá / +LK được)' : 'Chọn xong dòng cuối sẽ tự thêm dòng mới') + '</span></div>' +
+                '<div class="am-lx-sum"></div></div>';
+        },
+        /** Khởi tạo trên $root (.am-lx); preset: [{kind, item: {id, name}, qty, price}] */
+        init: function ($root, opts, preset) {
+            $root.data('lx', opts || {});
+            var o = lxOpts($root), $body = $root.find('tbody').empty();
+            (preset || []).forEach(function (p) { AM.lx.add($root, p.kind, p.item, p.qty, p.price); });
+            $body.append(o.machinesOnly ? lxGroupRow(o) : lxItemRow(o, o.defaultKind || o.kinds[0]));
+            lxChanged($root);
+        },
+        /** Thêm một dòng hàng đã chọn (điền vào dòng trống cuối nếu có) */
+        add: function ($root, kind, item, qty, price) {
+            var o = lxOpts($root), $body = $root.find('tbody'), $last = $body.children('tr[data-lx="item"]').last();
+            var $r = $last.length && !lxCode($last) && !$last.find('.am-picker-input').val() && $last.is(':last-child') ? $last : null;
+            if ($r && $r.attr('data-kind') !== kind) { $r.replaceWith(lxItemRow(o, kind)); $r = null; }
+            if (!$r) {
+                $r = $(lxItemRow(o, kind));
+                var $tail = $body.children('tr[data-lx="item"]').last();
+                $tail.length && !lxCode($tail) && $tail.is(':last-child') ? $tail.before($r) : $body.append($r);
+            }
+            if (qty) $r.find('[data-lx-qty]').val(qty);
+            if (price) $r.find('[data-lx-price]').val(price);
+            AM.pickerSet($r.find('.am-picker'), item);
+        },
+        /** → { lines: [{kind, item, qty, price}], groups: [{product, qty}], error } */
+        read: function ($root) {
+            var out = { lines: [], groups: [], error: '' };
+            $root.find('tbody tr').each(function () {
+                var $r = $(this), type = $r.data('lx'), code = lxCode($r), qty = $.trim($r.find('[data-lx-qty]').val()), typed = $r.find('.am-picker-input').val();
+                if (!code) { if (typed) out.error = 'Có dòng chưa chọn hàng từ danh sách gợi ý'; return; }
+                if (!(+qty >= 1) || Math.floor(+qty) !== +qty) out.error = 'Số lượng phải là số nguyên ≥ 1';
+                if (type === 'group') { out.groups.push({ product: code, qty: qty }); return; }
+                var line = { kind: type === 'sub' ? 'part' : $r.attr('data-kind'), item: code, qty: qty };
+                if (lxOpts($root).price) {
+                    line.price = $r.find('[data-lx-price]').val();
+                    if (!(+line.price > 0)) out.error = 'Đơn giá phải lớn hơn 0';
+                }
+                out.lines.push(line);
+            });
+            return out;
+        },
+        refresh: function ($root) { lxChanged($root); }
+    };
+
+    $(document)
+        .on('change', '.am-lx [data-lx-kind]', function () {
+            var $root = $(this).closest('.am-lx'), o = lxOpts($root), $r = $(this).closest('tr'), kind = this.value;
+            if ($r.data('lx') === 'group') lxSubs($r).remove();
+            $r.replaceWith(kind === 'bom' ? lxGroupRow(o) : lxItemRow(o, kind));
+            lxChanged($root);
+        })
+        .on('change', '.am-lx input[type=hidden][name=lx_item]', function () {
+            var $root = $(this).closest('.am-lx'), o = lxOpts($root), $r = $(this).closest('tr'), type = $r.data('lx'), code = this.value;
+            if (type === 'group') {
+                lxFillGroup($root, $r);
+                // Đơn lắp ráp: chọn máy ở nhóm cuối → tự thêm nhóm máy trống
+                if (o.machinesOnly && code && !$r.nextAll('tr[data-lx="group"]').length) $root.find('tbody').append(lxGroupRow(o));
+                return;
+            }
+            if (o.price && code && $r.attr('data-pauto') !== '0') {
+                var kind = type === 'sub' ? 'part' : $r.attr('data-kind'), item = kind === 'part' ? AM.part(code) : AM.productCache[code];
+                if (item && o.priceOf) $r.find('[data-lx-price]').val(o.priceOf(kind, item) || '');
+            }
+            if (type === 'item' && code && $r.is(':last-child')) $r.after(lxItemRow(o, $r.attr('data-kind')));
+            lxChanged($root);
+        })
+        .on('input', '.am-lx [data-lx-qty]', function () {
+            var $root = $(this).closest('.am-lx'), $r = $(this).closest('tr');
+            if ($r.data('lx') === 'group') {
+                var mq = +this.value || 0;
+                lxSubs($r).filter('[data-auto="1"]').each(function () { $(this).find('[data-lx-qty]').val(+$(this).data('per') * mq || ''); });
+            } else if ($r.data('lx') === 'sub') {
+                $r.attr('data-auto', '0');
+            }
+            lxChanged($root);
+        })
+        .on('input', '.am-lx [data-lx-price]', function () {
+            $(this).closest('tr').attr('data-pauto', '0');
+            lxChanged($(this).closest('.am-lx'));
+        })
+        .on('click', '.am-lx [data-lx-del]', function () {
+            var $root = $(this).closest('.am-lx'), o = lxOpts($root), $r = $(this).closest('tr');
+            if ($r.data('lx') === 'group') lxSubs($r).remove();
+            $r.remove();
+            var $body = $root.find('tbody');
+            if (!$body.children().length) $body.append(o.machinesOnly ? lxGroupRow(o) : lxItemRow(o, o.defaultKind || o.kinds[0]));
+            lxChanged($root);
+        })
+        .on('click', '.am-lx [data-lx-add]', function () {
+            var $root = $(this).closest('.am-lx'), o = lxOpts($root);
+            $root.find('tbody').append(o.machinesOnly ? lxGroupRow(o) : lxItemRow(o, o.defaultKind || o.kinds[0]));
+        })
+        .on('click', '.am-lx [data-lx-add-bom]', function () {
+            var $root = $(this).closest('.am-lx');
+            $root.find('tbody').append(lxGroupRow(lxOpts($root)));
+        })
+        .on('click', '.am-lx [data-lx-sub-add]', function () {
+            var $root = $(this).closest('.am-lx'), $g = $(this).closest('tr'), $subs = lxSubs($g);
+            ($subs.length ? $subs.last() : $g).after(lxSubRow(lxOpts($root), null, 0, 1, false));
+        });
+
     $(document)
         .on('focus', '.am-picker-input', function () { pickerSearch($(this).closest('.am-picker')); })
         .on('input', '.am-picker-input', function () {
@@ -336,7 +569,7 @@
         }
         return '<div class="am-field' + (f.full ? ' am-field-full' : '') + '" data-field="' + f.name + '">' +
             '<label>' + AM.esc(f.label) + (f.required ? ' <span class="am-req">*</span>' : '') + '</label>' + input +
-            '<div class="am-field-hint">' + AM.esc(f.hint || '') + '</div><div class="am-field-error"></div></div>';
+            '<div class="am-field-hint">' + (f.hintHtml || AM.esc(f.hint || '')) + '</div><div class="am-field-error"></div></div>';
     }
 
     function ensureModal(id) {
@@ -447,7 +680,6 @@
     };
 
     /* ---------- Thanh toán / công nợ của đơn đại lý (dùng ở trang Đơn hàng và Đại lý) ---------- */
-    AM.canEditDebt = function () { return AM.can('admin', 'sale', 'kt_congno'); };
 
     /** 95 → "1 giờ 35 phút" */
     AM.formatMinutes = function (m) {
@@ -461,63 +693,96 @@
     AM.debtBadge = function (o) {
         // Công nợ chỉ áp dụng cho đơn bán của đại lý
         if (o.type !== 'new' || o.customerType === 'retail' || o.status === 'cancelled') return null;
-        if (!o.debtMode) return { label: 'Chưa chọn TT', color: '#6b7280', bg: '#f1f5f9' };
-        if (o.debtMode === 'paid') return { label: 'Đã thanh toán', color: '#059669', bg: '#d1fae5' };
-        return { label: 'Nợ ' + AM.money(o.debt), color: '#ef4444', bg: '#fee2e2' };
+        // Theo phiếu thu: chưa trả / còn nợ / đã thanh toán đủ
+        var paid = o.paid || 0, debt = Math.max(0, (o.total || 0) - paid);
+        if (debt <= 0) return { label: 'Đã thanh toán', color: '#059669', bg: '#d1fae5' };
+        if (paid > 0) return { label: 'Còn nợ ' + AM.money(debt), color: '#b45309', bg: '#fef3c7' };
+        return { label: 'Chưa trả', color: '#ef4444', bg: '#fee2e2' };
     };
 
-    AM.debtForm = function (o, onSaved) {
-        var modes = AM.data.debtModes || {}, methods = AM.data.paidMethods || [];
-        var dealer = AM.dealer(o.dealerId);
-        var delivered = o.status === 'delivered';
+    /* ---------- Phiếu thu theo đơn: mỗi lần đại lý trả = 1 phiếu, không sửa/xoá, chỉ huỷ có lý do ---------- */
+    AM.canPay = function () { return AM.can('admin', 'sale', 'kt_congno'); };
+    AM.canVoidPay = function () { return AM.can('admin', 'kt_congno'); };
+
+    /** Ghi nhận một lần trả: nhập số tiền trả lần này, hệ thống tự tính còn nợ */
+    AM.payForm = function (o, onSaved) {
+        var methods = AM.data.paidMethods || [], dealer = AM.dealer(o.dealerId), delivered = o.status === 'delivered';
+        var paid = o.paid || 0, debt = Math.max(0, o.total - paid);
+        var times = (o.payments || []).filter(function (p) { return !p.voided; }).length;
         AM.form.open({
-            title: '💰 Thanh toán / công nợ — ' + o.id,
-            sub: (dealer ? dealer.name + ' · ' : '') + 'Giá trị đơn ' + AM.money(o.total),
+            title: '💰 Ghi nhận thanh toán — ' + o.id,
+            sub: (dealer ? dealer.name + ' · ' : '') + 'Giá trị đơn ' + AM.money(o.total) + ' · còn nợ ' + AM.money(debt),
             width: 520,
-            submitLabel: '💾 Lưu công nợ',
+            submitLabel: '💾 Ghi phiếu thu',
+            submitColor: '#059669',
             fields: [
-                { name: 'mode', label: 'Hình thức thanh toán', type: 'select', required: true, full: true, placeholder: '— Chọn —',
-                  options: $.map(modes, function (label, key) { return [[key, label]]; }) },
-                { name: 'debtAmount', label: 'Số tiền còn nợ (đ)', type: 'money', min: 1, required: true, hint: 'Phần còn lại coi như đại lý đã trả' },
-                { name: 'paidMethod', label: 'Đã trả bằng', type: 'select', required: true, placeholder: '— Chọn —', options: methods.map(function (m) { return [m, m]; }) },
-                { name: 'note', label: 'Ghi chú', type: 'textarea', full: true, placeholder: 'VD: Đại lý trả trước 200tr, hẹn trả phần còn lại cuối tháng' }
+                { name: 'amount', label: 'Số tiền trả lần này (đ)', type: 'money', min: 1, max: debt, required: true,
+                  hintHtml: '<a href="javascript:;" data-pay-all style="color:#2563eb;font-weight:700">Trả hết ' + AM.esc(AM.money(debt)) + '</a>' },
+                { name: 'date', label: 'Ngày trả', type: 'date', required: true },
+                { name: 'method', label: 'Hình thức', type: 'select', required: true, placeholder: '— Chọn —', options: methods.map(function (m) { return [m, m]; }) },
+                { name: 'note', label: 'Ghi chú', placeholder: 'Số UNC, người nộp, hẹn trả phần còn lại...' }
             ],
-            values: { mode: o.debtMode || 'full', debtAmount: o.debtMode === 'partial' ? o.debt : '', paidMethod: o.paidMethod || '', note: o.debtNote || '' },
+            values: { date: AM.isoToday(), method: methods[0] || '' },
             onChange: function (api) {
-                var mode = api.get('mode');
-                api.toggle('debtAmount', mode === 'partial');
-                api.toggle('paidMethod', mode === 'partial' || mode === 'paid');
-                var debt = mode === 'full' ? o.total : mode === 'paid' ? 0 : Math.max(0, +api.get('debtAmount') || 0);
-                var paid = Math.max(0, o.total - debt);
-                var delta = delivered ? debt - (o.debtRecorded || 0) : 0;
-                var cur = dealer ? dealer.debt : 0;
-                var html = '<div style="background:#f8fafc;border-radius:8px;padding:10px 14px;font-size:12px;color:#374151;line-height:1.8">' +
-                    '<div style="display:flex;justify-content:space-between"><span>Giá trị đơn</span><b>' + AM.money(o.total) + '</b></div>' +
-                    '<div style="display:flex;justify-content:space-between"><span>Đại lý đã trả</span><b style="color:#059669">' + AM.money(paid) + '</b></div>' +
-                    '<div style="display:flex;justify-content:space-between"><span>Ghi nợ</span><b style="color:#ef4444">' + AM.money(debt) + '</b></div>';
-                if (dealer) {
-                    html += delivered
-                        ? '<div style="border-top:1px dashed #e5e7eb;margin-top:6px;padding-top:6px">Dư nợ ' + AM.esc(AM.shortDealer(dealer.name)) + ': <b>' + AM.money(cur) + '</b> → <b style="color:' + (cur + delta > dealer.limit ? '#ef4444' : '#1a2035') + '">' + AM.money(cur + delta) + '</b>' +
-                          (delta ? ' (' + (delta > 0 ? '+' : '−') + AM.money(Math.abs(delta)) + ')' : ' (không đổi)') + '</div>'
-                        : '<div style="border-top:1px dashed #e5e7eb;margin-top:6px;padding-top:6px;color:#6b7280">Đơn chưa giao: số nợ sẽ được ghi vào công nợ đại lý khi giao xong.</div>';
-                }
-                api.preview(html + '</div>');
+                var a = Math.min(+api.get('amount') || 0, debt), left = debt - a, cur = dealer ? dealer.debt : 0;
+                var row = function (l, v, c) { return '<div style="display:flex;justify-content:space-between"><span>' + l + '</span><b style="color:' + (c || '#1a2035') + '">' + v + '</b></div>'; };
+                api.preview('<div style="background:#f8fafc;border-radius:8px;padding:10px 14px;font-size:12px;color:#374151;line-height:1.8">' +
+                    row('Giá trị đơn', AM.money(o.total)) +
+                    row('Đã trả trước đó' + (times ? ' (' + times + ' lần)' : ''), AM.money(paid), '#059669') +
+                    row('Trả lần này', a ? AM.money(a) : '—', '#2563eb') +
+                    row('Còn nợ sau lần này', AM.money(left), left > 0 ? '#ef4444' : '#059669') +
+                    (dealer ? '<div style="border-top:1px dashed #e5e7eb;margin-top:6px;padding-top:6px;color:#6b7280">' + (delivered
+                        ? 'Dư nợ ' + AM.esc(AM.shortDealer(dealer.name)) + ': <b style="color:#1a2035">' + AM.money(cur) + '</b> → <b style="color:#1a2035">' + AM.money(cur - a) + '</b>'
+                        : 'Đơn chưa giao: khi giao xong chỉ ghi nợ phần còn lại vào công nợ đại lý.') + '</div>' : '') + '</div>');
             },
             validate: function (v) {
                 var e = {};
-                if (v.mode === 'partial') {
-                    var amt = +v.debtAmount;
-                    if (!(amt > 0)) e.debtAmount = 'Vui lòng nhập số tiền còn nợ';
-                    else if (amt >= o.total) e.debtAmount = 'Số nợ phải nhỏ hơn giá trị đơn. Nợ toàn bộ thì chọn "Ghi nợ cả đơn"';
-                }
+                if (!(+v.amount > 0)) e.amount = 'Vui lòng nhập số tiền trả';
+                else if (+v.amount > debt) e.amount = 'Vượt số còn nợ của đơn (' + AM.money(debt) + ')';
                 return e;
             },
             onSubmit: function (v) {
-                return AM.api('order.debt', { id: o.id, mode: v.mode, debtAmount: v.debtAmount, paidMethod: v.paidMethod, note: v.note }).done(function (data) {
+                return AM.api('order.pay', { id: o.id, amount: v.amount, date: v.date, method: v.method, note: v.note }).done(function (data) {
+                    if (onSaved) onSaved(data);
+                });
+            }
+        }).$form.on('click', '[data-pay-all]', function () {
+            $(this).closest('form').find('[name="amount"]').val(debt).trigger('input');
+        });
+    };
+
+    AM.payVoidForm = function (o, pay, onSaved) {
+        AM.form.open({
+            title: '⊘ Huỷ phiếu thu ' + pay.code,
+            sub: o.id + ' · ' + AM.money(pay.amount) + ' · ' + pay.method + ' · ngày ' + pay.date,
+            width: 480,
+            submitLabel: '⊘ Huỷ phiếu thu',
+            submitColor: '#dc2626',
+            fields: [
+                { name: 'reason', label: 'Lý do huỷ', type: 'textarea', required: true, full: true, placeholder: 'VD: Nhập nhầm số tiền / ghi nhầm đơn / hoàn tiền cho đại lý...' },
+                { name: 'info', type: 'html', html: '<div style="font-size:11px;color:#6b7280;line-height:1.6">Phiếu không bị xoá mà chuyển sang trạng thái <b>đã huỷ</b> (giữ lại lịch sử). ' +
+                    'Số tiền này được cộng lại vào số còn nợ của đơn' + (o.status === 'delivered' ? ' và dư nợ đại lý' : '') + '. Nhập sai thì huỷ rồi ghi phiếu mới.</div>' }
+            ],
+            onSubmit: function (v) {
+                return AM.api('order.payVoid', { code: pay.code, reason: v.reason }).done(function (data) {
                     if (onSaved) onSaved(data);
                 });
             }
         });
+    };
+
+    /** Lịch sử phiếu thu của đơn (phiếu đã huỷ gạch ngang, có lý do) */
+    AM.paymentsHtml = function (o) {
+        var list = o.payments || [];
+        if (!list.length) return '<div style="font-size:11px;color:#9ca3af;padding:4px 0">Chưa có lần trả nào</div>';
+        return list.map(function (p) {
+            return '<div class="am-pay' + (p.voided ? ' voided' : '') + '">' +
+                '<div class="am-pay-main"><b>' + AM.money(p.amount) + '</b><span>' + AM.esc(p.date) + ' · ' + AM.esc(p.method) + '</span>' +
+                (!p.voided && AM.canVoidPay() && o.status !== 'cancelled' ? '<button type="button" class="am-pay-void" data-pay-void="' + AM.esc(p.code) + '" title="Huỷ phiếu thu">⊘</button>' : '') + '</div>' +
+                '<div class="am-pay-sub">' + AM.esc(p.code) + ' · ghi bởi ' + AM.esc(p.by || '—') + (p.note ? ' · ' + AM.esc(p.note) : '') + '</div>' +
+                (p.voided ? '<div class="am-pay-void-note">Đã huỷ ' + AM.esc(p.voidedAt || '') + ' bởi ' + AM.esc(p.voidedBy || '—') + ': ' + AM.esc(p.voidReason || '') + '</div>' : '') +
+                '</div>';
+        }).join('');
     };
 
     AM.confirm = function (opts) {

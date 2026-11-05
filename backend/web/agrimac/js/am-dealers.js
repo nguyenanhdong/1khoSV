@@ -78,7 +78,7 @@
                 '<div style="min-width:0"><div style="font-weight:700">' + AM.esc(o.id) + ' <span style="font-size:10px;color:' + (st.color || '#6b7280') + '">· ' + AM.esc(st.label || o.status) + '</span></div>' +
                 '<div style="font-size:11px;color:#9ca3af;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + AM.esc(o.product || '') + ' · ' + AM.esc(o.date || '') + ' · ' + AM.money(o.total) + '</div></div>' +
                 '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">' + (b ? AM.badge(b.label, b.color, b.bg, 10) : '') +
-                (AM.canEditDebt() ? '<button type="button" class="am-btn am-btn-sm" data-debt-order="' + AM.esc(o.id) + '" title="Sửa thanh toán / công nợ">✎</button>' : '') +
+                (AM.canPay() && o.total - (o.paid || 0) > 0 ? '<button type="button" class="am-btn am-btn-sm" data-debt-order="' + AM.esc(o.id) + '" title="Ghi nhận thanh toán cho đơn này">💰</button>' : '') +
                 '</div></div>';
         }).join('');
     }
@@ -165,6 +165,7 @@
     }
 
     function openCollectForm(d) {
+        var orderOf = function (code) { return (d.orders || []).filter(function (o) { return o.id === code; })[0] || null; };
         AM.form.open({
             title: '💰 Thu tiền — ' + d.name,
             sub: 'Phiếu thu ghi vào sổ công nợ và giảm dư nợ đại lý',
@@ -174,13 +175,19 @@
             fields: [
                 { name: 'info', type: 'html', html: '<div class="am-row-between" style="background:#f8fafc;border-radius:8px;padding:10px 14px">' +
                     '<span style="font-size:12px;color:#6b7280">Dư nợ hiện tại</span><span style="font-weight:900;font-size:15px;color:#ef4444">' + AM.money(d.debt) + '</span></div>' },
+                { name: 'order', label: 'Thu cho đơn', type: 'select', full: true, placeholder: '— Thu chung (không gắn đơn) —',
+                  options: (d.orders || []).filter(function (o) { return o.status === 'delivered' && o.total - (o.paid || 0) > 0; }).map(function (o) {
+                      return [o.id, o.id + ' · ' + (o.product || '') + ' · còn nợ ' + AM.money(o.total - (o.paid || 0))];
+                  }), hint: 'Chọn đơn để lưu thành phiếu thu của đơn đó (có lịch sử từng lần trả)' },
                 { name: 'amount', label: 'Số tiền thu (đ)', type: 'money', min: 1, max: d.debt, required: true, full: true },
                 { name: 'method', label: 'Hình thức', type: 'select', required: true, options: [['Tiền mặt', 'Tiền mặt'], ['Chuyển khoản', 'Chuyển khoản']] },
                 { name: 'date', label: 'Ngày thu', type: 'date', required: true },
                 { name: 'note', label: 'Ghi chú', type: 'textarea', full: true, placeholder: 'Số chứng từ, nội dung chuyển khoản...' }
             ],
             values: { amount: d.debt, date: AM.isoToday() },
-            onChange: function (api) {
+            onChange: function (api, name) {
+                var ord = orderOf(api.get('order'));
+                if (name === 'order' && ord) api.set('amount', ord.total - (ord.paid || 0));
                 var a = +api.get('amount') || 0;
                 api.preview(a > 0 && a <= d.debt
                     ? '<div class="am-row-between" style="background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:8px;padding:10px 14px">' +
@@ -191,10 +198,15 @@
                 var e = {};
                 if (!(+v.amount > 0)) e.amount = 'Số tiền phải lớn hơn 0';
                 else if (+v.amount > d.debt) e.amount = 'Không được thu vượt dư nợ (' + AM.money(d.debt) + ')';
+                var ord = orderOf(v.order);
+                if (ord && +v.amount > ord.total - (ord.paid || 0)) e.amount = 'Vượt số còn nợ của đơn ' + ord.id + ' (' + AM.money(ord.total - (ord.paid || 0)) + ')';
                 return e;
             },
             onSubmit: function (v) {
-                return AM.api('dealer.collect', $.extend({}, v, { dealerId: d.id })).done(function (data) {
+                var req = v.order
+                    ? AM.api('order.pay', { id: v.order, amount: v.amount, date: v.date, method: v.method, note: v.note })
+                    : AM.api('dealer.collect', $.extend({}, v, { dealerId: d.id }));
+                return req.done(function (data) {
                     upsertDealer(data.dealer);
                     render();
                 });
@@ -219,7 +231,7 @@
                 var d = byId(state.selected), code = $(this).data('debt-order');
                 var o = (d.orders || []).filter(function (x) { return x.id === code; })[0];
                 if (!o) return;
-                AM.debtForm($.extend({ type: 'new', dealerId: d.id }, o), function (data) {
+                AM.payForm($.extend({ type: 'new', dealerId: d.id }, o), function (data) {
                     if (data.dealer) upsertDealer(data.dealer);
                     render();
                 });

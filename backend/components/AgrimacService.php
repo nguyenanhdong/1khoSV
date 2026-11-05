@@ -43,7 +43,8 @@ class AgrimacService
         'order.stock'          => ['stockAssembly', ['orders', 'assembly'], ['admin', 'kt_congno']],
         'order.assemblyNote'   => ['saveAssemblyNote', ['assembly'], ['admin', 'assembly']],
         'order.cancel'         => ['cancelOrder', ['orders'], ['admin', 'sale']],
-        'order.debt'           => ['saveOrderDebt', ['orders', 'dealers'], ['admin', 'sale', 'kt_congno']],
+        'order.pay'            => ['payOrder', ['orders', 'dealers'], ['admin', 'sale', 'kt_congno']],
+        'order.payVoid'        => ['voidPayment', ['orders', 'dealers'], ['admin', 'kt_congno']],
         'carrier.save'         => ['saveCarrier', ['carriers', 'orders'], ['admin', 'kt_congno', 'delivery']],
         'carrier.delete'       => ['deleteCarrier', ['carriers'], ['admin', 'kt_congno', 'delivery']],
         'market.status'        => ['setMarketOrderStatus', ['orders'], ['admin']],
@@ -221,7 +222,7 @@ class AgrimacService
             $errors['supId'] = 'Hàng nhập nguyên chiếc cần chọn nhà cung cấp';
         }
         $price = $this->positive($errors, $d, 'price', 'Giá bán lẻ');
-        $unit = in_array($d['unit'] ?? '', D::PRODUCT_UNITS, true) ? $d['unit'] : null;
+        $unit = D::unit($d['unit'] ?? '');
         if (!$unit) {
             $errors['unit'] = 'Vui lòng chọn đơn vị tính';
         }
@@ -241,7 +242,7 @@ class AgrimacService
         }
         // Linh kiện cấu thành (BOM): chỉ với sản phẩm tự lắp; gửi kèm cờ bomSent để phân biệt "không gửi" với "xoá hết"
         $bom = null;
-        if (!empty($d['bomSent']) && in_array($source, ['assembly', 'both'], true)) {
+        if (!empty($d['bomSent'])) {
             $bom = $this->readBom($d['bom'] ?? [], 'bom');
         }
         $this->fail($errors);
@@ -351,7 +352,11 @@ class AgrimacService
         $code = $this->str($d, 'id', 20);
         $id = $code !== '' ? $this->idByCode('part', $code) : null;
         $errors = [];
-        $this->require($errors, $d, ['name' => 'tên linh kiện', 'unit' => 'đơn vị tính']);
+        $this->require($errors, $d, ['name' => 'tên linh kiện']);
+        $partUnit = D::unit($d['unit'] ?? '');
+        if (!$partUnit) {
+            $errors['unit'] = 'Vui lòng chọn đơn vị tính';
+        }
         $name = $this->str($d, 'name');
         if ($name !== '' && (new Query())->from('part')->where(['name' => $name])->andFilterWhere(['<>', 'id', $id])->exists($this->db)) {
             $errors['name'] = 'Linh kiện đã tồn tại';
@@ -382,7 +387,7 @@ class AgrimacService
         if ($newCat !== '') {
             $catId = $this->insert('part_category', ['name' => $newCat, 'sort_order' => 99]);
         }
-        $row = ['name' => $name, 'unit' => $this->str($d, 'unit', 20), 'category_id' => $catId, 'supplier_id' => $supplierId, 'cost_price' => $cost, 'min_stock' => (int)$min];
+        $row = ['name' => $name, 'unit' => $partUnit, 'category_id' => $catId, 'supplier_id' => $supplierId, 'cost_price' => $cost, 'min_stock' => (int)$min];
         if ($id) {
             $this->update('part', $row, ['id' => $id]);
         } else {
@@ -433,42 +438,92 @@ class AgrimacService
         return ['id' => $voucherId, 'code' => $code];
     }
 
+    /**
+     * Đọc các dòng phiếu kho [{kind: product|part, item: mã, qty, price}] → [[kind, item row, qty, price], ...].
+     * $withPrice: phiếu nhập bắt buộc đơn giá; phiếu xuất lấy giá vốn hiện tại. Dòng trùng hàng được cộng dồn.
+     */
+    private function readVoucherLines($rows, $withPrice, array &$errors)
+    {
+        $out = [];
+        foreach ((array)$rows as $r) {
+            $kind = ($r['kind'] ?? '') === 'part' ? 'part' : 'product';
+            $code = trim((string)($r['item'] ?? ''));
+            $qtyRaw = trim((string)($r['qty'] ?? ''));
+            if ($code === '' && ($qtyRaw === '' || $qtyRaw === '1')) {
+                continue;
+            }
+            $item = $this->itemRow($kind, $code);
+            if (!$item) {
+                $errors['lines'] = $code === '' ? 'Có dòng chưa chọn hàng' : 'Không tìm thấy "' . $code . '"';
+                continue;
+            }
+            $qty = (int)$qtyRaw;
+            if ($qty < 1 || (string)$qty !== $qtyRaw) {
+                $errors['lines'] = 'Số lượng "' . $item['name'] . '" phải là số nguyên ≥ 1';
+                continue;
+            }
+            $price = $withPrice ? (int)preg_replace('/\D/', '', (string)($r['price'] ?? '')) : $item['cost'];
+            if ($withPrice && $price <= 0) {
+                $errors['lines'] = 'Đơn giá "' . $item['name'] . '" phải lớn hơn 0';
+                continue;
+            }
+            $key = $kind . $item['id'];
+            if (isset($out[$key])) {
+                $out[$key][2] += $qty;
+            } else {
+                $out[$key] = [$kind, $item, $qty, $price];
+            }
+        }
+        if (!$out && empty($errors['lines'])) {
+            $errors['lines'] = 'Vui lòng thêm ít nhất một dòng hàng';
+        }
+        return array_values($out);
+    }
+
+    private function voucherDate(array $d, array &$errors)
+    {
+        $date = !empty($d['date']) ? $this->isoDate($d['date'], 'date', $errors) : date('Y-m-d');
+        return $date ? $date . ' ' . date('H:i:s') : null;
+    }
+
     private function stockImport(array $d)
     {
-        $kind = ($d['kind'] ?? '') === 'part' ? 'part' : 'product';
         $errors = [];
-        $item = $this->itemRow($kind, $d['itemId'] ?? '');
-        if (!$item) {
-            $errors['itemId'] = 'Vui lòng chọn hàng nhập';
-        }
+        // Tương thích form cũ 1 dòng (kind/itemId/qty/price)
+        $rows = $d['lines'] ?? [['kind' => $d['kind'] ?? '', 'item' => $d['itemId'] ?? '', 'qty' => $d['qty'] ?? '', 'price' => $d['price'] ?? '']];
+        $lines = $this->readVoucherLines($rows, true, $errors);
         $supplierId = !empty($d['supplierId']) ? $this->idByCode('supplier', $d['supplierId']) : null;
-        $qty = $this->positive($errors, $d, 'qty', 'Số lượng');
-        $price = $this->positive($errors, $d, 'price', 'Đơn giá');
+        if (!empty($d['supplierId']) && !$supplierId) {
+            $errors['supplierId'] = 'Nhà cung cấp không hợp lệ';
+        }
+        $at = $this->voucherDate($d, $errors);
         $this->fail($errors);
 
-        $v = $this->writeVoucher('import', 'purchase', 1, [[$kind, $item, $qty, $price]], ['supplier_id' => $supplierId, 'note' => $this->str($d, 'note', 500) ?: null]);
-        if ($kind === 'part') {
-            $this->update('part', ['cost_price' => $price], ['id' => $item['id']]);
+        $v = $this->writeVoucher('import', 'purchase', 1, $lines, ['supplier_id' => $supplierId, 'note' => $this->str($d, 'note', 500) ?: null, 'created_at' => $at]);
+        foreach ($lines as [$kind, $item, , $price]) {
+            // Giá vốn linh kiện theo phiếu nhập gần nhất
+            if ($kind === 'part') {
+                $this->update('part', ['cost_price' => $price], ['id' => $item['id']]);
+            }
         }
-        return ['message' => '✓ Nhập kho thành công: ' . $qty . ' × ' . $item['name'] . ' (' . $v['code'] . ')', 'data' => $this->inventoryData()];
+        $qty = array_sum(array_column($lines, 2));
+        return ['message' => '✓ Phiếu ' . $v['code'] . ': nhập ' . count($lines) . ' mặt hàng (' . $qty . ' đơn vị)', 'data' => $this->inventoryData() + ['voucher' => $v['code']]];
     }
 
     private function stockExport(array $d)
     {
         $reasons = ['assembly_issue', 'warranty', 'sale', 'adjust', 'other'];
         $reason = in_array($d['reason'] ?? '', $reasons, true) ? $d['reason'] : null;
-        $kind = ($d['kind'] ?? '') === 'product' ? 'product' : 'part';
         $errors = [];
         if (!$reason) {
             $errors['reason'] = 'Lý do xuất không hợp lệ';
         }
-        $item = $this->itemRow($kind, $d['itemId'] ?? '');
-        if (!$item) {
-            $errors['itemId'] = 'Vui lòng chọn hàng xuất';
-        }
-        $qty = $this->positive($errors, $d, 'qty', 'Số lượng');
-        if ($item && $qty && $qty > $item['stock']) {
-            $errors['qty'] = 'Vượt tồn kho (' . $item['stock'] . ')';
+        $rows = $d['lines'] ?? [['kind' => ($d['kind'] ?? '') === 'product' ? 'product' : 'part', 'item' => $d['itemId'] ?? '', 'qty' => $d['qty'] ?? '']];
+        $lines = $this->readVoucherLines($rows, false, $errors);
+        foreach ($lines as [, $item, $qty]) {
+            if ($qty > $item['stock']) {
+                $errors['lines'] = 'Không đủ tồn kho "' . $item['name'] . '" (còn ' . $item['stock'] . ', cần ' . $qty . ')';
+            }
         }
         $ref = $this->str($d, 'ref', 30);
         $orderId = $ref !== '' ? $this->idByCode('dealer_order', $ref) : null;
@@ -479,11 +534,13 @@ class AgrimacService
         if (in_array($reason, ['adjust', 'other'], true) && $note === '') {
             $errors['note'] = 'Vui lòng ghi rõ lý do';
         }
+        $at = $this->voucherDate($d, $errors);
         $this->fail($errors);
 
-        $v = $this->writeVoucher($reason === 'adjust' ? 'adjust' : 'export', $reason === 'adjust' ? 'other' : $reason, -1,
-            [[$kind, $item, $qty, $item['cost']]], ['order_id' => $orderId, 'note' => ($reason === 'adjust' ? '[Kiểm kê] ' : '') . $note ?: null]);
-        return ['message' => '✓ Đã xuất ' . $qty . ' × ' . $item['name'] . ' (' . $v['code'] . ')', 'data' => $this->inventoryData()];
+        $v = $this->writeVoucher($reason === 'adjust' ? 'adjust' : 'export', $reason === 'adjust' ? 'other' : $reason, -1, $lines,
+            ['order_id' => $orderId, 'note' => ($reason === 'adjust' ? '[Kiểm kê] ' : '') . $note ?: null, 'created_at' => $at]);
+        $qty = array_sum(array_column($lines, 2));
+        return ['message' => '✓ Phiếu ' . $v['code'] . ': xuất ' . count($lines) . ' mặt hàng (' . $qty . ' đơn vị)', 'data' => $this->inventoryData() + ['voucher' => $v['code']]];
     }
 
     /* ======================= Nhà cung cấp ======================= */
@@ -743,8 +800,11 @@ class AgrimacService
         if (!in_array($o['status'], $statuses, true)) {
             throw new Invalid([], 'Đơn ' . $o['code'] . ' đang ở trạng thái "' . D::orderStatusLabel($o['type'], $o['status']) . '", không thực hiện được thao tác này');
         }
-        $o['items'] = (new Query())->select(['i.*', 'code' => 'p.code', 'name' => 'p.name', 'stock' => 'p.quantity_in_stock', 'cost' => 'p.cost_price'])
-            ->from('dealer_order_item i')->innerJoin('product p', 'p.id = i.product_id')->where(['i.order_id' => $o['id']])->orderBy('i.id')->all($this->db);
+        $o['items'] = (new Query())->select([
+            'i.*', 'code' => 'COALESCE(p.code, pt.code)', 'name' => 'COALESCE(p.name, pt.name)',
+            'stock' => "IF(i.item_type = 'part', pt.stock, p.quantity_in_stock)", 'cost' => "IF(i.item_type = 'part', pt.cost_price, p.cost_price)",
+        ])->from('dealer_order_item i')->leftJoin('product p', "p.id = i.product_id AND i.item_type = 'product'")
+            ->leftJoin('part pt', "pt.id = i.part_id AND i.item_type = 'part'")->where(['i.order_id' => $o['id']])->orderBy('i.id')->all($this->db);
         return $o;
     }
 
@@ -925,20 +985,25 @@ class AgrimacService
         } elseif ($type) {
             $seen = [];
             foreach ((array)($d['items'] ?? []) as $row) {
-                $key = trim((string)($row['product'] ?? ''));
+                // Đơn bán: dòng máy hoặc linh kiện lẻ; đơn lắp ráp: chỉ máy
+                $kind = $type === 'new' && ($row['kind'] ?? '') === 'part' ? 'part' : 'product';
+                $key = trim((string)($row[$kind === 'part' ? 'part' : 'product'] ?? ($row['product'] ?? '')));
                 if ($key === '' && trim((string)($row['qty'] ?? '')) === '') {
                     continue;
                 }
-                $product = $this->productByKey($key);
+                $product = $kind === 'part'
+                    ? (new Query())->from('part')->where(['code' => $key])->one($this->db)
+                    : $this->productByKey($key);
                 if (!$product) {
-                    $errors['items'] = 'Sản phẩm "' . $key . '" không tồn tại';
+                    $errors['items'] = ($kind === 'part' ? 'Linh kiện "' : 'Sản phẩm "') . $key . '" không tồn tại';
                     continue;
                 }
-                if (isset($seen[$product['id']])) {
-                    $errors['items'] = 'Sản phẩm "' . $product['name'] . '" bị chọn trùng — gộp vào một dòng';
+                $product['_kind'] = $kind;
+                if (isset($seen[$kind . $product['id']])) {
+                    $errors['items'] = '"' . $product['name'] . '" bị chọn trùng — gộp vào một dòng';
                     continue;
                 }
-                $seen[$product['id']] = true;
+                $seen[$kind . $product['id']] = true;
                 $qty = (int)($row['qty'] ?? 0);
                 $price = $type === 'assembly' ? 0 : (int)preg_replace('/\D/', '', (string)($row['price'] ?? ''));
                 if ($qty < 1) {
@@ -951,6 +1016,10 @@ class AgrimacService
             }
             if (!$lines && empty($errors['items'])) {
                 $errors['items'] = 'Vui lòng thêm ít nhất một sản phẩm';
+            }
+            // Đơn lắp ráp: linh kiện dự kiến (theo định mức, đã chỉnh) — kế toán xuất kho theo danh sách này
+            if ($type === 'assembly' && !empty($d['parts'])) {
+                $parts = $this->readParts($d['parts'], $errors);
             }
         }
 
@@ -980,13 +1049,16 @@ class AgrimacService
             'sale_id' => $saleId, 'created_by' => $this->userId, 'note' => $this->str($d, 'note', 500) ?: null, 'ordered_at' => date('Y-m-d H:i:s'),
         ], $retail));
         foreach ($lines as [$product, $qty, $price, $disc]) {
+            $isPart = $product['_kind'] === 'part';
             $this->insert('dealer_order_item', [
-                'order_id' => $id, 'product_id' => $product['id'], 'qty' => $qty, 'unit_price' => $price,
+                'order_id' => $id, 'item_type' => $product['_kind'], 'product_id' => $isPart ? null : $product['id'], 'part_id' => $isPart ? $product['id'] : null,
+                'qty' => $qty, 'unit_price' => $price,
                 'discount_type' => $disc[0], 'discount_value' => $disc[1], 'discount_amount' => $disc[2], 'line_total' => $qty * $price - $disc[2],
             ]);
         }
         if ($parts) {
-            $cost = $this->writeOrderParts(['id' => $id], $parts);
+            $units = $type === 'assembly' ? array_sum(array_column($lines, 1)) : 1;
+            $cost = $this->writeOrderParts(['id' => $id], $parts, $units);
             $this->update('dealer_order', ['total_cost' => $cost], ['id' => $id]);
         }
         $this->insert('dealer_order_log', ['order_id' => $id, 'to_status' => 'pending', 'employee_id' => $this->userId, 'note' => 'Tạo ' . mb_strtolower(D::ORDER_TYPES[$type]['label'])]);
@@ -1061,10 +1133,13 @@ class AgrimacService
         if ($o['type'] === 'new') {
             $lines = [];
             foreach ($o['items'] as $it) {
-                $lines[] = ['product', $this->itemRow('product', $it['code']), (int)$it['qty'], (int)$it['unit_price']];
+                $kind = $it['item_type'] === 'part' ? 'part' : 'product';
+                $lines[] = [$kind, $this->itemRow($kind, $it['code']), (int)$it['qty'], (int)$it['unit_price']];
             }
             $v = $this->writeVoucher('export', 'sale', -1, $lines, $extra);
-            foreach ($o['items'] as $it) {
+            // Serial bảo hành chỉ sinh cho máy, không cho linh kiện lẻ
+            $machines = array_filter($o['items'], function ($it) { return $it['item_type'] !== 'part'; });
+            foreach ($machines as $it) {
                 for ($i = 0; $i < (int)$it['qty']; $i++) {
                     $this->insert('warranty', [
                         'serial' => $this->newSerial($it['code']), 'qr_token' => Yii::$app->security->generateRandomString(12),
@@ -1080,7 +1155,8 @@ class AgrimacService
                 $cost += (int)$it['qty'] * (int)$it['cost'];
             }
             $this->update('dealer_order', ['total_cost' => $cost], ['id' => $o['id']]);
-            $label = 'xuất ' . array_sum(array_column($o['items'], 'qty')) . ' máy, sinh serial bảo hành — chờ nhân viên giao hàng gửi đi';
+            $partQty = array_sum(array_column(array_filter($o['items'], function ($it) { return $it['item_type'] === 'part'; }), 'qty'));
+            $label = 'xuất ' . array_sum(array_column($machines, 'qty')) . ' máy' . ($partQty ? ' + ' . $partQty . ' linh kiện' : '') . ', sinh serial bảo hành — chờ nhân viên giao hàng gửi đi';
         } elseif ($o['type'] === 'warranty') {
             $current = $this->orderParts($o);
             if (!$current) {
@@ -1146,54 +1222,100 @@ class AgrimacService
     }
 
     /** Chọn / sửa thanh toán – công nợ của đơn đại lý (mọi trạng thái trừ đã huỷ). */
-    private function saveOrderDebt(array $d)
+    /* ---------------- Phiếu thu theo đơn (trả nhiều lần) ---------------- */
+
+    private function orderPaid($orderId)
+    {
+        return (int)(new Query())->from('dealer_order_payment')->where(['order_id' => $orderId, 'voided_at' => null])->sum('amount', $this->db);
+    }
+
+    /** Cập nhật tình trạng thanh toán của đơn theo các phiếu thu còn hiệu lực */
+    private function syncOrderPaid(array $o)
+    {
+        $paid = $this->orderPaid($o['id']);
+        $debt = max(0, (int)$o['total_amount'] - $paid);
+        $last = (new Query())->select('method')->from('dealer_order_payment')->where(['order_id' => $o['id'], 'voided_at' => null])->orderBy(['id' => SORT_DESC])->scalar($this->db);
+        $this->update('dealer_order', [
+            'debt_mode' => $paid <= 0 ? 'full' : ($debt <= 0 ? 'paid' : 'partial'), 'debt_amount' => $debt, 'paid_method' => $last ?: null,
+            'debt_updated_at' => date('Y-m-d H:i:s'), 'debt_updated_by' => $this->userId,
+        ], ['id' => $o['id']]);
+        return [$paid, $debt];
+    }
+
+    /** Ghi sổ công nợ đại lý: $type credit (thu) / debit (huỷ phiếu thu) */
+    private function ledgerEntry(array $o, $type, $amount, $method, $note, $at = null)
+    {
+        $dealer = (new Query())->from('dealer')->where(['id' => $o['dealer_id']])->one($this->db);
+        $after = (int)$dealer['current_debt'] + ($type === 'credit' ? -$amount : $amount);
+        $id = $this->insert('dealer_ledger', array_filter([
+            'dealer_id' => $dealer['id'], 'type' => $type, 'amount' => $amount, 'balance_after' => $after, 'order_id' => $o['id'],
+            'method' => $method, 'note' => $note, 'created_by' => $this->userId, 'created_at' => $at,
+        ], function ($v) { return $v !== null; }));
+        $this->update('dealer', ['current_debt' => $after], ['id' => $dealer['id']]);
+        $this->update('dealer_order', ['debt_recorded' => new Expression('debt_recorded ' . ($type === 'credit' ? '- ' : '+ ') . (int)$amount)], ['id' => $o['id']]);
+        return $id;
+    }
+
+    private function payOrder(array $d)
     {
         $o = $this->loadOrder($d['id'] ?? '', ['pending', 'confirmed', 'exported', 'shipping', 'delivered']);
         if ($o['type'] !== 'new' || !$o['dealer_id']) {
-            throw new Invalid([], 'Chỉ đơn bán cho đại lý mới ghi công nợ');
+            throw new Invalid([], 'Chỉ đơn bán cho đại lý mới ghi nhận thanh toán / công nợ');
         }
-        $total = (int)$o['total_amount'];
-        $mode = (string)($d['mode'] ?? '');
-        $method = $this->str($d, 'paidMethod', 30);
-        $note = $this->str($d, 'note', 300);
+        $debt = (int)$o['total_amount'] - $this->orderPaid($o['id']);
         $errors = [];
-        if (!isset(D::DEBT_MODES[$mode])) {
-            $errors['mode'] = 'Vui lòng chọn hình thức thanh toán';
+        $amount = $this->positive($errors, $d, 'amount', 'Số tiền trả');
+        if ($amount && $amount > $debt) {
+            $errors['amount'] = $debt > 0 ? 'Vượt số còn nợ của đơn (' . D::money($debt) . ')' : 'Đơn đã thanh toán đủ';
         }
-        $debt = $mode === 'full' ? $total : 0;
-        if ($mode === 'partial') {
-            $debt = $this->int($d, 'debtAmount');
-            if ($debt === null || $debt === false || $debt <= 0) {
-                $errors['debtAmount'] = 'Vui lòng nhập số tiền còn nợ';
-            } elseif ($debt >= $total) {
-                $errors['debtAmount'] = 'Số nợ phải nhỏ hơn giá trị đơn (' . D::money($total) . '). Nợ toàn bộ thì chọn "Ghi nợ cả đơn"';
-            }
+        $method = in_array($d['method'] ?? '', D::PAID_METHODS, true) ? $d['method'] : null;
+        if (!$method) {
+            $errors['method'] = 'Vui lòng chọn hình thức trả';
         }
-        if (in_array($mode, ['partial', 'paid'], true) && !in_array($method, D::PAID_METHODS, true)) {
-            $errors['paidMethod'] = 'Vui lòng chọn hình thức đã trả';
-        }
+        $date = $this->isoDate($d['date'] ?? '', 'date', $errors);
+        $note = $this->str($d, 'note', 300) ?: null;
         $this->fail($errors);
 
-        $this->update('dealer_order', [
-            'debt_mode' => $mode, 'debt_amount' => $debt, 'paid_method' => $mode === 'full' ? null : $method, 'debt_note' => $note ?: null,
-            'debt_updated_at' => date('Y-m-d H:i:s'), 'debt_updated_by' => $this->userId,
-        ], ['id' => $o['id']]);
-        // Đơn chưa giao xong: nợ chỉ ghi sổ khi khách xác nhận đã nhận (receiveOrder), lúc này chỉ lưu lựa chọn
-        $delta = 0;
-        if ($o['status'] === 'delivered') {
-            $delta = $this->applyOrderDebt($o, $debt, 'Sửa công nợ đơn ' . $o['code'] . ' · ' . D::DEBT_MODES[$mode] . ($note ? ' · ' . $note : ''));
-        }
+        $code = $this->nextCode('dealer_order_payment', 'PT' . date('Y'), 4);
+        // Đơn đã giao (nợ đã vào sổ): ghi thu vào sổ công nợ đại lý ngay; chưa giao: khi giao chỉ ghi nợ phần còn lại
+        $ledgerId = $o['status'] === 'delivered'
+            ? $this->ledgerEntry($o, 'credit', $amount, $method, 'Thu đơn ' . $o['code'] . ' · ' . $code . ($note ? ' · ' . $note : ''), $date . ' ' . date('H:i:s'))
+            : null;
+        $this->insert('dealer_order_payment', [
+            'code' => $code, 'order_id' => $o['id'], 'dealer_id' => $o['dealer_id'], 'amount' => $amount, 'method' => $method,
+            'paid_at' => $date, 'note' => $note, 'ledger_id' => $ledgerId, 'created_by' => $this->userId,
+        ]);
+        [$paid, $left] = $this->syncOrderPaid($o);
         $this->insert('dealer_order_log', [
             'order_id' => $o['id'], 'from_status' => $o['status'], 'to_status' => $o['status'], 'employee_id' => $this->userId,
-            'note' => 'Công nợ: ' . D::DEBT_MODES[$mode] . ' · nợ ' . D::money($debt) . ($mode !== 'full' ? ' · đã trả ' . D::money($total - $debt) . ' (' . $method . ')' : ''),
+            'note' => 'Phiếu thu ' . $code . ': ' . D::money($amount) . ' (' . $method . ', ngày ' . date('d/m/Y', strtotime($date)) . ') · còn nợ ' . D::money($left),
         ]);
-        $msg = '✓ Đơn ' . $o['code'] . ': ' . D::DEBT_MODES[$mode] . ($debt > 0 ? ' · nợ ' . D::money($debt) : '');
-        if ($o['status'] !== 'delivered') {
-            $msg .= ' · ghi vào công nợ khi giao xong';
-        } elseif ($delta !== 0) {
-            $msg .= ' · dư nợ đại lý ' . ($delta > 0 ? '+' : '−') . D::money(abs($delta));
+        return $this->orderResult('✓ ' . $code . ': đã thu ' . D::money($amount) . ' · ' . ($left > 0 ? 'đơn còn nợ ' . D::money($left) : 'đơn đã thanh toán đủ'), $o['code']);
+    }
+
+    private function voidPayment(array $d)
+    {
+        $pay = (new Query())->from('dealer_order_payment')->where(['code' => (string)($d['code'] ?? '')])->one($this->db);
+        if (!$pay || $pay['voided_at']) {
+            throw new Invalid([], $pay ? 'Phiếu thu đã bị huỷ trước đó' : 'Phiếu thu không tồn tại');
         }
-        return $this->orderResult($msg, $o['code']);
+        $code = (new Query())->select('code')->from('dealer_order')->where(['id' => $pay['order_id']])->scalar($this->db);
+        $o = $this->loadOrder($code, ['pending', 'confirmed', 'exported', 'shipping', 'delivered']);
+        $reason = $this->str($d, 'reason', 300);
+        if ($reason === '') {
+            throw new Invalid(['reason' => 'Vui lòng ghi lý do huỷ phiếu thu']);
+        }
+        // Đơn đã giao: số đã thu (dù thu trước hay sau khi giao) đang làm giảm nợ trong sổ → ghi nợ lại
+        if ($o['status'] === 'delivered') {
+            $this->ledgerEntry($o, 'debit', (int)$pay['amount'], null, 'Huỷ phiếu thu ' . $pay['code'] . ' đơn ' . $o['code'] . ' · ' . $reason);
+        }
+        $this->update('dealer_order_payment', ['voided_at' => date('Y-m-d H:i:s'), 'voided_by' => $this->userId, 'void_reason' => $reason], ['id' => $pay['id']]);
+        [, $left] = $this->syncOrderPaid($o);
+        $this->insert('dealer_order_log', [
+            'order_id' => $o['id'], 'from_status' => $o['status'], 'to_status' => $o['status'], 'employee_id' => $this->userId,
+            'note' => 'Huỷ phiếu thu ' . $pay['code'] . ' (' . D::money($pay['amount']) . '): ' . $reason . ' · còn nợ ' . D::money($left),
+        ]);
+        return $this->orderResult('Đã huỷ phiếu thu ' . $pay['code'] . ' · đơn còn nợ ' . D::money($left), $o['code']);
     }
 
     /* ---------------- Giao hàng: gửi nhà xe → khách xác nhận nhận ---------------- */
@@ -1254,11 +1376,9 @@ class AgrimacService
         if ($o['type'] === 'new') {
             $total = (int)$o['total_amount'];
             if ($o['dealer_id']) {
-                // Chưa chọn hình thức thanh toán → ghi nợ cả đơn
-                $mode = $o['debt_mode'] ?: 'full';
-                $debt = $mode === 'full' ? $total : ($mode === 'paid' ? 0 : min($total, (int)$o['debt_amount']));
-                $this->update('dealer_order', ['debt_mode' => $mode, 'debt_amount' => $debt], ['id' => $o['id']]);
-                $this->applyOrderDebt($o, $debt, 'Giao đơn ' . $o['code'] . ($mode !== 'full' ? ' · ' . D::DEBT_MODES[$mode] : ''));
+                // Ghi nợ phần chưa trả (giá trị đơn − các phiếu thu trước khi giao)
+                [$paid, $debt] = $this->syncOrderPaid($o);
+                $this->applyOrderDebt($o, $debt, 'Giao đơn ' . $o['code'] . ($paid ? ' · đã thu trước ' . D::money($paid) : ''));
                 $this->update('dealer', ['total_purchase' => new Expression('total_purchase + ' . $total)], ['id' => $o['dealer_id']]);
             }
             foreach (['sale' => $o['sale_id'], 'delivery' => $o['delivery_id']] as $role => $empId) {
@@ -1359,6 +1479,10 @@ class AgrimacService
             $errors['detail'] = 'Vui lòng ghi rõ lý do';
         }
         $this->fail($errors);
+        $paidBefore = $this->orderPaid($o['id']);
+        if ($paidBefore > 0) {
+            throw new Invalid([], 'Đơn đã có phiếu thu ' . D::money($paidBefore) . ' — huỷ các phiếu thu (hoàn tiền) trước khi huỷ đơn');
+        }
         $text = $reason . ($detail ? ': ' . $detail : '');
         $this->setOrderStatus($o, 'cancelled', ['cancel_reason' => $text, 'cancelled_at' => date('Y-m-d H:i:s')], $text);
         return $this->orderResult('Đã huỷ đơn ' . $o['code'], $o['code']);

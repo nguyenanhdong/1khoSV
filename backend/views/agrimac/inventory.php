@@ -87,26 +87,24 @@ $label = function ($text, $color = '#374151', $size = 12, $weight = 700, $mb = 5
     </div>
 
     <div data-tab-group="inv" data-tab-pane="import" class="am-hidden" style="display:flex;gap:16px;align-items:flex-start">
-        <div class="am-card-lg" style="padding:24px;width:480px;flex-shrink:0">
+        <div class="am-card-lg" style="padding:24px;flex:1;min-width:0">
             <div class="am-section-title">📥 Tạo phiếu nhập kho</div>
 
-            <div style="margin-bottom:14px">
-                <?= $label('Loại hàng nhập', '#374151', 12, 700, 6) ?>
-                <div style="display:flex;gap:8px">
-                    <button type="button" class="am-kind active" data-kind="product">🚜 Máy nguyên chiếc</button>
-                    <button type="button" class="am-kind" data-kind="part">🔩 Linh kiện lắp ráp</button>
+            <div style="display:flex;gap:10px;margin-bottom:14px;align-items:flex-end">
+                <div style="width:170px">
+                    <?= $label('Ngày nhập') ?>
+                    <input id="am-imp-date" type="date" class="am-input">
                 </div>
+                <div style="flex:1;font-size:11px;color:#6b7280;line-height:1.5;padding-bottom:4px">Một phiếu nhập được nhiều dòng, trộn cả máy và linh kiện. Giá vốn linh kiện được cập nhật theo phiếu nhập gần nhất.</div>
             </div>
 
-            <div id="am-imp-product-block" style="margin-bottom:14px">
+            <div style="margin-bottom:14px" data-field="lines" class="am-field am-field-full">
                 <div class="am-row-between" style="margin-bottom:6px">
-                    <span style="font-size:12px;font-weight:700;color:#374151">Sản phẩm</span>
-                    <button type="button" class="am-toggle" data-toggle-panel="product"></button>
-                </div>
-                <div class="am-picker" data-source="products">
-                    <input type="hidden" id="am-imp-product" name="impProduct" value="">
-                    <input type="text" class="am-input am-picker-input" autocomplete="off" placeholder="Gõ tên hoặc mã sản phẩm để tìm...">
-                    <div class="am-picker-list am-hidden"></div>
+                    <span style="font-size:12px;font-weight:700;color:#374151">Hàng nhập <span class="am-req">*</span></span>
+                    <span style="display:flex;gap:6px">
+                        <button type="button" class="am-toggle" data-toggle-panel="product"></button>
+                        <button type="button" class="am-toggle" data-toggle-panel="part"></button>
+                    </span>
                 </div>
                 <div id="am-new-product" class="am-hidden" style="margin-top:10px;background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:10px;padding:14px 16px">
                     <div style="display:flex;align-items:center;gap:6px;margin-bottom:11px">
@@ -116,14 +114,18 @@ $label = function ($text, $color = '#374151', $size = 12, $weight = 700, $mb = 5
                     <?php foreach ([
                         ['name', 'Tên sản phẩm *', 'text', 'VD: Kubota GL240'],
                         ['specs', 'Specs / Thông số', 'text', 'VD: 24HP · 4WD'],
-                        ['price', 'Giá bán (đ)', 'number', 'VD: 250000000'],
-                        ['cost', 'Giá vốn (đ)', 'number', 'VD: 210000000'],
+                        ['price', 'Giá bán (đ)', 'money', 'VD: 250.000.000'],
+                        ['cost', 'Giá vốn (đ)', 'money', 'VD: 210.000.000'],
                     ] as [$field, $text, $type, $ph]): ?>
                         <div style="margin-bottom:8px">
                             <?= $label($text, '#1d4ed8', 11, 600, 3) ?>
-                            <input type="<?= $type ?>" data-np="<?= $field ?>" placeholder="<?= $ph ?>" class="am-input am-input-blue">
+                            <input <?= $type === 'money' ? 'type="text" inputmode="numeric" autocomplete="off"' : 'type="' . $type . '"' ?> data-np="<?= $field ?>" placeholder="<?= $ph ?>" class="am-input am-input-blue<?= $type === 'money' ? ' am-money' : '' ?>">
                         </div>
                     <?php endforeach; ?>
+                    <div style="margin-bottom:8px">
+                        <?= $label('Đơn vị tính', '#1d4ed8', 11, 600, 3) ?>
+                        <select data-np="unit" class="am-input am-input-blue"><?php foreach (\backend\components\AgrimacData::PRODUCT_UNITS as $u): ?><option value="<?= $u ?>"><?= $u ?></option><?php endforeach; ?></select>
+                    </div>
                     <div style="margin-bottom:10px">
                         <?= $label('Danh mục', '#1d4ed8', 11, 600, 3) ?>
                         <select data-np="catId" class="am-input am-input-blue"></select>
@@ -133,15 +135,6 @@ $label = function ($text, $color = '#374151', $size = 12, $weight = 700, $mb = 5
                         <button type="button" data-toggle-panel="product" data-close="1" class="am-cancel">Hủy</button>
                     </div>
                 </div>
-            </div>
-
-            <div id="am-imp-part-block" class="am-hidden" style="margin-bottom:14px">
-                <div class="am-row-between" style="margin-bottom:6px">
-                    <span style="font-size:12px;font-weight:700;color:#374151">Linh kiện</span>
-                    <button type="button" class="am-toggle" data-toggle-panel="part"></button>
-                </div>
-                <select id="am-imp-part" class="am-input"></select>
-                <div id="am-imp-part-info" style="font-size:11px;color:#6b7280;margin-top:5px"></div>
                 <div id="am-new-part" class="am-hidden" style="margin-top:10px;background:#f0f9ff;border:1.5px solid #7dd3fc;border-radius:10px;padding:14px 16px">
                     <div style="display:flex;align-items:center;gap:6px;margin-bottom:11px">
                         <div class="am-plus" style="background:#0ea5e9">+</div>
@@ -149,15 +142,18 @@ $label = function ($text, $color = '#374151', $size = 12, $weight = 700, $mb = 5
                     </div>
                     <?php foreach ([
                         ['name', 'Tên linh kiện *', 'text', 'VD: Bơm cao áp Kubota'],
-                        ['unit', 'Đơn vị tính', 'text', 'VD: cái / bộ'],
-                        ['cost', 'Giá vốn (đ)', 'number', 'VD: 4500000'],
+                        ['cost', 'Giá vốn (đ)', 'money', 'VD: 4.500.000'],
                         ['minStock', 'Tồn tối thiểu', 'number', 'VD: 5'],
                     ] as [$field, $text, $type, $ph]): ?>
                         <div style="margin-bottom:8px">
                             <?= $label($text, '#0369a1', 11, 600, 3) ?>
-                            <input type="<?= $type ?>" data-npart="<?= $field ?>" placeholder="<?= $ph ?>" class="am-input am-input-sky">
+                            <input <?= $type === 'money' ? 'type="text" inputmode="numeric" autocomplete="off"' : 'type="' . $type . '"' ?> data-npart="<?= $field ?>" placeholder="<?= $ph ?>" class="am-input am-input-sky<?= $type === 'money' ? ' am-money' : '' ?>">
                         </div>
                     <?php endforeach; ?>
+                    <div style="margin-bottom:8px">
+                        <?= $label('Đơn vị tính', '#0369a1', 11, 600, 3) ?>
+                        <select data-npart="unit" class="am-input am-input-sky"><?php foreach (\backend\components\AgrimacData::PRODUCT_UNITS as $u): ?><option value="<?= $u ?>"><?= $u ?></option><?php endforeach; ?></select>
+                    </div>
                     <div style="margin-bottom:10px">
                         <?= $label('Nhóm linh kiện', '#0369a1', 11, 600, 3) ?>
                         <select data-npart="cat" class="am-input am-input-sky"></select>
@@ -167,6 +163,8 @@ $label = function ($text, $color = '#374151', $size = 12, $weight = 700, $mb = 5
                         <button type="button" data-toggle-panel="part" data-close="1" class="am-cancel">Hủy</button>
                     </div>
                 </div>
+                <div id="am-imp-lines" style="margin-top:8px"></div>
+                <div class="am-field-error"></div>
             </div>
 
             <div style="margin-bottom:14px">
@@ -197,18 +195,6 @@ $label = function ($text, $color = '#374151', $size = 12, $weight = 700, $mb = 5
                 </div>
             </div>
 
-            <div style="margin-bottom:12px">
-                <?= $label('Số lượng nhập') ?>
-                <input id="am-imp-qty" type="number" placeholder="VD: 5" class="am-input">
-            </div>
-            <div style="margin-bottom:12px">
-                <?= $label('Đơn giá vốn (đ)') ?>
-                <input id="am-imp-price" type="text" inputmode="numeric" autocomplete="off" placeholder="VD: 240.000.000" class="am-input am-money">
-            </div>
-            <div id="am-imp-total" class="am-hidden" style="background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:8px;padding:10px 14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
-                <span style="font-size:12px;color:#6b7280">Tổng giá trị nhập:</span>
-                <span data-value style="font-weight:900;font-size:15px;color:#059669"></span>
-            </div>
             <div style="margin-bottom:14px">
                 <?= $label('Ghi chú') ?>
                 <textarea id="am-imp-note" class="am-textarea" placeholder="Ghi chú thêm về lô hàng..." style="height:56px"></textarea>
@@ -216,12 +202,12 @@ $label = function ($text, $color = '#374151', $size = 12, $weight = 700, $mb = 5
             <button type="button" data-action="submit-import" class="am-dark-gradient" style="width:100%;padding:11px;color:#fbbf24;border:none;border-radius:10px;cursor:pointer;font-weight:800;font-size:14px">💾 Tạo phiếu nhập kho</button>
         </div>
 
-        <div style="flex:1;display:flex;flex-direction:column;gap:12px">
+        <div style="width:300px;flex-shrink:0;display:flex;flex-direction:column;gap:12px">
             <div class="am-card" style="padding:16px">
                 <div style="font-weight:700;font-size:13px;margin-bottom:10px;color:#374151">💡 Hướng dẫn nhập kho nhanh</div>
                 <?php foreach ([
-                    ['Nhập máy hay linh kiện?', 'Chọn [🚜 Máy nguyên chiếc] khi mua máy về bán, [🔩 Linh kiện lắp ráp] khi nhập linh kiện cho xưởng tự lắp. Giá vốn linh kiện được cập nhật theo phiếu nhập gần nhất.', '#e0f2fe', '#0369a1'],
-                    ['Thiếu sản phẩm / linh kiện?', 'Bấm [+ Tạo ... mới] ngay cạnh dropdown — điền tên, giá, danh mục rồi thêm. Hàng mới sẽ được chọn tự động.', '#dbeafe', '#2563eb'],
+                    ['Nhiều mặt hàng một phiếu', 'Mỗi dòng chọn Loại (🚜 Máy / 🔩 Linh kiện), hàng, số lượng, đơn giá. Chọn xong dòng cuối sẽ tự thêm dòng mới.', '#e0f2fe', '#0369a1'],
+                    ['Thiếu sản phẩm / linh kiện?', 'Bấm [+ Tạo sản phẩm mới] / [+ Tạo linh kiện mới] phía trên bảng — hàng mới được thêm thành một dòng của phiếu.', '#dbeafe', '#2563eb'],
                     ['Thiếu nhà cung cấp?', 'Bấm [+ Tạo NCC mới] — nhập tên, SĐT, địa chỉ. NCC mới sẽ được chọn tự động vào phiếu.', '#fef3c7', '#b45309'],
                     ['Xem tồn kho?', 'Sau khi lưu phiếu, chuyển qua tab Tồn kho máy / Tồn linh kiện để xem số lượng đã được cộng dồn.', '#d1fae5', '#059669'],
                 ] as [$title, $text, $bg, $color]): ?>

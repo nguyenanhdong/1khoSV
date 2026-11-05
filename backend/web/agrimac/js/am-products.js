@@ -91,7 +91,8 @@
     }
 
     function canAssemble(p) {
-        return p.sourceType === 'assembly' || p.sourceType === 'both';
+        // Thẻ sản phẩm chỉ hiện dòng/nút BOM với hàng tự lắp hoặc đã khai báo linh kiện
+        return p.sourceType !== 'import' || (boms[p.name] || []).length > 0;
     }
 
     function partById(id) {
@@ -191,7 +192,8 @@
     var pmBom = [];
 
     function renderPmBom() {
-        var $f = $('#am-product-form'), source = $f.find('[name="sourceType"]').val(), show = source === 'assembly' || source === 'both';
+        // Luôn cho khai báo linh kiện cấu thành (kể cả hàng nhập nguyên chiếc — để lắp ráp / bảo hành theo định mức)
+        var $f = $('#am-product-form'), show = true;
         $('#am-pm-bom').toggleClass('am-hidden', !show).find('[data-bom-unit]').text(($f.find('[name="unit"]').val() || 'Cái').toLowerCase());
         if (!show) return;
         var total = bomCost(pmBom);
@@ -421,7 +423,8 @@
         else if (products.some(function (p) { return p.id !== state.editingId && p.name.toLowerCase() === name; })) errors.name = 'Tên sản phẩm đã tồn tại';
         if (!d.catId) errors.catId = 'Vui lòng chọn danh mục';
         if (!(+d.price > 0)) errors.price = 'Giá bán phải lớn hơn 0';
-        if (d.sourceType === 'import' && !d.supId) errors.supId = 'Hàng nhập nguyên chiếc cần chọn nhà cung cấp';
+        // Như server: chỉ bắt buộc khi tạo mới (sản phẩm cũ chưa có NCC vẫn sửa được)
+        if (!state.editingId && d.sourceType === 'import' && !d.supId) errors.supId = 'Hàng nhập nguyên chiếc cần chọn nhà cung cấp';
         if (d.dealerPrice !== '' && +d.dealerPrice > +d.price && +d.price > 0) errors.dealerPrice = 'Giá đại lý đang cao hơn giá bán lẻ';
         $.each(['cost', 'dealerPrice', 'weight', 'minStock'], function (_, k) {
             if (d[k] !== '' && (isNaN(+d[k]) || +d[k] < 0 || Math.floor(+d[k]) !== +d[k])) errors[k] = 'Phải là số nguyên không âm';
@@ -501,6 +504,17 @@
             searchTimer = setTimeout(function () { state.q = q; loadPage(1); }, 300);
         });
         $('[data-action="new-product"]').on('click', function () { openProductForm(null); });
+        // ?edit=SP001: mở thẳng form sửa (link "Khai báo ngay" từ đơn lắp ráp), cuộn tới khung linh kiện
+        var editCode = AM.query('edit');
+        if (editCode) {
+            AM.lookup('product', { code: editCode }).done(function (res) {
+                if (!res.row) return AM.toast('⚠ Không tìm thấy sản phẩm ' + editCode, false);
+                if (!byId(products, res.row.id)) products.push(res.row);
+                openProductForm(res.row.id);
+                var $bom = $('#am-pm-bom');
+                setTimeout(function () { $bom[0].scrollIntoView({ block: 'center' }); $bom.find('[data-bom-pick]').trigger('focus'); }, 150);
+            });
+        }
         $('#am-product-grid').on('click', '[data-edit]', function () { openProductForm($(this).data('edit')); })
             .on('click', '[data-bom-edit]', function () { openBomForm(byId(products, $(this).data('bom-edit'))); });
         $('[data-action="new-category"]').on('click', function () {

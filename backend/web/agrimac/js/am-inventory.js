@@ -7,12 +7,9 @@
     var parts = inv.parts || [], suppliers = inv.suppliers || [];
     var stock = { q: '', page: 1, pages: 1, total: 0, xhr: null };
     var categories = inv.categories || [], partCategories = inv.partCategories || [], txs = inv.transactions || [];
-    var kind = 'product';
-    var selected = {
-        product: '',
-        part: parts.length ? parts[0].id : '',
-        supplier: suppliers.length ? suppliers[0].id : ''
-    };
+    var selected = { supplier: suppliers.length ? suppliers[0].id : '' };
+    /** Bảng dòng của phiếu nhập: máy + linh kiện, có đơn giá (gợi ý = giá vốn hiện tại) */
+    var IMPORT_LINES = { kinds: ['product', 'part'], price: true, priceOf: function (kind, item) { return item.cost || ''; } };
     var TOGGLE_TEXT = { product: '+ Tạo sản phẩm mới', part: '+ Tạo linh kiện mới', supplier: '+ Tạo NCC mới' };
 
     function byId(list, id) {
@@ -108,6 +105,13 @@
     }
 
     var NEW_CAT = '__new__';
+    var UNITS = AM.data.productUnits || ['Cái', 'Bộ'];
+
+    /** Dữ liệu cũ lưu "cái"/"bộ" → khớp đúng lựa chọn "Cái"/"Bộ" */
+    function normUnit(u) {
+        var l = String(u || '').toLowerCase();
+        return UNITS.filter(function (x) { return x.toLowerCase() === l; })[0] || UNITS[0];
+    }
 
     function openPartForm(part) {
         AM.form.open({
@@ -117,7 +121,7 @@
             submitLabel: part ? '💾 Cập nhật' : '💾 Lưu linh kiện',
             fields: [
                 { name: 'code', label: 'Mã linh kiện', readonly: true },
-                { name: 'unit', label: 'Đơn vị tính', required: true, placeholder: 'cái / bộ' },
+                { name: 'unit', label: 'Đơn vị tính', type: 'select', required: true, options: UNITS.map(function (u) { return [u, u]; }) },
                 { name: 'name', label: 'Tên linh kiện', required: true, full: true, placeholder: 'VD: Bơm cao áp Kubota' },
                 { name: 'cat', label: 'Nhóm linh kiện', type: 'select', required: true, placeholder: '— Chọn nhóm —',
                   options: partCategories.map(function (c) { return [c, c]; }).concat([[NEW_CAT, '➕ Tạo nhóm mới...']]) },
@@ -126,8 +130,8 @@
                 { name: 'cost', label: 'Giá vốn (đ)', type: 'money', min: 0, required: true },
                 { name: 'minStock', label: 'Tồn tối thiểu', type: 'number', min: 0, required: true, hint: 'Dưới mức này sẽ cảnh báo' }
             ],
-            values: part ? $.extend({ code: part.id }, part)
-                : { code: AM.nextCode(parts, 'LK', 3), unit: 'cái', minStock: 5, cat: partCategories.length ? (partCategories.indexOf(partFilter) >= 0 ? partFilter : '') : NEW_CAT },
+            values: part ? $.extend({ code: part.id }, part, { unit: normUnit(part.unit) })
+                : { code: AM.nextCode(parts, 'LK', 3), unit: UNITS[0], minStock: 5, cat: partCategories.length ? (partCategories.indexOf(partFilter) >= 0 ? partFilter : '') : NEW_CAT },
             onChange: function (api) { api.toggle('newCat', api.get('cat') === NEW_CAT); },
             validate: function (v) {
                 var e = {}, name = v.name.toLowerCase();
@@ -142,7 +146,6 @@
                 var isNew = v.cat === NEW_CAT;
                 return AM.api('part.save', $.extend({}, v, { id: part ? part.id : '', cat: isNew ? '' : v.cat, newCat: isNew ? v.newCat : '' })).done(function (data) {
                     applyInventory(data);
-                    if (!part) selected.part = data.id;
                     renderAll();
                 });
             }
@@ -159,52 +162,40 @@
         if (data.suppliers) AM.replace(suppliers, data.suppliers);
     }
 
+    /** Phiếu xuất lẻ / điều chỉnh: nhiều dòng (máy, linh kiện, "⚙ LK theo máy" tự thêm linh kiện theo định mức) */
     function openExportForm() {
         var code = AM.nextCode(txs.filter(function (t) { return t.type === 'export'; }), 'XK', 3);
-        var itemOf = function (k, id) { return k === 'part' ? byId(parts, id) : AM.productCache[id] || null; };
-        AM.form.open({
+        var opts = { kinds: ['part', 'product'], bom: true, instock: true, stockCheck: true };
+        var api = AM.form.open({
             title: '📤 Tạo phiếu xuất kho',
             sub: 'Xuất theo đơn hàng dùng nút trong trang Đơn hàng; phiếu này cho xuất lẻ / điều chỉnh',
-            width: 580,
+            width: 820,
             submitLabel: '📤 Xuất kho',
             submitColor: '#7c3aed',
             fields: [
                 { name: 'code', label: 'Mã phiếu', readonly: true },
                 { name: 'reason', label: 'Lý do xuất', type: 'select', required: true, options: $.map(EXPORT_REASONS, function (l, k) { return [[k, l]]; }) },
-                { name: 'kind', label: 'Loại hàng', type: 'select', required: true, options: [['part', '🔩 Linh kiện'], ['product', '🚜 Máy nguyên chiếc']] },
-                { name: 'qty', label: 'Số lượng', type: 'number', min: 1, required: true },
-                { name: 'itemId', label: 'Hàng xuất', type: 'picker', source: 'parts', required: true, full: true, placeholder: 'Gõ tên hoặc mã (chỉ hiện hàng còn tồn)...' },
+                { name: 'lines', type: 'html', html: '<div class="am-field am-field-full" data-field="lines"><label>Hàng xuất <span class="am-req">*</span></label>' +
+                    AM.lx.html(opts) + '<div class="am-field-error"></div></div>' },
                 { name: 'ref', label: 'Tham chiếu', placeholder: 'VD: DH2025003 / KC001', hint: 'Mã đơn hàng hoặc phiếu khiếu nại' },
                 { name: 'date', label: 'Ngày xuất', type: 'date', required: true },
                 { name: 'note', label: 'Ghi chú', type: 'textarea', full: true }
             ],
-            values: { code: code, reason: 'assembly_issue', kind: 'part', qty: 1, date: AM.isoToday() },
-            onChange: function (api, name) {
-                if (name === null) api.picker('itemId').data('instock', true);
-                if (name === 'reason') {
-                    var r = api.get('reason');
-                    if (r === 'sale') api.set('kind', 'product');
-                    if (r === 'assembly_issue' || r === 'warranty') api.set('kind', 'part');
-                    name = 'kind';
-                }
-                if (name === 'kind') AM.pickerSource(api.picker('itemId'), api.get('kind') === 'part' ? 'parts' : 'products', true);
-                var item = itemOf(api.get('kind'), api.get('itemId')), qty = +api.get('qty') || 0;
-                api.preview(item
-                    ? '<div class="am-row-between" style="background:#f8fafc;border-radius:8px;padding:10px 14px;font-size:12px">' +
-                      '<span style="color:#6b7280">Tồn sau xuất · giá trị</span><span style="font-weight:800;color:' + (qty > item.stock ? '#ef4444' : '#7c3aed') + '">' +
-                      (item.stock - qty) + ' ' + (item.unit || 'chiếc') + ' · ' + AM.money(qty * item.cost) + '</span></div>'
-                    : '');
+            values: { code: code, reason: 'assembly_issue', date: AM.isoToday() },
+            onChange: function (a, name) {
+                // Lý do bán hàng → dòng mới mặc định là máy; còn lại là linh kiện
+                if (name === 'reason') lxOpts().defaultKind = a.get('reason') === 'sale' ? 'product' : 'part';
             },
             validate: function (v) {
-                var e = {}, item = itemOf(v.kind, v.itemId);
-                if (!(+v.qty >= 1) || Math.floor(+v.qty) !== +v.qty) e.qty = 'Số lượng phải là số nguyên ≥ 1';
-                else if (item && +v.qty > item.stock) e.qty = 'Vượt tồn kho (' + item.stock + ')';
+                var e = {}, r = AM.lx.read($lx());
+                if (r.error) e.lines = r.error;
+                else if (!r.lines.length) e.lines = 'Vui lòng thêm ít nhất một dòng hàng';
                 if ((v.reason === 'assembly_issue' || v.reason === 'sale') && !v.ref) e.ref = 'Cần nhập mã đơn hàng';
                 if ((v.reason === 'adjust' || v.reason === 'other') && !v.note) e.note = 'Vui lòng ghi rõ lý do';
                 return e;
             },
             onSubmit: function (v) {
-                return AM.api('stock.export', v).done(function (data) {
+                return AM.api('stock.export', { reason: v.reason, ref: v.ref, date: v.date, note: v.note, lines: AM.lx.read($lx()).lines }).done(function (data) {
                     applyInventory(data);
                     txFilter = '';
                     $('#am-tx-filter').val('');
@@ -212,6 +203,9 @@
                 });
             }
         });
+        function $lx() { return api.$form.find('.am-lx'); }
+        function lxOpts() { return $lx().data('lx'); }
+        AM.lx.init($lx(), $.extend({ defaultKind: 'part' }, opts));
     }
 
     function optionList(list, selectedId, placeholder, suffix) {
@@ -226,14 +220,7 @@
         $cat.html(partCategories.map(function (c) {
             return '<option value="' + AM.esc(c) + '"' + (c === cur ? ' selected' : '') + '>' + AM.esc(c) + '</option>';
         }).join(''));
-        $('#am-imp-part').html(optionList(parts, selected.part, '-- Chọn linh kiện --', function (p) {
-            return ' (' + p.id + ')';
-        }));
         $('#am-imp-supplier').html(optionList(suppliers, selected.supplier, '-- Chọn nhà cung cấp --'));
-        var part = byId(parts, selected.part);
-        $('#am-imp-part-info').html(part
-            ? 'Nhóm: <b>' + AM.esc(part.cat) + '</b> · Tồn: <b style="color:' + stockColor(part.stock, partLow(part)) + '">' + part.stock + ' ' + AM.esc(part.unit) + '</b> · Giá vốn hiện tại: <b>' + AM.money(part.cost) + '</b>'
-            : '');
     }
 
     function renderAlerts() {
@@ -249,33 +236,12 @@
         }).join('') : '<div style="font-size:12px;color:#9ca3af">Tất cả sản phẩm và linh kiện đều đủ hàng ✓</div>');
     }
 
-    function renderTotal() {
-        var q = +$('#am-imp-qty').val(), p = +$('#am-imp-price').val();
-        $('#am-imp-total').toggleClass('am-hidden', !(q && p)).find('[data-value]').text(AM.money(q * p));
-    }
-
     function setPanel(name, open) {
         ['product', 'part', 'supplier'].forEach(function (key) {
             var on = key === name && open;
             $('#am-new-' + key).toggleClass('am-hidden', !on);
             $('.am-toggle[data-toggle-panel="' + key + '"]').toggleClass('open', on).text(on ? '✕ Đóng' : TOGGLE_TEXT[key]);
         });
-    }
-
-    function setKind(next) {
-        kind = next;
-        $('.am-kind').removeClass('active').filter('[data-kind="' + next + '"]').addClass('active');
-        $('#am-imp-product-block').toggleClass('am-hidden', next !== 'product');
-        $('#am-imp-part-block').toggleClass('am-hidden', next !== 'part');
-        $('#am-imp-price').attr('placeholder', next === 'part' ? 'VD: 45.000.000' : 'VD: 240.000.000');
-        setPanel(null, false);
-    }
-
-    function prefillPrice(item) {
-        if (item && !$('#am-imp-price').val()) {
-            $('#am-imp-price').val(item.cost || '');
-            renderTotal();
-        }
     }
 
     function showTab(tab) {
@@ -310,28 +276,16 @@
             stockTimer = setTimeout(function () { stock.q = q; loadStock(1); }, 300);
         });
         $('#am-stock-pager').on('click', '[data-page]:not(:disabled)', function () { loadStock(+$(this).data('page')); });
-        if (AM.query('import')) {
-            showTab('import');
-            if (AM.query('kind') === 'part') setKind('part');
-        }
-
-        $('.am-kind').on('click', function () { setKind($(this).data('kind')); });
+        var $impLines = $('#am-imp-lines').html(AM.lx.html(IMPORT_LINES)).find('.am-lx');
+        AM.lx.init($impLines, $.extend({ defaultKind: AM.query('kind') === 'part' ? 'part' : 'product' }, IMPORT_LINES));
+        $('#am-imp-date').val(AM.isoToday());
+        if (AM.query('import')) showTab('import');
         $('#am-part-filter').on('change', function () { partFilter = this.value; renderParts(); });
         $('#am-tx-filter').on('change', function () { txFilter = this.value; renderTx(); });
         $('[data-action="new-part"]').on('click', function () { openPartForm(null); });
         $('#am-part-rows').on('click', '[data-edit-part]', function () { openPartForm(byId(parts, $(this).data('edit-part'))); });
         $('[data-action="new-export"]').on('click', openExportForm);
-        $('#am-imp-product').on('change', function () {
-            selected.product = this.value;
-            prefillPrice(AM.productCache[this.value]);
-        });
-        $('#am-imp-part').on('change', function () {
-            selected.part = this.value;
-            renderSelects();
-            prefillPrice(byId(parts, selected.part));
-        });
         $('#am-imp-supplier').on('change', function () { selected.supplier = this.value; });
-        $('#am-imp-qty, #am-imp-price').on('input', renderTotal);
 
         $(document).on('click', '[data-toggle-panel]', function () {
             var name = $(this).data('toggle-panel');
@@ -343,10 +297,10 @@
             var f = readFields('data-np');
             if (!$.trim(f.name)) return AM.toast('⚠ Vui lòng nhập tên sản phẩm', false);
             AM.api('product.save', {
-                name: f.name, catId: f.catId, price: f.price, cost: f.cost, specs: f.specs,
+                name: f.name, catId: f.catId, price: f.price, cost: f.cost, specs: f.specs, unit: f.unit || UNITS[0],
                 supId: selected.supplier, sourceType: selected.supplier ? 'import' : 'assembly'
             }).done(function (data) {
-                AM.pickerSet($('#am-imp-product').closest('.am-picker'), data.product);
+                AM.lx.add($impLines, 'product', data.product, 1, data.product.cost || '');
                 $('[data-np]').not('select').val('');
                 setPanel(null, false);
                 loadStock(1);
@@ -356,13 +310,13 @@
         $('[data-action="add-part"]').on('click', function () {
             var f = readFields('data-npart');
             if (!$.trim(f.name)) return AM.toast('⚠ Vui lòng nhập tên linh kiện', false);
-            AM.api('part.save', { name: f.name, cat: f.cat, unit: $.trim(f.unit) || 'cái', cost: f.cost || 0, minStock: f.minStock || 0 }).done(function (data) {
+            AM.api('part.save', { name: f.name, cat: f.cat, unit: f.unit || UNITS[0], cost: f.cost || 0, minStock: f.minStock || 0 }).done(function (data) {
                 applyInventory(data);
-                selected.part = data.id;
                 $('[data-npart]').not('select').val('');
                 setPanel(null, false);
                 renderAll();
-                prefillPrice(byId(parts, data.id));
+                var part = byId(parts, data.id);
+                if (part) AM.lx.add($impLines, 'part', part, 1, part.cost || '');
             });
         });
 
@@ -379,18 +333,23 @@
         });
 
         $('[data-action="submit-import"]').on('click', function () {
-            var $btn = $(this);
-            var itemId = kind === 'part' ? selected.part : selected.product;
-            var qty = $('#am-imp-qty').val(), price = $('#am-imp-price').val();
-            if (!itemId || !qty || !price) return AM.toast('⚠ Vui lòng điền đủ thông tin', false);
+            var $btn = $(this), r = AM.lx.read($impLines), $field = $('#am-imp-lines').closest('[data-field="lines"]');
+            $field.removeClass('has-error').find('.am-field-error').text('');
+            var err = r.error || (!r.lines.length ? 'Vui lòng thêm ít nhất một dòng hàng' : '');
+            if (err) return $field.addClass('has-error').find('.am-field-error').text(err);
             $btn.prop('disabled', true);
-            AM.api('stock.import', { kind: kind, itemId: itemId, supplierId: selected.supplier, qty: qty, price: price, note: $('#am-imp-note').val() })
+            AM.api('stock.import', { lines: r.lines, supplierId: selected.supplier, date: $('#am-imp-date').val(), note: $('#am-imp-note').val() })
                 .done(function (data) {
                     applyInventory(data);
-                    $('#am-imp-qty, #am-imp-price, #am-imp-note').val('');
-                    renderTotal();
+                    $('#am-imp-note').val('');
+                    AM.lx.init($impLines, IMPORT_LINES);
                     renderAll();
                     showTab('tx');
+                }).fail(function (err) {
+                    if (err.errors && err.errors.lines) {
+                        err.handled = true;
+                        $field.addClass('has-error').find('.am-field-error').text(err.errors.lines);
+                    }
                 }).always(function () { $btn.prop('disabled', false); });
         });
     });
